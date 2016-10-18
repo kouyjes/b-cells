@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>big data table</title>
+    <link rel="stylesheet" href="../build/table.css"/>
+    <script src="../build/table.js"></script>
+    <style>
+        #table{
+            width:100%;
+            height:500px;
+        }
+    </style>
+    <script>
+        var tableModel = new CELL.TableModel();
+        var header = [];
+        var colNum = 300;
+        for(var i = 0; i< colNum;i++){
+            header.push({name:'column' + i,width:'10%'});
+        }
+        var rows = [];
+        for(var i = 0;i < 10000;i++){
+            rows.push((function(){
+                var fields = [];
+                for(var col = 0;col < colNum;col++){
+                    fields.push({value:'cell-'+ i + '-' + col});
+                }
+                return {
+                    height:i%5 * 30,
+                    fields:fields
+                };
+            })());
+        }
+        tableModel.header = header;
+        tableModel.rows = rows;
+
+        function init(){
+            var tableCell = new CELL.TableCell(tableModel);
+            console.time('start-render');
+            tableCell.render('#table');
+            console.timeEnd('start-render');
+
+        }
+        function refresh(){
+            tableModel.refresh();
+        }
+
+    </script>
+</head>
+<body>
+    <button onclick="init()">render</button>
+    <button onclick="refresh()">refresh</button>
+    <div id="table">
+
+    </div>
+</body>
+</html>

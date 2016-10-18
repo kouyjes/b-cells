@@ -1,0 +1,24 @@
+{
+  "name": "table",
+  "version": "1.0.0",
+  "description": "big data",
+  "main": "index.js",
+  "scripts": {
+    "build": "rollup -c",
+    "build-uglify": "rollup -c && uglifyjs build/Table.js > build/table.min.js",
+    "build-css":"scss src/themes/TableCell.scss > build/table.css",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "BigTable",
+    "big",
+    "data"
+  ],
+  "author": "koujp",
+  "license": "ISC",
+  "devDependencies": {
+    "rollup": "^0.36.3",
+    "rollup-plugin-scss": "^0.1.0",
+    "rollup-plugin-uglify": "^1.0.1"
+  }
+}
