@@ -62,6 +62,23 @@
             maxRowIndex = i;
             tableModel.appendRows(rows);
         }
+        function appendHtmlData(){
+            var rows = [];
+            for(var i = maxRowIndex;i < maxRowIndex + 10;i++){
+                rows.push((function(){
+                    var fields = [];
+                    for(var col = 0;col < colNum;col++){
+                        fields.push({html:'<div style="width:20px;background-color:red;">' + 'cell-'+ i + '-' + col + '</div>'});
+                    }
+                    return {
+                        height:i%5 * 30,
+                        fields:fields
+                    };
+                })());
+            }
+            maxRowIndex = i;
+            tableModel.appendRows(rows);
+        }
 
     </script>
 </head>
@@ -69,6 +86,7 @@
     <button onclick="init()">render</button>
     <button onclick="refresh()">refresh</button>
     <button onclick="appendData()">appendData</button>
+    <button onclick="appendHtmlData()">appendHtmlData</button>
     <div id="table">
 
     </div>

@@ -9,18 +9,18 @@
     position: absolute;
     left: 0;
     right: 0;
-    overflow: hidden;
-    white-space: nowrap;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     border-bottom: 1px solid #000;
     border-right: 1px solid #00f;
-    box-sizing: border-box;
-    background-color: #ccc; }
-    .d1012 .d1012-cell > span {
+    box-sizing: border-box; }
+    .d1012 .d1012-cell[htmlcontent='false'] {
       overflow: hidden;
-      text-overflow: ellipsis; }
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      justify-content: center; }
+      .d1012 .d1012-cell[htmlcontent='false'] > span {
+        overflow: hidden;
+        text-overflow: ellipsis; }
   .d1012 > * {
     box-sizing: border-box; }
   .d1012 > .d1012-header {

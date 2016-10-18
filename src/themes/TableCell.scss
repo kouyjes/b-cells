@@ -14,18 +14,19 @@ $prefix:d1012;
     position: absolute;
     left:0;
     right:0;
-    overflow:hidden;
-    white-space: nowrap;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     border-bottom:1px solid $rowBorderColor;
     border-right:1px solid $colBorderColor;
     box-sizing:border-box;
-    background-color:#ccc;
-    >span{
+    &[htmlcontent='false']{
       overflow:hidden;
-      text-overflow: ellipsis;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      >span{
+        overflow:hidden;
+        text-overflow: ellipsis;
+      }
     }
 
   }
