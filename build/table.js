@@ -153,20 +153,19 @@ TableCell.prototype.refresh = function () {
     renderTo.appendChild(tablePanel);
 
     requestAnimationFrame(function () {
-        this.scrollTo(0,0);
+        this.dispatchScrollEvent();
     }.bind(this));
 
+};
+TableCell.prototype.dispatchScrollEvent = function () {
+    var rowPanel = this.rowPanel;
+    var scrollEvent = document.createEvent('Event');
+    scrollEvent.initEvent('scroll',true,true);
+    rowPanel.dispatchEvent(scrollEvent);
 };
 TableCell.prototype.scrollTo = function (scrollLeft,scrollTop) {
 
     var rowPanel = this.rowPanel;
-
-    if(rowPanel.scrollLeft === 0 && rowPanel.scrollTop === 0){
-        var scrollEvent = document.createEvent('Event');
-        scrollEvent.initEvent('scroll',true,true);
-        rowPanel.dispatchEvent(scrollEvent);
-        return;
-    }
 
     rowPanel.scrollLeft = scrollLeft;
     rowPanel.scrollTop = scrollTop;
@@ -233,6 +232,8 @@ TableCell.prototype.getRepaintAreas = function (type) {
         curArea = type === 'row'?this.getCurrentRowArea():this.getCurrentColArea();
 
     var areas = [];
+    areas.currentArea = curArea;
+    
     if(lastArea == null){
         lastArea = curArea;
         areas.push(curArea);
@@ -274,8 +275,8 @@ TableCell.prototype.repaint = function () {
     var rowRepaintAreas = this.getRowRepaintAreas(),
         colRepaintAreas = this.getColRepaintAreas();
 
-    var rowClientArea = this.getCurrentRowArea(),
-        colClientArea = this.getCurrentColArea();
+    var rowClientArea = rowRepaintAreas.currentArea,
+        colClientArea = colRepaintAreas.currentArea;
     this.rowClientArea = rowClientArea;
     this.colClientArea = colClientArea;
 
@@ -409,15 +410,12 @@ TableCell.prototype.createCursor = function () {
     return cursor;
 };
 TableCell.prototype.createRowContainer = function () {
-    var tableModel = this.tableModel;
-    var rows = tableModel.rows;
     var rowContainer = document.createElement('div');
     rowContainer.className = this.getFullClassName('row-container');
     this.rowPanel = rowContainer;
 
     var cursor = this.createCursor();
     rowContainer.appendChild(cursor);
-
 
     if(this.config.overflowX){
         rowContainer.style.overflowX = this.config.overflowX;
