@@ -19,7 +19,7 @@
             header.push({name:'column' + i,width:'10%'});
         }
         var rows = [];
-        for(var i = 0;i < 10000;i++){
+        for(var i = 0;i < 10;i++){
             rows.push((function(){
                 var fields = [];
                 for(var col = 0;col < colNum;col++){
@@ -31,6 +31,7 @@
                 };
             })());
         }
+        var maxRowIndex = i;
         tableModel.header = header;
         tableModel.rows = rows;
 
@@ -44,12 +45,30 @@
         function refresh(){
             tableModel.refresh();
         }
+        function appendData(){
+            var rows = [];
+            for(var i = maxRowIndex;i < maxRowIndex + 10;i++){
+                rows.push((function(){
+                    var fields = [];
+                    for(var col = 0;col < colNum;col++){
+                        fields.push({value:'cell-'+ i + '-' + col});
+                    }
+                    return {
+                        height:i%5 * 30,
+                        fields:fields
+                    };
+                })());
+            }
+            maxRowIndex = i;
+            tableModel.appendRows(rows);
+        }
 
     </script>
 </head>
 <body>
     <button onclick="init()">render</button>
     <button onclick="refresh()">refresh</button>
+    <button onclick="appendData()">appendData</button>
     <div id="table">
 
     </div>

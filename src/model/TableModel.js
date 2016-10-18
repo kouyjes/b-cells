@@ -6,8 +6,7 @@ function TableModel(tableModel){
     this.rows = [];//[{fields:[]}]
 
     this._eventListener = {
-        onCellLoad:[],
-        onCellUnload:[],
+        onAppendRows:[],
         onRefresh:[]
     };
 
@@ -27,7 +26,7 @@ TableModel.prototype.init = function (tableModel) {
         return;
     }
     var context = this;
-    ['cellLoad','cellUnload','refresh'].forEach(function (eventName) {
+    ['appendRows','refresh'].forEach(function (eventName) {
         var listeners = eventListener[this.getEventKey(eventName)];
         if(listeners instanceof Array){
             listeners.forEach(function (listener) {
@@ -70,5 +69,9 @@ TableModel.prototype.trigger = function (eventName) {
 };
 TableModel.prototype.refresh = function () {
     this.trigger('refresh');
+};
+TableModel.prototype.appendRows = function (rows) {
+    this.rows = this.rows.concat(rows);
+    this.trigger('appendRows');
 };
 export { TableModel }

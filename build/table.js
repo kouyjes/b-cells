@@ -12,8 +12,7 @@ function TableModel(tableModel){
     this.rows = [];//[{fields:[]}]
 
     this._eventListener = {
-        onCellLoad:[],
-        onCellUnload:[],
+        onAppendRows:[],
         onRefresh:[]
     };
 
@@ -33,7 +32,7 @@ TableModel.prototype.init = function (tableModel) {
         return;
     }
     var context = this;
-    ['cellLoad','cellUnload','refresh'].forEach(function (eventName) {
+    ['appendRows','refresh'].forEach(function (eventName) {
         var listeners = eventListener[this.getEventKey(eventName)];
         if(listeners instanceof Array){
             listeners.forEach(function (listener) {
@@ -77,6 +76,10 @@ TableModel.prototype.trigger = function (eventName) {
 TableModel.prototype.refresh = function () {
     this.trigger('refresh');
 };
+TableModel.prototype.appendRows = function (rows) {
+    this.rows = this.rows.concat(rows);
+    this.trigger('appendRows');
+};
 
 /**
  * Created by koujp on 2016/10/17.
@@ -106,6 +109,10 @@ TableCell.prototype.render = function (renderTo) {
 
     this.tableModel.bind('refresh', function () {
         this.refresh();
+    }.bind(this));
+
+    this.tableModel.bind('appendRows', function () {
+        this.updateCursorHeight();
     }.bind(this));
 };
 TableCell.prototype.getFullClassName = function (className) {
@@ -233,7 +240,7 @@ TableCell.prototype.getRepaintAreas = function (type) {
 
     var areas = [];
     areas.currentArea = curArea;
-    
+
     if(lastArea == null){
         lastArea = curArea;
         areas.push(curArea);
@@ -348,11 +355,31 @@ TableCell.prototype.repaintCell = function (cell,row,col,field) {
     cell.setAttribute('col','' + col);
 };
 TableCell.prototype.configCell = function (cell,field) {
-    cell.innerHTML = '';
-    var textNode = document.createElement('span');
-    textNode.appendChild(document.createTextNode(field.name || field.value));
-    cell.setAttribute('title',textNode.innerText);
-    cell.appendChild(textNode);
+    var isHtml = typeof field.html === 'string',
+    isHtmlCell = cell.getAttribute('htmlcontent') === 'true';
+    cell.setAttribute('htmlcontent',isHtml + '');
+    if(isHtml){
+        cell.innerHTML = field.html;
+    }else{
+        var text = field.name || field.value;
+        var span;
+        if(isHtmlCell){
+            cell.innerHTML = '';
+            span = document.createElement('span');
+            span.innerText = text;
+            cell.appendChild(span);
+        }else{
+            var children = cell.children;
+            if(children.length > 0){
+                span = children[0];
+            }else{
+                span = document.createElement('span');
+                cell.appendChild(span);
+            }
+            span.innerText = text;
+        }
+        cell.setAttribute('title',text);
+    }
     return cell;
 };
 TableCell.prototype.createCell = function (row,col,field,cacheDisabled) {
@@ -377,6 +404,34 @@ TableCell.prototype.createCell = function (row,col,field,cacheDisabled) {
 
     return cell;
 };
+TableCell.prototype.updateCursorHeight = function () {
+    var cursor = this.renderTo.querySelector(this.getFullClassSelector('row-cursor'));
+    if(!cursor){
+        return;
+    }
+    var tableModel = this.tableModel;
+    var rowsTop = this.domCache.rowsTop,
+        rowsHeight = this.domCache.rowsHeight,
+        maxHeight = rowsHeight.maxHeight;
+
+    var rows = tableModel.rows;
+    for(var rowIndex = rowsHeight.length;rowIndex < rows.length;rowIndex++){
+        var rowHeight = this.parseRowHeight(rows[rowIndex].height);
+        rowsHeight[rowIndex] = rowHeight;
+        maxHeight += rowHeight;
+        rowsTop[rowIndex] = rowsTop[rowIndex - 1] + rowsHeight[rowIndex - 1];
+    }
+
+    cursor.style.top = rowsTop[rowsTop.length - 1] + rowsHeight[rowsHeight.length - 1] + 'px';
+
+    var panelSize = this.getPanelSize();
+
+    if(maxHeight <= panelSize.height){
+        this.config.overflowY = 'hidden';
+    }else{
+        this.config.overflowY = 'auto';
+    }
+};
 TableCell.prototype.createCursor = function () {
     var tableModel = this.tableModel;
     var rows = tableModel.rows;
@@ -396,6 +451,7 @@ TableCell.prototype.createCursor = function () {
             rowsTop[index] = rowsTop[index - 1] + rowsHeight[index - 1];
         }
     }.bind(this));
+    rowsHeight.maxHeight = maxHeight;
 
     var cursor = document.createElement('i');
     cursor.className = this.getFullClassName('row-cursor');
@@ -404,7 +460,8 @@ TableCell.prototype.createCursor = function () {
     cursor.style.width = colsLeft[colsLeft.length - 1] + colsWidth[colsWidth.length - 1] + 'px';
 
     var panelSize = this.getPanelSize();
-    if(rowsHeight <= panelSize.height){
+
+    if(maxHeight <= panelSize.height){
         this.config.overflowY = 'hidden';
     }
     return cursor;
