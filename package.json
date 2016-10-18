@@ -1,5 +1,5 @@
 {
-  "name": "table",
+  "name": "b-table",
   "version": "1.0.0",
   "description": "big data",
   "main": "index.js",
@@ -20,5 +20,9 @@
     "rollup": "^0.36.3",
     "rollup-plugin-scss": "^0.1.0",
     "rollup-plugin-uglify": "^1.0.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kouyjes/b-table.git"
   }
 }
