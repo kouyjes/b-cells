@@ -81,11 +81,18 @@ TableModel.prototype.refresh = function () {
 /**
  * Created by koujp on 2016/10/17.
  */
+var requestAnimationFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || function(executor){
+            return setTimeout(executor,1000/60);
+        };
+var cancelAnimationFrame = window.cancelAnimationFrame || window.webkitCancelAnimationFrame || window.mozCancelAnimationFrame || window.clearTimeout;
+
 function TableCell(tableModel){
     if(!(tableModel instanceof TableModel)){
         throw new TypeError('arguments must be instanceof TableModel !');
     }
     this.tableModel = tableModel;
+
+    this.config = {};
 }
 TableCell.prototype.themesPrefix = 'd1012';
 TableCell.prototype.render = function (renderTo) {
@@ -116,6 +123,7 @@ TableCell.prototype.init = function () {
 
     this.rowClientArea = null;
     this.colClientArea = null;
+
     this.domCache = {
         cells:[],
         colsWidth:[],
@@ -131,6 +139,9 @@ TableCell.prototype.refresh = function () {
     if(!renderTo || renderTo.nodeType !== 1){
         return;
     }
+
+    this.cachePanelSize();
+
     var tablePanel = document.createElement('div');
     tablePanel.className = this.getFullClassName();
     var dirtyPanel = renderTo.querySelector(this.getFullClassSelector());
@@ -140,11 +151,35 @@ TableCell.prototype.refresh = function () {
     tablePanel.appendChild(this.createRowContainer());
     this.bindEvent();
     renderTo.appendChild(tablePanel);
+
+    requestAnimationFrame(function () {
+        this.scrollTo(0,0);
+    }.bind(this));
+
+};
+TableCell.prototype.scrollTo = function (scrollLeft,scrollTop) {
+
+    var rowPanel = this.rowPanel;
+
+    if(rowPanel.scrollLeft === 0 && rowPanel.scrollTop === 0){
+        var scrollEvent = document.createEvent('Event');
+        scrollEvent.initEvent('scroll',true,true);
+        rowPanel.dispatchEvent(scrollEvent);
+        return;
+    }
+
+    rowPanel.scrollLeft = scrollLeft;
+    rowPanel.scrollTop = scrollTop;
+};
+TableCell.prototype.cachePanelSize = function () {
+    var renderTo = this.renderTo;
+    renderTo.currentWidth = renderTo.clientWidth;
+    renderTo.currentHeight = renderTo.clientHeight;
 };
 TableCell.prototype.getPanelSize = function () {
     return {
-        width:this.renderTo.clientWidth,
-        height:this.renderTo.clientHeight
+        width:this.renderTo.currentWidth,
+        height:this.renderTo.currentHeight
     };
 };
 TableCell.prototype.getCurrentColArea = function () {
@@ -196,10 +231,14 @@ TableCell.prototype.getColRepaintAreas = function () {
 TableCell.prototype.getRepaintAreas = function (type) {
     var lastArea = type === 'row'?this.rowClientArea:this.colClientArea,
         curArea = type === 'row'?this.getCurrentRowArea():this.getCurrentColArea();
+
+    var areas = [];
     if(lastArea == null){
         lastArea = curArea;
+        areas.push(curArea);
+        return areas;
     }
-    var areas = [];
+
     if(lastArea.from === curArea.from && lastArea.pageSize === curArea.pageSize){
         return areas;
     }
@@ -345,18 +384,28 @@ TableCell.prototype.createCursor = function () {
         rowsTop = this.domCache.rowsTop,
         rowsHeight = this.domCache.rowsHeight;
     //create page cursor
+    var maxHeight = 0;
     rows.forEach(function (row,index) {
-        rowsHeight[index] = this.parseRowHeight(row.height);
+        var rowHeight = this.parseRowHeight(row.height);
+        rowsHeight[index] = rowHeight;
+        maxHeight += rowHeight;
         if(index === 0){
             rowsTop[index] = 0;
         }else{
             rowsTop[index] = rowsTop[index - 1] + rowsHeight[index - 1];
         }
     }.bind(this));
+
     var cursor = document.createElement('i');
     cursor.className = this.getFullClassName('row-cursor');
+
     cursor.style.top = rowsTop[rowsTop.length - 1] + rowsHeight[rowsHeight.length - 1] + 'px';
     cursor.style.width = colsLeft[colsLeft.length - 1] + colsWidth[colsWidth.length - 1] + 'px';
+
+    var panelSize = this.getPanelSize();
+    if(rowsHeight <= panelSize.height){
+        this.config.overflowY = 'hidden';
+    }
     return cursor;
 };
 TableCell.prototype.createRowContainer = function () {
@@ -369,22 +418,19 @@ TableCell.prototype.createRowContainer = function () {
     var cursor = this.createCursor();
     rowContainer.appendChild(cursor);
 
-    var rowClientArea = this.getCurrentRowArea(),
-        colClientArea = this.getCurrentColArea();
-    this.rowClientArea = rowClientArea;
-    var fields,cell;
-    for(var rowIndex = rowClientArea.from;rowIndex < rowClientArea.from + rowClientArea.pageSize;rowIndex++){
-        fields = rows[rowIndex].fields;
-        for(var colIndex = colClientArea.from;colIndex < colClientArea.from + colClientArea.pageSize;colIndex++){
-            cell = this.createCell(rowIndex,colIndex,fields[colIndex]);
-            rowContainer.appendChild(cell);
-        }
+
+    if(this.config.overflowX){
+        rowContainer.style.overflowX = this.config.overflowX;
+    }
+    if(this.config.overflowY){
+        rowContainer.style.overflowY = this.config.overflowY;
     }
 
     return rowContainer;
 };
 TableCell.prototype.parseColWidth = function (width) {
-    var clientWidth = this.renderTo.clientWidth;
+    var panelSize = this.getPanelSize();
+    var clientWidth = panelSize.width;
     if(typeof width === 'string' && width && width.indexOf('%') === width.length - 1){
         width = Math.floor(parseFloat(width)/100 * clientWidth);
     }else{
@@ -395,7 +441,8 @@ TableCell.prototype.parseColWidth = function (width) {
 TableCell.prototype.parseRowHeight = function (height) {
 
     if(typeof height === 'string' && height && height.indexOf('%') === height.length - 1){
-        var clientHeight = this.renderTo.clientHeight;
+        var panelSize = this.getPanelSize();
+        var clientHeight = panelSize.height;
         height = Math.floor(parseFloat(height)/100 * clientHeight);
     }else{
         height = parseInt(height);
@@ -412,8 +459,12 @@ TableCell.prototype.createHeader = function () {
     headerContentPanel.className = this.getFullClassName('header-content');
     var colsWidth = this.domCache.colsWidth,
         colsLeft = this.domCache.colsLeft;
+
+    var maxWidth = 0;
     tableModel.header.forEach(function (field,index) {
-        colsWidth[index] = this.parseColWidth(field.width);
+        var colWidth = this.parseColWidth(field.width);
+        colsWidth[index] = colWidth;
+        maxWidth += colWidth;
         if(index === 0){
             colsLeft[index] = 0;
         }else{
@@ -423,6 +474,12 @@ TableCell.prototype.createHeader = function () {
         headerContentPanel.appendChild(headerCell);
 
     }.bind(this));
+
+    var panelSize = this.getPanelSize();
+    if(colsWidth <= panelSize.width){
+        this.config.overflowX = 'hidden';
+    }
+
     headerContainer.appendChild(headerContentPanel);
     return headerContainer;
 };
@@ -431,12 +488,14 @@ TableCell.prototype.bindEvent = function () {
         rowPanel = this.rowPanel;
     var headerContentPanel = headerPanel.querySelector(this.getFullClassSelector('header-content'));
     var timeout;
-    var requestAnimationFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || function(executor){
-                return setTimeout(executor,1000/60);
-            },
-        cancelAnimationFrame = window.cancelAnimationFrame || window.webkitCancelAnimationFrame || window.mozCancelAnimationFrame || window.clearTimeout;
     rowPanel.addEventListener('scroll', function () {
-        headerContentPanel.style.transform = 'translate3d(' + -rowPanel.scrollLeft + 'px' + ',0,0)';
+        var scrollLeft = rowPanel.scrollLeft,
+            scrollTop = rowPanel.scrollTop;
+
+        this.config.scrollLeft = scrollLeft;
+        this.config.scrollTop = scrollTop;
+
+        headerContentPanel.style.transform = 'translate3d(' + -scrollLeft + 'px' + ',0,0)';
         cancelAnimationFrame(timeout);
         timeout = requestAnimationFrame(function () {
             this.repaint();
