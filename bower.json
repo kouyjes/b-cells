@@ -1,0 +1,22 @@
+{
+  "name": "b-table",
+  "description": "big data",
+  "main": "index.js",
+  "authors": [
+    "koujp"
+  ],
+  "license": "ISC",
+  "keywords": [
+    "BigTable",
+    "big",
+    "data"
+  ],
+  "homepage": "https://github.com/kouyjes/b-table",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

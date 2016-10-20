@@ -450,7 +450,7 @@ TableCell.prototype.createHeader = function () {
     }.bind(this));
 
     var panelSize = this.getPanelSize();
-    if(colsWidth <= panelSize.width){
+    if(maxWidth <= panelSize.width){
         this.config.overflowX = 'hidden';
     }
 
