@@ -431,6 +431,7 @@ TableCell.prototype.updateCursorHeight = function () {
     }else{
         this.config.overflowY = 'auto';
     }
+    this.rowPanel.style.overflowY = this.config.overflowY;
 };
 TableCell.prototype.createCursor = function () {
     var tableModel = this.tableModel;
