@@ -9,14 +9,48 @@ var requestAnimationFrame = window.requestAnimationFrame || window.webkitRequest
     cancelAnimationFrame = window.cancelAnimationFrame || window.webkitCancelAnimationFrame || window.mozCancelAnimationFrame || window.clearTimeout;
 
 function TableCell(tableModel){
+
     if(!(tableModel instanceof TableModel)){
         throw new TypeError('arguments must be instanceof TableModel !');
     }
     this.tableModel = tableModel;
 
     this.config = {};
+
 }
 TableCell.prototype.themesPrefix = 'd1012';
+TableCell.prototype.init = function () {
+
+    this.headerPanel = null;
+    this.rowPanel = null;
+    this.cursor = null;
+
+    this.rowClientArea = null;
+    this.colClientArea = null;
+    this.paintRequest = null;
+
+    this.domCache = {
+        cells:[],
+        colsWidth:[],
+        colsLeft:[],
+        rowsTop:[],
+        rowsHeight:[]
+    };
+
+};
+TableCell.prototype.getFullClassName = function (className) {
+
+    if(!className){
+        return this.themesPrefix;
+    }
+    return this.themesPrefix + '-' + className;
+
+};
+TableCell.prototype.getFullClassSelector = function (selector) {
+
+    return '.' + this.getFullClassName(selector);
+
+};
 TableCell.prototype.render = function (renderTo) {
 
     this.setRenderTo(renderTo);
@@ -30,31 +64,7 @@ TableCell.prototype.render = function (renderTo) {
     this.tableModel.bind('appendRows', function () {
         this.updateCursorHeight();
     }.bind(this));
-};
-TableCell.prototype.getFullClassName = function (className) {
-    if(!className){
-        return this.themesPrefix;
-    }
-    return this.themesPrefix + '-' + className;
-};
-TableCell.prototype.getFullClassSelector = function (selector) {
-    return '.' + this.getFullClassName(selector);
-};
-TableCell.prototype.init = function () {
-    this.headerPanel = null;
-    this.rowPanel = null;
-    this.cursor = null;
 
-    this.rowClientArea = null;
-    this.colClientArea = null;
-
-    this.domCache = {
-        cells:[],
-        colsWidth:[],
-        colsLeft:[],
-        rowsTop:[],
-        rowsHeight:[]
-    };
 };
 TableCell.prototype.refresh = function () {
 
@@ -76,26 +86,38 @@ TableCell.prototype.refresh = function () {
     tablePanel.appendChild(this.createRowContainer());
     renderTo.appendChild(tablePanel);
 
-    requestAnimationFrame(function () {
-        this.dispatchScrollEvent();
-    }.bind(this));
-
     this.bindEvent();
+
+    this.dispatchScrollEvent();
 
 };
 TableCell.prototype.setRenderTo = function (renderTo) {
+
     if(typeof renderTo === 'string'){
         renderTo = document.querySelector(renderTo);
     }
     this.renderTo = renderTo;
 
     this.cachePanelSize();
+
+};
+TableCell.prototype.clearPaintRequest = function () {
+
+    if(null == this.paintRequest){
+        return;
+    }
+    cancelAnimationFrame(this.paintRequest);
+    this.paintRequest = null;
+
 };
 TableCell.prototype.dispatchScrollEvent = function () {
+
+    this.clearPaintRequest();
     var rowPanel = this.rowPanel;
     var scrollEvent = document.createEvent('Event');
     scrollEvent.initEvent('scroll',true,true);
     rowPanel.dispatchEvent(scrollEvent);
+
 };
 TableCell.prototype.scrollTo = function (scrollLeft,scrollTop) {
 
@@ -103,25 +125,44 @@ TableCell.prototype.scrollTo = function (scrollLeft,scrollTop) {
 
     rowPanel.scrollLeft = scrollLeft;
     rowPanel.scrollTop = scrollTop;
+
 };
 TableCell.prototype.cachePanelSize = function () {
+
     var renderTo = this.renderTo;
+
+    renderTo.lastWidth = renderTo.currentWidth;
+    renderTo.lastHeight = renderTo.currentHeight;
+
     renderTo.currentWidth = renderTo.clientWidth;
     renderTo.currentHeight = renderTo.clientHeight;
+
+    if(!renderTo.lastWidth){
+        renderTo.lastWidth = renderTo.currentWidth;
+    }
+    if(!renderTo.lastHeight){
+        renderTo.lastHeight = renderTo.currentHeight;
+    }
+
 };
 TableCell.prototype.getPanelSize = function () {
+
     return {
         width:this.renderTo.currentWidth,
         height:this.renderTo.currentHeight
     };
+
 };
 TableCell.prototype.getCurrentColArea = function () {
+
     var panelSize = this.getPanelSize();
     var colsLeft = this.domCache.colsLeft;
     var left = this.rowPanel.scrollLeft;
     return this.getThresholdArea(panelSize.width,colsLeft,left);
+
 };
 TableCell.prototype.getThresholdArea = function (viewSize,positions,cursor) {
+
     var from = 0,
         end;
     positions.some(function (position,index) {
@@ -148,20 +189,28 @@ TableCell.prototype.getThresholdArea = function (viewSize,positions,cursor) {
         pageSize:end - from
     };
     return area;
+
 };
 TableCell.prototype.getCurrentRowArea = function () {
+
     var panelSize = this.getPanelSize();
     var rowsTop = this.domCache.rowsTop;
     var top = this.rowPanel.scrollTop;
     return this.getThresholdArea(panelSize.height,rowsTop,top);
+
 };
 TableCell.prototype.getRowRepaintAreas = function () {
+
     return this.getRepaintAreas('row');
+
 };
 TableCell.prototype.getColRepaintAreas = function () {
+
     return this.getRepaintAreas('col');
+
 };
 TableCell.prototype.getRepaintAreas = function (type) {
+
     var lastArea = type === 'row'?this.rowClientArea:this.colClientArea,
         curArea = type === 'row'?this.getCurrentRowArea():this.getCurrentColArea();
 
@@ -203,6 +252,7 @@ TableCell.prototype.getRepaintAreas = function (type) {
         });
     }
     return areas;
+
 };
 TableCell.prototype.repaint = function () {
 
@@ -262,10 +312,13 @@ TableCell.prototype.repaint = function () {
             cacheCells.splice(cacheCells.indexOf(cell),1);
         }
     });
+
 };
 TableCell.prototype.computeRowTop = function (row) {
+
     var rowsTop = this.domCache.rowsTop;
     return rowsTop[row];
+
 };
 TableCell.prototype.repaintCell = function (cell,row,col,field) {
 
@@ -274,8 +327,10 @@ TableCell.prototype.repaintCell = function (cell,row,col,field) {
     cell.setAttribute('col','' + col);
 
     this.reLayoutCell(cell);
+
 };
 TableCell.prototype.configCell = function (cell,field) {
+
     var isHtml = typeof field.html === 'string',
     isHtmlCell = cell.getAttribute('htmlcontent') === 'true';
     cell.setAttribute('htmlcontent',isHtml + '');
@@ -302,6 +357,7 @@ TableCell.prototype.configCell = function (cell,field) {
         cell.setAttribute('title',text);
     }
     return cell;
+
 };
 TableCell.prototype.createCell = function (row,col,field,cacheDisabled) {
 
@@ -318,8 +374,10 @@ TableCell.prototype.createCell = function (row,col,field,cacheDisabled) {
 
     this.reLayoutCell(cell);
     return cell;
+
 };
 TableCell.prototype.reLayoutCell = function (cell) {
+
     var row = parseInt(cell.getAttribute('row')),
         col = parseInt(cell.getAttribute('col'));
     var colsLeft = this.domCache.colsLeft,
@@ -329,8 +387,10 @@ TableCell.prototype.reLayoutCell = function (cell) {
     cell.style.left = colsLeft[col] + 'px';
     cell.style.width = colsWidth[col] + 'px';
     cell.style.height = rowsHeight[row] + 'px';
+
 };
 TableCell.prototype.updateCursorHeight = function () {
+
     var cursor = this.renderTo.querySelector(this.getFullClassSelector('row-cursor'));
     if(!cursor){
         return;
@@ -372,6 +432,11 @@ TableCell.prototype.resize = function () {
     var panelSize = this.getPanelSize();
     if(maxWidth <= panelSize.width){
         this.config.overflowX = 'hidden';
+    }else{
+        this.config.overflowX = 'auto';
+    }
+    if(this.config.overflowX){
+        this.rowPanel.style.overflowX = this.config.overflowX;
     }
 
     //compute row height
@@ -389,9 +454,17 @@ TableCell.prototype.resize = function () {
         this.reLayoutCell(cell);
     }.bind(this));
 
+    this.reLayoutCursor();
+
+
+    var renderTo = this.renderTo;
+    this.rowPanel.scrollLeft *= renderTo.currentWidth / renderTo.lastWidth;
+    this.rowPanel.scrollTop *= renderTo.currentHeight / renderTo.lastHeight;
     this.dispatchScrollEvent();
+
 };
 TableCell.prototype.initRowHeightIndex = function () {
+
     var tableModel = this.tableModel;
     var rows = tableModel.rows;
     var rowsTop = this.domCache.rowsTop,
@@ -407,8 +480,10 @@ TableCell.prototype.initRowHeightIndex = function () {
             rowsTop[index] = rowsTop[index - 1] + rowsHeight[index - 1];
         }
     }.bind(this));
+
 };
 TableCell.prototype.createCursor = function () {
+
     var cursor = document.createElement('i');
     cursor.className = this.getFullClassName('row-cursor');
 
@@ -417,8 +492,10 @@ TableCell.prototype.createCursor = function () {
     this.reLayoutCursor();
 
     return cursor;
+
 };
 TableCell.prototype.reLayoutCursor = function () {
+
     var colsLeft = this.domCache.colsLeft,
         colsWidth = this.domCache.colsWidth,
         rowsTop = this.domCache.rowsTop,
@@ -426,8 +503,10 @@ TableCell.prototype.reLayoutCursor = function () {
     var cursor = this.cursor;
     cursor.style.top = rowsTop[rowsTop.length - 1] + rowsHeight[rowsHeight.length - 1] + 'px';
     cursor.style.width = colsLeft[colsLeft.length - 1] + colsWidth[colsWidth.length - 1] + 'px';
+
 };
 TableCell.prototype.createRowContainer = function () {
+
     var rowContainer = document.createElement('div');
     rowContainer.className = this.getFullClassName('row-container');
     this.rowPanel = rowContainer;
@@ -442,8 +521,10 @@ TableCell.prototype.createRowContainer = function () {
     }
 
     return rowContainer;
+
 };
 TableCell.prototype.parseColWidth = function (width) {
+
     var panelSize = this.getPanelSize();
     var clientWidth = panelSize.width;
     if(typeof width === 'string' && width && width.indexOf('%') === width.length - 1){
@@ -452,6 +533,7 @@ TableCell.prototype.parseColWidth = function (width) {
         width = parseInt(width);
     }
     return isNaN(width)?100:width;
+
 };
 TableCell.prototype.parseRowHeight = function (height) {
 
@@ -462,8 +544,10 @@ TableCell.prototype.parseRowHeight = function (height) {
         height = parseInt(height);
     }
     return height?height:30;
+
 };
 TableCell.prototype.createHeader = function () {
+
     var tableModel = this.tableModel;
     var headerContainer = document.createElement('header');
     headerContainer.className = this.getFullClassName('header');
@@ -496,25 +580,23 @@ TableCell.prototype.createHeader = function () {
 
     headerContainer.appendChild(headerContentPanel);
     return headerContainer;
+
 };
 TableCell.prototype.bindEvent = function () {
+
     var headerPanel = this.headerPanel,
         rowPanel = this.rowPanel;
     var headerContentPanel = headerPanel.querySelector(this.getFullClassSelector('header-content'));
-    var timeout;
     rowPanel.addEventListener('scroll', function () {
-        var scrollLeft = rowPanel.scrollLeft,
-            scrollTop = rowPanel.scrollTop;
 
-        this.config.scrollLeft = scrollLeft;
-        this.config.scrollTop = scrollTop;
-
+        var scrollLeft = rowPanel.scrollLeft;
         headerContentPanel.style.transform = 'translate3d(' + -scrollLeft + 'px' + ',0,0)';
-        cancelAnimationFrame(timeout);
-        timeout = requestAnimationFrame(function () {
+        this.clearPaintRequest();
+        this.paintRequest = requestAnimationFrame(function () {
             this.repaint();
         }.bind(this))
 
     }.bind(this));
+
 };
 export { TableCell }

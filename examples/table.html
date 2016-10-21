@@ -48,8 +48,13 @@
             tableCell.render('#table');
             console.timeEnd('start-render');
 
-
+            var timeout;
             window.addEventListener('resize', function () {
+               /* clearTimeout(timeout);
+                timeout = setTimeout(function () {
+
+                },500);*/
+
                 tableCell.resize();
             });
         }
