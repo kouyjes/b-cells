@@ -6,9 +6,16 @@
     <link rel="stylesheet" href="../build/table.css"/>
     <script src="../build/table.js"></script>
     <style>
+        html,body{
+            width:100%;
+            height:100%;
+            padding:0;
+            margin:0;
+            overflow:hidden;
+        }
         #table{
             width:100%;
-            height:500px;
+            height:60%;
         }
     </style>
     <script>
@@ -19,14 +26,14 @@
             header.push({name:'column' + i,width:'10%'});
         }
         var rows = [];
-        for(var i = 0;i < 10;i++){
+        for(var i = 0;i < 10000;i++){
             rows.push((function(){
                 var fields = [];
                 for(var col = 0;col < colNum;col++){
                     fields.push({value:'cell-'+ i + '-' + col});
                 }
                 return {
-                    height:i%5 * 30,
+                    height:'10%',
                     fields:fields
                 };
             })());
@@ -41,6 +48,10 @@
             tableCell.render('#table');
             console.timeEnd('start-render');
 
+
+            window.addEventListener('resize', function () {
+                tableCell.resize();
+            });
         }
         function refresh(){
             tableModel.refresh();
@@ -64,11 +75,12 @@
         }
         function appendHtmlData(){
             var rows = [];
-            for(var i = maxRowIndex;i < maxRowIndex + 10;i++){
+            for(var i = maxRowIndex;i < maxRowIndex + 1000;i++){
                 rows.push((function(){
                     var fields = [];
                     for(var col = 0;col < colNum;col++){
-                        fields.push({html:'<div style="width:20px;background-color:red;">' + 'cell-'+ i + '-' + col + '</div>'});
+                        fields.push({html:'<div style="position:absolute;top:10px;' +
+                        'bottom:10px;left:15px;right:15px;background-color: red;padding: 5px;background-clip: content-box;border: 1px solid #dce;">' + 'cell-'+ i + '-' + col + '</div>'});
                     }
                     return {
                         height:i%5 * 30,

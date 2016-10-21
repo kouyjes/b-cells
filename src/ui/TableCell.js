@@ -19,10 +19,7 @@ function TableCell(tableModel){
 TableCell.prototype.themesPrefix = 'd1012';
 TableCell.prototype.render = function (renderTo) {
 
-    if(typeof renderTo === 'string'){
-        renderTo = document.querySelector(renderTo);
-    }
-    this.renderTo = renderTo;
+    this.setRenderTo(renderTo);
 
     this.refresh();
 
@@ -46,6 +43,7 @@ TableCell.prototype.getFullClassSelector = function (selector) {
 TableCell.prototype.init = function () {
     this.headerPanel = null;
     this.rowPanel = null;
+    this.cursor = null;
 
     this.rowClientArea = null;
     this.colClientArea = null;
@@ -63,25 +61,35 @@ TableCell.prototype.refresh = function () {
     this.init();
     var renderTo = this.renderTo;
     if(!renderTo || renderTo.nodeType !== 1){
-        return;
+        throw new TypeError('parent container is invalid !');
     }
-
-    this.cachePanelSize();
 
     var tablePanel = document.createElement('div');
     tablePanel.className = this.getFullClassName();
     var dirtyPanel = renderTo.querySelector(this.getFullClassSelector());
     dirtyPanel && renderTo.removeChild(dirtyPanel);
 
+    this.initRowHeightIndex();
+
     tablePanel.appendChild(this.createHeader());
+
     tablePanel.appendChild(this.createRowContainer());
-    this.bindEvent();
     renderTo.appendChild(tablePanel);
 
     requestAnimationFrame(function () {
         this.dispatchScrollEvent();
     }.bind(this));
 
+    this.bindEvent();
+
+};
+TableCell.prototype.setRenderTo = function (renderTo) {
+    if(typeof renderTo === 'string'){
+        renderTo = document.querySelector(renderTo);
+    }
+    this.renderTo = renderTo;
+
+    this.cachePanelSize();
 };
 TableCell.prototype.dispatchScrollEvent = function () {
     var rowPanel = this.rowPanel;
@@ -262,16 +270,10 @@ TableCell.prototype.computeRowTop = function (row) {
 TableCell.prototype.repaintCell = function (cell,row,col,field) {
 
     this.configCell(cell,field);
-
-    var colsLeft = this.domCache.colsLeft,
-        colsWidth = this.domCache.colsWidth,
-        rowsHeight = this.domCache.rowsHeight;
-    cell.style.top = this.computeRowTop(row) + 'px';
-    cell.style.left = colsLeft[col] + 'px';
-    cell.style.width = colsWidth[col] + 'px';
-    cell.style.height = rowsHeight[row] + 'px';
     cell.setAttribute('row','' + row);
     cell.setAttribute('col','' + col);
+
+    this.reLayoutCell(cell);
 };
 TableCell.prototype.configCell = function (cell,field) {
     var isHtml = typeof field.html === 'string',
@@ -306,22 +308,27 @@ TableCell.prototype.createCell = function (row,col,field,cacheDisabled) {
     var cacheCells = this.domCache.cells;
     var cell = document.createElement('div');
     this.configCell(cell,field);
-    var colsLeft = this.domCache.colsLeft,
-        colsWidth = this.domCache.colsWidth,
-        rowsHeight = this.domCache.rowsHeight;
 
     cell.setAttribute('row','' + row);
     cell.setAttribute('col','' + col);
     var classNames = [this.getFullClassName('cell')];
-    cell.style.top = this.computeRowTop(row) + 'px';
-    cell.style.left = colsLeft[col] + 'px';
-    cell.style.width = colsWidth[col] + 'px';
-    cell.style.height = rowsHeight[row] + 'px';
     cell.className = classNames.join(' ');
 
     !cacheDisabled && cacheCells.push(cell);
 
+    this.reLayoutCell(cell);
     return cell;
+};
+TableCell.prototype.reLayoutCell = function (cell) {
+    var row = parseInt(cell.getAttribute('row')),
+        col = parseInt(cell.getAttribute('col'));
+    var colsLeft = this.domCache.colsLeft,
+        colsWidth = this.domCache.colsWidth,
+        rowsHeight = this.domCache.rowsHeight;
+    cell.style.top = this.computeRowTop(row) + 'px';
+    cell.style.left = colsLeft[col] + 'px';
+    cell.style.width = colsWidth[col] + 'px';
+    cell.style.height = rowsHeight[row] + 'px';
 };
 TableCell.prototype.updateCursorHeight = function () {
     var cursor = this.renderTo.querySelector(this.getFullClassSelector('row-cursor'));
@@ -343,54 +350,87 @@ TableCell.prototype.updateCursorHeight = function () {
 
     cursor.style.top = rowsTop[rowsTop.length - 1] + rowsHeight[rowsHeight.length - 1] + 'px';
 
-    var panelSize = this.getPanelSize();
-
-    if(maxHeight <= panelSize.height){
-        this.config.overflowY = 'hidden';
-    }else{
-        this.config.overflowY = 'auto';
-    }
-    this.rowPanel.style.overflowY = this.config.overflowY;
 };
-TableCell.prototype.createCursor = function () {
+TableCell.prototype.resize = function () {
+
+    this.cachePanelSize();
+
+    var colsWidth = this.domCache.colsWidth,
+        colsLeft = this.domCache.colsLeft;
+
+    var maxWidth = 0;
+    tableModel.header.forEach(function (field,index) {
+        var colWidth = this.parseColWidth(field.width);
+        colsWidth[index] = colWidth;
+        maxWidth += colWidth;
+        if(index === 0){
+            colsLeft[index] = 0;
+        }else{
+            colsLeft[index] = colsLeft[index - 1] + colsWidth[index - 1];
+        }
+    }.bind(this));
+    var panelSize = this.getPanelSize();
+    if(maxWidth <= panelSize.width){
+        this.config.overflowX = 'hidden';
+    }
+
+    //compute row height
+    this.initRowHeightIndex();
+
+    var forEach = Array.prototype.forEach;
+    var cellSelector = this.getFullClassSelector('cell');
+    var headerCells = this.headerPanel.querySelectorAll(cellSelector),
+        rowCells = this.rowPanel.querySelectorAll(cellSelector);
+    forEach.call(headerCells, function (cell) {
+        this.reLayoutCell(cell);
+    }.bind(this));
+
+    forEach.call(rowCells, function (cell) {
+        this.reLayoutCell(cell);
+    }.bind(this));
+
+    this.dispatchScrollEvent();
+};
+TableCell.prototype.initRowHeightIndex = function () {
     var tableModel = this.tableModel;
     var rows = tableModel.rows;
-    var colsLeft = this.domCache.colsLeft,
-        colsWidth = this.domCache.colsWidth,
-        rowsTop = this.domCache.rowsTop,
+    var rowsTop = this.domCache.rowsTop,
         rowsHeight = this.domCache.rowsHeight;
+
     //create page cursor
-    var maxHeight = 0;
     rows.forEach(function (row,index) {
         var rowHeight = this.parseRowHeight(row.height);
         rowsHeight[index] = rowHeight;
-        maxHeight += rowHeight;
         if(index === 0){
             rowsTop[index] = 0;
         }else{
             rowsTop[index] = rowsTop[index - 1] + rowsHeight[index - 1];
         }
     }.bind(this));
-    rowsHeight.maxHeight = maxHeight;
-
+};
+TableCell.prototype.createCursor = function () {
     var cursor = document.createElement('i');
     cursor.className = this.getFullClassName('row-cursor');
 
+    this.cursor = cursor;
+
+    this.reLayoutCursor();
+
+    return cursor;
+};
+TableCell.prototype.reLayoutCursor = function () {
+    var colsLeft = this.domCache.colsLeft,
+        colsWidth = this.domCache.colsWidth,
+        rowsTop = this.domCache.rowsTop,
+        rowsHeight = this.domCache.rowsHeight;
+    var cursor = this.cursor;
     cursor.style.top = rowsTop[rowsTop.length - 1] + rowsHeight[rowsHeight.length - 1] + 'px';
     cursor.style.width = colsLeft[colsLeft.length - 1] + colsWidth[colsWidth.length - 1] + 'px';
-
-    var panelSize = this.getPanelSize();
-
-    if(maxHeight <= panelSize.height){
-        this.config.overflowY = 'hidden';
-    }
-    return cursor;
 };
 TableCell.prototype.createRowContainer = function () {
     var rowContainer = document.createElement('div');
     rowContainer.className = this.getFullClassName('row-container');
     this.rowPanel = rowContainer;
-
     var cursor = this.createCursor();
     rowContainer.appendChild(cursor);
 
@@ -416,8 +456,7 @@ TableCell.prototype.parseColWidth = function (width) {
 TableCell.prototype.parseRowHeight = function (height) {
 
     if(typeof height === 'string' && height && height.indexOf('%') === height.length - 1){
-        var panelSize = this.getPanelSize();
-        var clientHeight = panelSize.height;
+        var clientHeight = this.getPanelSize().height;
         height = Math.floor(parseFloat(height)/100 * clientHeight);
     }else{
         height = parseInt(height);
