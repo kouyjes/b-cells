@@ -290,7 +290,7 @@ TableCell.prototype.getColRepaintAreas = function () {
     return this.getRepaintAreas('col');
 
 };
-TableCell.prototype.getRepaintAreas = function (type) {
+TableCell.prototype.getRepaintAreas_ = function (type) {
 
     var lastArea = type === 'row'?this.rowClientArea:this.colClientArea,
         curArea = type === 'row'?this.getCurrentRowArea():this.getCurrentColArea();
@@ -299,7 +299,6 @@ TableCell.prototype.getRepaintAreas = function (type) {
     areas.currentArea = curArea;
 
     if(lastArea == null){
-        lastArea = curArea;
         areas.push(curArea);
         return areas;
     }
@@ -331,6 +330,56 @@ TableCell.prototype.getRepaintAreas = function (type) {
             from:firstArea.from + firstArea.pageSize,
             pageSize:secArea.from + secArea.pageSize - (firstArea.from + firstArea.pageSize)
         });
+    }
+    return areas;
+
+};
+TableCell.prototype.getRepaintAreas = function (type) {
+
+    var lastArea = type === 'row'?this.rowClientArea:this.colClientArea,
+        curArea = type === 'row'?this.getCurrentRowArea():this.getCurrentColArea();
+
+    var areas = [];
+    areas.currentArea = curArea;
+
+    if(lastArea == null){
+        areas.push(curArea);
+        return areas;
+    }
+
+    if(lastArea.from === curArea.from && lastArea.pageSize === curArea.pageSize){
+        return areas;
+    }
+
+    if(curArea.from >= lastArea.from){
+
+        if(lastArea.from + lastArea.pageSize <= curArea.from){
+            areas.push(curArea);
+        }else{
+            areas.push({
+                from:lastArea.from + lastArea.pageSize,
+                pageSize:curArea.from + curArea.pageSize - (lastArea.from + lastArea.pageSize)
+            });
+        }
+
+    }else{
+
+        if(curArea.from + curArea.pageSize <= lastArea.from){
+            areas.push(curArea);
+        }else{
+            areas.push({
+                from:curArea.from,
+                pageSize:lastArea.from - curArea.from
+            });
+            var bottomDis = curArea.from + curArea.pageSize - (lastArea.from + lastArea.pageSize);
+            if(bottomDis > 0){
+                areas.push({
+                    from:lastArea.from + lastArea.pageSize,
+                    pageSize:bottomDis
+                });
+            }
+        }
+
     }
     return areas;
 
@@ -490,58 +539,6 @@ TableCell.prototype.updateCursorHeight = function () {
     }
 
     cursor.style.top = rowsTop[rowsTop.length - 1] + rowsHeight[rowsHeight.length - 1] + 'px';
-
-};
-TableCell.prototype.resize = function () {
-
-    this.cachePanelSize();
-
-    var colsWidth = this.domCache.colsWidth,
-        colsLeft = this.domCache.colsLeft;
-
-    var maxWidth = 0;
-    tableModel.header.forEach(function (field,index) {
-        var colWidth = this.parseColWidth(field.width);
-        colsWidth[index] = colWidth;
-        maxWidth += colWidth;
-        if(index === 0){
-            colsLeft[index] = 0;
-        }else{
-            colsLeft[index] = colsLeft[index - 1] + colsWidth[index - 1];
-        }
-    }.bind(this));
-    var panelSize = this.getPanelSize();
-    if(maxWidth <= panelSize.width){
-        this.config.overflowX = 'hidden';
-    }else{
-        this.config.overflowX = 'auto';
-    }
-    if(this.config.overflowX){
-        this.rowPanel.style.overflowX = this.config.overflowX;
-    }
-
-    //compute row height
-    this.initRowHeightIndex();
-
-    var forEach = Array.prototype.forEach;
-    var cellSelector = this.getFullClassSelector('cell');
-    var headerCells = this.headerPanel.querySelectorAll(cellSelector),
-        rowCells = this.rowPanel.querySelectorAll(cellSelector);
-    forEach.call(headerCells, function (cell) {
-        this.reLayoutCell(cell);
-    }.bind(this));
-
-    forEach.call(rowCells, function (cell) {
-        this.reLayoutCell(cell);
-    }.bind(this));
-
-    this.reLayoutCursor();
-
-    
-    var renderTo = this.renderTo;
-    this.rowPanel.scrollLeft *= renderTo.currentWidth / renderTo.lastWidth;
-    this.rowPanel.scrollTop *= renderTo.currentHeight / renderTo.lastHeight;
-    this.dispatchScrollEvent();
 
 };
 TableCell.prototype.initRowHeightIndex = function () {
