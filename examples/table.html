@@ -21,7 +21,7 @@
     <script>
         var tableModel = new CELL.TableModel();
         var header = [];
-        var colNum = 3;
+        var colNum = 30;
         for(var i = 0; i< colNum;i++){
             header.push({name:'column' + i,width:'23.3%'});
         }
@@ -40,7 +40,7 @@
         }
         var maxRowIndex = i;
         tableModel.header = {
-            height:'50px',
+            height:50,
             fields:header
         };
         tableModel.rows = rows;
@@ -50,6 +50,14 @@
             console.time('start-render');
             tableCell.render('#table');
             console.timeEnd('start-render');
+
+            window.addEventListener('resize', function () {
+                tableCell.executeFunctionDelay('resize', function () {
+                    var scrollTo = tableCell.scrollTo();
+                    tableCell.refresh();
+                    tableCell.scrollTo(scrollTo.scrollTop,scrollTo.scrollLeft);
+                });
+            });
 
         }
         function refresh(){
