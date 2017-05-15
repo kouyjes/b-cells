@@ -9,14 +9,14 @@ var requestAnimationFrame = window.requestAnimationFrame || window.webkitRequest
     cancelAnimationFrame = window.cancelAnimationFrame || window.webkitCancelAnimationFrame || window.mozCancelAnimationFrame || window.clearTimeout;
 
 
-function TableCell(tableModel){
+function TableCell(tableModel,config){
 
     if(!(tableModel instanceof TableModel)){
         throw new TypeError('arguments must be instanceof TableModel !');
     }
     this.tableModel = tableModel;
 
-    this.config = {};
+    this.config = Object.assign({},config);
 
     this._timeoutCache = {};
 
