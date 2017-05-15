@@ -452,8 +452,10 @@ TableCell.prototype._reLayoutCell = function (cell) {
     cell.style.height = rowsHeight[row] + 'px';
 
     //last column flag
-    var colLast = String(this.tableModel.header.fields.length - 1 === col);
+    var colLast = String(this.tableModel.header.fields.length - 1 === col),
+        rowLast = String(this.tableModel.rows.length - 1 === row);
     cell.setAttribute('col-last',colLast);
+    cell.setAttribute('row-last',rowLast);
 
 };
 TableCell.prototype.updateCursorHeight = function () {
