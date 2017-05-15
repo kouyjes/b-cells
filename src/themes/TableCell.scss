@@ -1,7 +1,7 @@
 $prefix:d1012;
 .#{$prefix}{
   $rowBorderColor:#000;
-  $colBorderColor: #00f;
+  $colBorderColor: #f0f;
   $tableBorderColor:#000;
   $headerBorderColor:#000;
   position: relative;
@@ -17,7 +17,8 @@ $prefix:d1012;
     border-bottom:1px solid $rowBorderColor;
     border-right:1px solid $colBorderColor;
     box-sizing:border-box;
-    &[htmlcontent='false']{
+    overflow: hidden;
+    &[html_content='false']{
       overflow:hidden;
       white-space: nowrap;
       display: flex;
@@ -42,6 +43,9 @@ $prefix:d1012;
     .#{$prefix}-cell{
       border-bottom:none;
       height:100% !important;
+      &[col-last='true']{
+        border-right:none;
+      }
     }
   }
   .#{$prefix}-header-content{

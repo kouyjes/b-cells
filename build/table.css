@@ -10,15 +10,16 @@
     left: 0;
     right: 0;
     border-bottom: 1px solid #000;
-    border-right: 1px solid #00f;
-    box-sizing: border-box; }
-    .d1012 .d1012-cell[htmlcontent='false'] {
+    border-right: 1px solid #f0f;
+    box-sizing: border-box;
+    overflow: hidden; }
+    .d1012 .d1012-cell[html_content='false'] {
       overflow: hidden;
       white-space: nowrap;
       display: flex;
       align-items: center;
       justify-content: center; }
-      .d1012 .d1012-cell[htmlcontent='false'] > span {
+      .d1012 .d1012-cell[html_content='false'] > span {
         overflow: hidden;
         text-overflow: ellipsis; }
   .d1012 > * {
@@ -32,6 +33,8 @@
     .d1012 > .d1012-header .d1012-cell {
       border-bottom: none;
       height: 100% !important; }
+      .d1012 > .d1012-header .d1012-cell[col-last='true'] {
+        border-right: none; }
   .d1012 .d1012-header-content {
     position: relative;
     width: 100%;

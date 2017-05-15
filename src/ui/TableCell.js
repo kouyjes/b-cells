@@ -374,15 +374,14 @@ TableCell.prototype.repaintCell = function (cell,row,col,field) {
     this.configCell(cell,field);
     cell.setAttribute('row','' + row);
     cell.setAttribute('col','' + col);
-
     this.reLayoutCell(cell);
 
 };
 TableCell.prototype.configCell = function (cell,field) {
 
     var isHtml = typeof field.html === 'string',
-    isHtmlCell = cell.getAttribute('htmlcontent') === 'true';
-    cell.setAttribute('htmlcontent',isHtml + '');
+    isHtmlCell = cell.getAttribute('html_content') === 'true';
+    cell.setAttribute('html_content',isHtml + '');
     if(isHtml){
         cell.innerHTML = field.html;
     }else{
@@ -436,6 +435,10 @@ TableCell.prototype.reLayoutCell = function (cell) {
     cell.style.left = colsLeft[col] + 'px';
     cell.style.width = colsWidth[col] + 'px';
     cell.style.height = rowsHeight[row] + 'px';
+
+    //last column flag
+    var colLast = String(this.tableModel.header.fields.length - 1 === col);
+    cell.setAttribute('col-last',colLast);
 
 };
 TableCell.prototype.updateCursorHeight = function () {
@@ -543,12 +546,22 @@ TableCell.prototype.parseRowHeight = function (height) {
     return height?height:30;
 
 };
+TableCell.prototype.headerHeight = function (height) {
+
+    var tableModel = this.tableModel;
+    if(!height){
+        return tableModel.header.height;
+    }
+    tableModel.header.height = height;
+    this.headerPanel.style.height = height;
+};
 TableCell.prototype.createHeader = function () {
 
     var tableModel = this.tableModel;
     var headerContainer = document.createElement('header');
     headerContainer.className = this.getFullClassName('header');
     this.headerPanel = headerContainer;
+    this.headerHeight(tableModel.header.height);
 
     var headerContentPanel = document.createElement('div');
     headerContentPanel.className = this.getFullClassName('header-content');
@@ -556,7 +569,7 @@ TableCell.prototype.createHeader = function () {
         colsLeft = this.domCache.colsLeft;
 
     var maxWidth = 0;
-    tableModel.header.forEach(function (field,index) {
+    tableModel.header.fields.forEach(function (field,index) {
         var colWidth = this.parseColWidth(field.width);
         colsWidth[index] = colWidth;
         maxWidth += colWidth;

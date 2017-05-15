@@ -2,7 +2,9 @@
  * Created by koujp on 2016/10/17.
  */
 function TableModel(tableModel){
-    this.header = [];//{name:''}
+    this.header = {
+        fields:[]
+    };//{name:''}
     this.rows = [];//[{fields:[]}]
 
     this._eventListener = {
@@ -15,8 +17,8 @@ function TableModel(tableModel){
     }
 }
 TableModel.prototype.init = function (tableModel) {
-    if(tableModel.header instanceof Array){
-        this.header = tableModel.header;
+    if(tableModel.header && tableModel.header.fields instanceof Array){
+        this.header.fields = tableModel.header.fields;
     }
     if(tableModel.rows instanceof Array){
         this.rows = tableModel.rows;
