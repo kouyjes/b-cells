@@ -5,6 +5,8 @@
   width: 100%;
   height: 100%;
   overflow-x: auto; }
+  .d1012[resize='true'] {
+    -webkit-user-select: none; }
   .d1012 .d1012-cell {
     position: absolute;
     left: 0;

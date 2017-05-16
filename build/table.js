@@ -99,7 +99,13 @@ function TableCell(tableModel,config){
     }
     this.tableModel = tableModel;
 
-    this.config = Object.assign({},config);
+    this.config = Object.assign({
+        textTitle:false,
+        colResize:false,
+        rowResize:false,
+        overflowX:'',
+        overflowY:''
+    },config);
 
     this._timeoutCache = {};
 
@@ -109,6 +115,7 @@ function TableCell(tableModel,config){
 TableCell.prototype.themesPrefix = 'd1012';
 TableCell.prototype.init = function () {
 
+    this.tablePanel = null;
     this.headerPanel = null;
     this.rowPanel = null;
     this.cursor = null;
@@ -155,7 +162,7 @@ TableCell.prototype.refresh = function () {
 
     this._cachePanelSize();
 
-    var tablePanel = document.createElement('div');
+    var tablePanel = this.tablePanel = document.createElement('div');
     tablePanel.className = this.getFullClassName();
     var dirtyPanel = renderTo.querySelector(this.getFullClassSelector());
     dirtyPanel && renderTo.removeChild(dirtyPanel);
@@ -199,7 +206,7 @@ TableCell.prototype.checkDomElement = function (object) {
         return ele.__proto__ === object.__proto__;
     }
     return Object.keys(ele).every(function (key) {
-        return object.hasOwnProperty(key);
+        return object['hasOwnProperty'](key);
     });
 
 };
@@ -444,7 +451,7 @@ TableCell.prototype.repaint = function () {
                     field = row.fields[colIndex];
                     cell = cells.pop();
                     if(!cell){
-                        cell = this.createCell(rowIndex,colIndex,field);
+                        cell = this._createCell(rowIndex,colIndex,field);
                         this.rowPanel.appendChild(cell);
                     }else{
                         this._repaintCell(cell,rowIndex,colIndex,field);
@@ -469,9 +476,9 @@ TableCell.prototype.computeRowTop = function (row) {
 };
 TableCell.prototype._repaintCell = function (cell,row,col,field) {
 
-    this._configCell(cell,field);
     cell.setAttribute('row','' + row);
     cell.setAttribute('col','' + col);
+    this._configCell(cell,field);
     this._reLayoutCell(cell);
 
 };
@@ -500,12 +507,14 @@ TableCell.prototype._configCell = function (cell,field) {
             }
             span.innerText = text;
         }
-        cell.setAttribute('title',text);
+        if(this.config.textTitle){
+            cell.setAttribute('title',text);
+        }
     }
     return cell;
 
 };
-TableCell.prototype.createCell = function (row,col,field,cacheDisabled) {
+TableCell.prototype._createCell = function (row,col,field,cacheDisabled) {
 
     var cacheCells = this.domCache.cells;
     var cell = document.createElement('div');
@@ -543,20 +552,18 @@ TableCell.prototype._reLayoutCell = function (cell) {
 };
 TableCell.prototype.updateCursorHeight = function () {
 
-    var cursor = this.renderTo.querySelector(this.getFullClassSelector('row-cursor'));
+    var cursor = this.cursor;
     if(!cursor){
         return;
     }
     var tableModel = this.tableModel;
     var rowsTop = this.domCache.rowsTop,
-        rowsHeight = this.domCache.rowsHeight,
-        maxHeight = rowsHeight.maxHeight;
+        rowsHeight = this.domCache.rowsHeight;
 
     var rows = tableModel.rows;
     for(var rowIndex = rowsHeight.length;rowIndex < rows.length;rowIndex++){
         var rowHeight = this._parseRowHeight(rows[rowIndex].height);
         rowsHeight[rowIndex] = rowHeight;
-        maxHeight += rowHeight;
         rowsTop[rowIndex] = rowsTop[rowIndex - 1] + rowsHeight[rowIndex - 1];
     }
 
@@ -682,7 +689,7 @@ TableCell.prototype._createHeader = function () {
         }else{
             colsLeft[index] = colsLeft[index - 1] + colsWidth[index - 1];
         }
-        var headerCell = this.createCell(0,index,field,true);
+        var headerCell = this._createCell(0,index,field,true);
         headerContentPanel.appendChild(headerCell);
 
     }.bind(this));
@@ -699,20 +706,24 @@ TableCell.prototype._createHeader = function () {
 TableCell.prototype._bindTableModelEvent = function () {
     this.tableModel.bind('refresh', function () {
         if(this.renderTo){
-            this.executeFunctionDelay('refresh',this.refresh.bind(this));
+            this.executeFunctionDelay('refresh',this.refresh);
         }
     }.bind(this));
 
     this.tableModel.bind('appendRows', function () {
         if(this.renderTo){
-            this.executeFunctionDelay('updateCursorHeight',this.updateCursorHeight.bind(this));
+            this.executeFunctionDelay('updateCursorHeight',this.updateCursorHeight);
         }
     }.bind(this));
 };
-TableCell.prototype.executeFunctionDelay = function (timeoutId,func) {
+TableCell.prototype.executeFunctionDelay = function (timeoutId,func,context) {
 
+    if(typeof func !== 'function'){
+        return;
+    }
+    context = context || this;
     cancelAnimationFrame(this._timeoutCache[timeoutId]);
-    this._timeoutCache[timeoutId] = requestAnimationFrame(func);
+    return this._timeoutCache[timeoutId] = requestAnimationFrame(func.bind(context));
 
 };
 TableCell.prototype._bindEvent = function () {
@@ -724,10 +735,220 @@ TableCell.prototype._bindEvent = function () {
 
         var scrollLeft = rowPanel.scrollLeft;
         headerContentPanel.style.transform = 'translate3d(' + -scrollLeft + 'px' + ',0,0)';
-        this.executeFunctionDelay('paintRequest',this.repaint.bind(this));
+        this.executeFunctionDelay('paintRequest',this.repaint);
 
     }.bind(this));
 
+    this._bindResizeCellEvent();
+
+};
+function getMousePosition(e){
+    var pageX = e.pageX || e.clientX,
+        pageY = e.pageY || e.clientY;
+    return {
+        pageX:pageX,
+        pageY:pageY
+    };
+}
+TableCell.prototype.resizeRowHeight = function (rowIndex,height) {
+    this.resizeCell(rowIndex,null,null,height);
+};
+TableCell.prototype.resizeColWidth = function (colIndex,width) {
+    this.resizeCell(null,colIndex,width,null);
+};
+TableCell.prototype._updateDomCache = function (rowIndex,colIndex,width,height) {
+
+    if(rowIndex >= 0 && typeof (height = parseInt(height)) === 'number'){
+        height = Math.max(0,height);
+        var rowsHeight = this.domCache.rowsHeight,
+            rowsTop = this.domCache.rowsTop;
+        rowsHeight[rowIndex] = height;
+        for(var i = rowIndex + 1;i < rowsTop.length;i++){
+            rowsTop[i] = rowsTop[i - 1] + rowsHeight[i - 1];
+        }
+    }
+    if(colIndex >= 0 && typeof (width = parseInt(width)) === 'number'){
+        width = Math.max(0,width);
+        var colsWidth = this.domCache.colsWidth,
+            colsLeft = this.domCache.colsLeft;
+        colsWidth[colIndex] = width;
+        for(var i = colIndex + 1;i < colsLeft.length;i++){
+            colsLeft[i] = colsLeft[i - 1] + colsWidth[i - 1];
+        }
+    }
+};
+TableCell.prototype._resizeCellDom = function (rowIndex,colIndex) {
+
+    var rowsHeight = this.domCache.rowsHeight,
+        rowsTop = this.domCache.rowsTop;
+    var colsWidth = this.domCache.colsWidth,
+        colsLeft = this.domCache.colsLeft;
+    var cells = this.rowPanel.querySelectorAll(this.getFullClassSelector('cell')),
+        size = cells.length,
+        cell,row,col;
+    for(var i = 0;i < size;i++){
+        cell = cells[i];
+        row = parseInt(cell.getAttribute('row')),col = parseInt(cell.getAttribute('col'));
+        if(row === rowIndex){
+            cell.style.height = rowsHeight[row] + 'px';
+        }else if(row > rowIndex){
+            cell.style.top = rowsTop[row] + 'px';
+        }
+        if(col === colIndex){
+            cell.style.width = colsWidth[col] + 'px';
+        }else if(col > colIndex){
+            cell.style.left = colsLeft[col] + 'px';
+        }
+    }
+
+    //update header col width
+    cells = this.headerPanel.querySelectorAll(this.getFullClassSelector('cell')),size = cells.length;
+    for(var i = 0;i < size;i++){
+        cell = cells[i];
+        if(rowIndex === -1){
+            this.headerHeight(height);
+        }
+        col = parseInt(cell.getAttribute('col'));
+        if(col === colIndex){
+            cell.style.width = colsWidth[col] + 'px';
+        }else if(col > colIndex){
+            cell.style.left = colsLeft[col] + 'px';
+        }
+    }
+
+
+    this.cursor.style.left = colsLeft[colsLeft.length - 1] + colsWidth[colsWidth.length - 1];
+    this.cursor.style.top = rowsTop[rowsTop.length - 1] + rowsHeight[rowsHeight.length - 1];
+
+};
+TableCell.prototype.resizeCell = function (rowIndex,colIndex,width,height) {
+    this._updateDomCache(rowIndex,colIndex,width,height);
+    this._resizeCellDom(rowIndex,colIndex,width,height);
+};
+TableCell.prototype._bindResizeCellEvent = function () {
+    if(!this.config.colResize && !this.config.rowResize){
+        return;
+    }
+    var mouseHit = 3,cursors = ['auto','n-resize','w-resize','nw-resize'];
+    var rowPanel = this.rowPanel,
+        rowsTop = this.domCache.rowsTop,
+        colsLeft = this.domCache.colsLeft,
+        colResize = this.config.colResize,
+        rowResize = this.config.rowResize,
+        rowsHeight = this.domCache.rowsHeight,
+        colsWidth = this.domCache.colsWidth;
+
+    var self = this;
+    function getMouseInfo(e){
+        var position = getMousePosition(e);
+        var scrollTo = self.scrollTo();
+        var bound = rowPanel.getBoundingClientRect(),relY = position.pageY - bound.top,
+            relX = position.pageX - bound.left;
+
+        var rowHit = 0,rowIndex = undefined;
+        rowResize && rowsTop.some(function (rowTop,index) {
+            if(Math.abs(rowTop - scrollTo.scrollTop - relY) < mouseHit){
+                rowHit = 1;
+                rowIndex = index;
+                return true;
+            }
+        });
+
+        var colHit = 0,colIndex = undefined;
+        colResize && colsLeft.some(function (colLeft,index) {
+            if(Math.abs(colLeft - scrollTo.scrollLeft - relX) < mouseHit){
+                colHit = 2;
+                colIndex = index;
+                return true;
+            }
+        });
+        var cursor = cursors[rowHit + colHit];
+        return {
+            cursor:cursor,
+            position:position,
+            rowIndex:rowIndex - 1,
+            colIndex:colIndex - 1
+
+        };
+    }
+    var resizeManager = {
+        lastPageX:undefined,
+        lastPageY:undefined,
+        rowIndex:undefined,
+        colIndex:undefined,
+        reset: function () {
+            this.resetX().resetY();
+        },
+        resetX: function () {
+            this.lastPageX = this.colIndex = undefined;
+            return this;
+        },
+        resetY: function () {
+            this.lastPageY = this.rowIndex  = undefined;
+            return this;
+        }
+    };
+    rowPanel.addEventListener('mousemove', function (e) {
+        this.executeFunctionDelay('rowPanel-mousemove',function () {
+            var mouseInfo = getMouseInfo(e);
+            rowPanel.style.cursor = mouseInfo.cursor;
+        });
+
+    }.bind(this));
+
+    rowPanel.addEventListener('mousemove', function (e) {
+        var mouseInfo = getMouseInfo(e);
+        //resizeCell
+        var rowIndex = resizeManager.rowIndex,
+            colIndex = resizeManager.colIndex,
+            width,height,
+            resizeFlag = false;
+        if(resizeManager.lastPageY  !== undefined){
+            height = mouseInfo.position.pageY - resizeManager.lastPageY + rowsHeight[rowIndex];
+            resizeFlag = true;
+            resizeManager.lastPageY = mouseInfo.position.pageY;
+        }
+
+        if(resizeManager.lastPageX !== undefined){
+            width = mouseInfo.position.pageX - resizeManager.lastPageX + colsWidth[colIndex];
+            resizeFlag = true;
+            resizeManager.lastPageX = mouseInfo.position.pageX;
+        }
+
+        if(resizeFlag){
+            this.resizeCell(rowIndex,colIndex,width,height);
+        }
+    }.bind(this));
+
+
+    rowPanel.addEventListener('mousedown', function (e) {
+
+        var mouseInfo = getMouseInfo(e),
+            resizeFlag = false;
+        if(mouseInfo.rowIndex !== undefined){
+            resizeManager.lastPageY = mouseInfo.position.pageY;
+            resizeManager.rowIndex = mouseInfo.rowIndex;
+            resizeFlag = true;
+        }else{
+            resizeManager.resetY();
+        }
+        if(mouseInfo.colIndex !== undefined){
+            resizeManager.lastPageX = mouseInfo.position.pageX;
+            resizeManager.colIndex = mouseInfo.colIndex;
+            resizeFlag = true;
+        }else{
+            resizeManager.resetX();
+        }
+
+        this.tablePanel.setAttribute('resize',String(resizeFlag));
+
+    }.bind(this));
+    rowPanel.addEventListener('mouseup', function () {
+
+        resizeManager.reset();
+        this.tablePanel.setAttribute('resize',String(false));
+
+    }.bind(this));
 };
 
 exports.TableModel = TableModel;

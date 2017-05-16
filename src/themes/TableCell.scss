@@ -10,6 +10,9 @@ $prefix:d1012;
   width:100%;
   height:100%;
   overflow-x: auto;
+  &[resize='true']{
+    -webkit-user-select: none;
+  }
   .#{$prefix}-cell{
     position: absolute;
     left:0;

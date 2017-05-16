@@ -21,12 +21,12 @@
     <script>
         var tableModel = new CELL.TableModel();
         var header = [];
-        var colNum = 30;
+        var colNum = 10;
         for(var i = 0; i< colNum;i++){
             header.push({name:'column' + i,width:'23.3%'});
         }
         var rows = [];
-        for(var i = 0;i < 100000;i++){
+        for(var i = 0;i < 2;i++){
             rows.push((function(){
                 var fields = [];
                 for(var col = 0;col < colNum;col++){
@@ -46,7 +46,10 @@
         tableModel.rows = rows;
 
         function init(){
-            var tableCell = new CELL.TableCell(tableModel);
+            var tableCell = new CELL.TableCell(tableModel,{
+                rowResize:true,
+                colResize:true
+            });
             console.time('start-render');
             tableCell.render('#table');
             console.timeEnd('start-render');
