@@ -361,7 +361,7 @@ TableCell.prototype.repaint = function () {
                     field = row.fields[colIndex];
                     cell = cells.pop();
                     if(!cell){
-                        cell = this.createCell(rowIndex,colIndex,field);
+                        cell = this._createCell(rowIndex,colIndex,field);
                         this.rowPanel.appendChild(cell);
                     }else{
                         this._repaintCell(cell,rowIndex,colIndex,field);
@@ -422,7 +422,7 @@ TableCell.prototype._configCell = function (cell,field) {
     return cell;
 
 };
-TableCell.prototype.createCell = function (row,col,field,cacheDisabled) {
+TableCell.prototype._createCell = function (row,col,field,cacheDisabled) {
 
     var cacheCells = this.domCache.cells;
     var cell = document.createElement('div');
@@ -599,7 +599,7 @@ TableCell.prototype._createHeader = function () {
         }else{
             colsLeft[index] = colsLeft[index - 1] + colsWidth[index - 1];
         }
-        var headerCell = this.createCell(0,index,field,true);
+        var headerCell = this._createCell(0,index,field,true);
         headerContentPanel.appendChild(headerCell);
 
     }.bind(this));
