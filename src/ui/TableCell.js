@@ -492,8 +492,11 @@ TableCell.prototype.syncCursor = function () {
         rowsHeight = this.domCache.rowsHeight,
         colsLeft = this.domCache.colsLeft,
         colsWidth = this.domCache.colsWidth;
-    cursor.style.top = rowsTop[rowsTop.length - 1] + rowsHeight[rowsHeight.length - 1] + 'px';
-    cursor.style.width = colsLeft[colsLeft.length - 1] + colsWidth[colsWidth.length - 1] + 'px';
+    var curTop = rowsTop[rowsTop.length - 1] + rowsHeight[rowsHeight.length - 1],
+        curWidth = colsLeft[colsLeft.length - 1] + colsWidth[colsWidth.length - 1];
+    cursor.style.top = curTop + 'px';
+    cursor.style.width = curWidth + 'px';
+
 };
 TableCell.prototype._initRowHeightIndex = function () {
 
@@ -729,9 +732,6 @@ TableCell.prototype._resizeCellDom = function (rowIndex,colIndex) {
             cell.style.left = colsLeft[col] + 'px';
         }
     }
-
-    this.syncCursor();
-
 };
 TableCell.prototype.resizeCell = function (rowIndex,colIndex,width,height) {
     this._updateDomCache(rowIndex,colIndex,width,height);
@@ -857,11 +857,12 @@ TableCell.prototype._bindResizeCellEvent = function () {
         this.tablePanel.setAttribute('resize',String(resizeFlag));
 
     }.bind(this));
-    rowPanel.addEventListener('mouseup', function () {
-
+    function mouseup(){
         resizeManager.reset();
         this.tablePanel.setAttribute('resize',String(false));
-
-    }.bind(this));
+        this.syncCursor();
+    }
+    rowPanel.addEventListener('mouseup',mouseup.bind(this));
+    rowPanel.addEventListener('mouseleave',mouseup.bind(this))
 };
 export { TableCell }
