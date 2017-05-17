@@ -117,6 +117,7 @@ TableCell.prototype.init = function () {
 
     this.tablePanel = null;
     this.headerPanel = null;
+    this.bodyPanel = null;
     this.rowPanel = null;
     this.cursor = null;
 
@@ -171,7 +172,7 @@ TableCell.prototype.refresh = function () {
 
     tablePanel.appendChild(this._createHeader());
 
-    tablePanel.appendChild(this._createRowContainer());
+    tablePanel.appendChild(this._createBodyContainer());
     renderTo.appendChild(tablePanel);
 
     this._bindEvent();
@@ -212,24 +213,24 @@ TableCell.prototype.checkDomElement = function (object) {
 };
 TableCell.prototype.dispatchScrollEvent = function () {
 
-    var rowPanel = this.rowPanel;
+    var bodyPanel = this.bodyPanel;
     var scrollEvent = document.createEvent('Event');
     scrollEvent.initEvent('scroll',true,true);
-    rowPanel.dispatchEvent(scrollEvent);
+    bodyPanel.dispatchEvent(scrollEvent);
 
 };
 TableCell.prototype.scrollTo = function (scrollTop,scrollLeft) {
 
-    var rowPanel = this.rowPanel;
+    var bodyPanel = this.bodyPanel;
 
     if(arguments.length === 0){
         return {
-            scrollLeft:rowPanel.scrollLeft,
-            scrollTop:rowPanel.scrollTop
+            scrollLeft:bodyPanel.scrollLeft,
+            scrollTop:bodyPanel.scrollTop
         };
     }
-    rowPanel.scrollLeft = scrollLeft;
-    rowPanel.scrollTop = scrollTop;
+    bodyPanel.scrollLeft = scrollLeft;
+    bodyPanel.scrollTop = scrollTop;
 
 };
 TableCell.prototype._cachePanelSize = function () {
@@ -262,7 +263,7 @@ TableCell.prototype.getCurrentColArea = function () {
 
     var panelSize = this.getPanelSize();
     var colsLeft = this.domCache.colsLeft;
-    var left = this.rowPanel.scrollLeft;
+    var left = this.bodyPanel.scrollLeft;
     return this.getThresholdArea(panelSize.width,colsLeft,left);
 
 };
@@ -300,7 +301,7 @@ TableCell.prototype.getCurrentRowArea = function () {
 
     var panelSize = this.getPanelSize();
     var rowsTop = this.domCache.rowsTop;
-    var top = this.rowPanel.scrollTop;
+    var top = this.bodyPanel.scrollTop;
     return this.getThresholdArea(panelSize.height,rowsTop,top);
 
 };
@@ -612,6 +613,20 @@ TableCell.prototype._createCursor = function () {
     return cursor;
 
 };
+TableCell.prototype._createBodyContainer = function () {
+
+    var bodyContainer = this.bodyPanel = document.createElement('div');
+    bodyContainer.className = this.getFullClassName('body-container');
+    if(this.config.overflowX){
+        bodyContainer.style.overflowX = this.config.overflowX;
+    }
+    if(this.config.overflowY){
+        bodyContainer.style.overflowY = this.config.overflowY;
+    }
+
+    bodyContainer.appendChild(this._createRowContainer());
+    return bodyContainer;
+};
 TableCell.prototype._createRowContainer = function () {
 
     var rowContainer = document.createElement('div');
@@ -619,13 +634,6 @@ TableCell.prototype._createRowContainer = function () {
     this.rowPanel = rowContainer;
     var cursor = this._createCursor();
     rowContainer.appendChild(cursor);
-
-    if(this.config.overflowX){
-        rowContainer.style.overflowX = this.config.overflowX;
-    }
-    if(this.config.overflowY){
-        rowContainer.style.overflowY = this.config.overflowY;
-    }
 
     return rowContainer;
 
@@ -729,11 +737,11 @@ TableCell.prototype.executeFunctionDelay = function (timeoutId,func,context) {
 TableCell.prototype._bindEvent = function () {
 
     var headerPanel = this.headerPanel,
-        rowPanel = this.rowPanel;
+        bodyPanel = this.bodyPanel;
     var headerContentPanel = headerPanel.querySelector(this.getFullClassSelector('header-content'));
-    rowPanel.addEventListener('scroll', function () {
+    bodyPanel.addEventListener('scroll', function () {
 
-        var scrollLeft = rowPanel.scrollLeft;
+        var scrollLeft = bodyPanel.scrollLeft;
         headerContentPanel.style.transform = 'translate3d(' + -scrollLeft + 'px' + ',0,0)';
         this.executeFunctionDelay('paintRequest',this.repaint);
 
@@ -825,7 +833,7 @@ TableCell.prototype._bindResizeCellEvent = function () {
         return;
     }
     var mouseHit = 3,cursors = ['auto','n-resize','w-resize','nw-resize'];
-    var rowPanel = this.rowPanel,
+    var bodyPanel = this.bodyPanel,
         rowsTop = this.domCache.rowsTop,
         colsLeft = this.domCache.colsLeft,
         colResize = this.config.colResize,
@@ -837,7 +845,7 @@ TableCell.prototype._bindResizeCellEvent = function () {
     function getMouseInfo(e){
         var position = getMousePosition(e);
         var scrollTo = self.scrollTo();
-        var bound = rowPanel.getBoundingClientRect(),relY = position.pageY - bound.top,
+        var bound = bodyPanel.getBoundingClientRect(),relY = position.pageY - bound.top,
             relX = position.pageX - bound.left;
 
         var rowHit = 0,rowIndex = undefined;
@@ -885,15 +893,15 @@ TableCell.prototype._bindResizeCellEvent = function () {
             return this;
         }
     };
-    rowPanel.addEventListener('mousemove', function (e) {
+    bodyPanel.addEventListener('mousemove', function (e) {
         this.executeFunctionDelay('rowPanel-mousemove',function () {
             var mouseInfo = getMouseInfo(e);
-            rowPanel.style.cursor = mouseInfo.cursor;
+            bodyPanel.style.cursor = mouseInfo.cursor;
         });
 
     }.bind(this));
 
-    rowPanel.addEventListener('mousemove', function (e) {
+    bodyPanel.addEventListener('mousemove', function (e) {
         var mouseInfo = getMouseInfo(e);
         //resizeCell
         var rowIndex = resizeManager.rowIndex,
@@ -918,7 +926,7 @@ TableCell.prototype._bindResizeCellEvent = function () {
     }.bind(this));
 
 
-    rowPanel.addEventListener('mousedown', function (e) {
+    bodyPanel.addEventListener('mousedown', function (e) {
 
         var mouseInfo = getMouseInfo(e),
             resizeFlag = false;
@@ -945,8 +953,8 @@ TableCell.prototype._bindResizeCellEvent = function () {
         this.tablePanel.setAttribute('resize',String(false));
         this.syncCursor();
     }
-    rowPanel.addEventListener('mouseup',mouseup.bind(this));
-    rowPanel.addEventListener('mouseleave',mouseup.bind(this));
+    bodyPanel.addEventListener('mouseup',mouseup.bind(this));
+    bodyPanel.addEventListener('mouseleave',mouseup.bind(this));
 };
 
 exports.TableModel = TableModel;
