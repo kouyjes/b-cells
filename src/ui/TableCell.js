@@ -469,10 +469,6 @@ TableCell.prototype._reLayoutCell = function (cell) {
 };
 TableCell.prototype.updateCursorHeight = function () {
 
-    var cursor = this.cursor;
-    if(!cursor){
-        return;
-    }
     var tableModel = this.tableModel;
     var rowsTop = this.domCache.rowsTop,
         rowsHeight = this.domCache.rowsHeight;
@@ -484,8 +480,20 @@ TableCell.prototype.updateCursorHeight = function () {
         rowsTop[rowIndex] = rowsTop[rowIndex - 1] + rowsHeight[rowIndex - 1];
     }
 
-    cursor.style.top = rowsTop[rowsTop.length - 1] + rowsHeight[rowsHeight.length - 1] + 'px';
+    this.syncCursor();
 
+};
+TableCell.prototype.syncCursor = function () {
+    var cursor = this.cursor;
+    if(!cursor){
+        return;
+    }
+    var rowsTop = this.domCache.rowsTop,
+        rowsHeight = this.domCache.rowsHeight,
+        colsLeft = this.domCache.colsLeft,
+        colsWidth = this.domCache.colsWidth;
+    cursor.style.top = rowsTop[rowsTop.length - 1] + rowsHeight[rowsHeight.length - 1] + 'px';
+    cursor.style.width = colsLeft[colsLeft.length - 1] + colsWidth[colsWidth.length - 1] + 'px';
 };
 TableCell.prototype._initRowHeightIndex = function () {
 
@@ -513,20 +521,9 @@ TableCell.prototype._createCursor = function () {
 
     this.cursor = cursor;
 
-    this._reLayoutCursor();
+    this.syncCursor();
 
     return cursor;
-
-};
-TableCell.prototype._reLayoutCursor = function () {
-
-    var colsLeft = this.domCache.colsLeft,
-        colsWidth = this.domCache.colsWidth,
-        rowsTop = this.domCache.rowsTop,
-        rowsHeight = this.domCache.rowsHeight;
-    var cursor = this.cursor;
-    cursor.style.top = rowsTop[rowsTop.length - 1] + rowsHeight[rowsHeight.length - 1] + 'px';
-    cursor.style.width = colsLeft[colsLeft.length - 1] + colsWidth[colsWidth.length - 1] + 'px';
 
 };
 TableCell.prototype._createRowContainer = function () {
@@ -675,7 +672,7 @@ TableCell.prototype.resizeColWidth = function (colIndex,width) {
 };
 TableCell.prototype._updateDomCache = function (rowIndex,colIndex,width,height) {
 
-    if(rowIndex >= 0 && typeof (height = parseInt(height)) === 'number'){
+    if(typeof (height = parseInt(height)) === 'number'){
         height = Math.max(0,height);
         var rowsHeight = this.domCache.rowsHeight,
             rowsTop = this.domCache.rowsTop;
@@ -684,7 +681,7 @@ TableCell.prototype._updateDomCache = function (rowIndex,colIndex,width,height) 
             rowsTop[i] = rowsTop[i - 1] + rowsHeight[i - 1];
         }
     }
-    if(colIndex >= 0 && typeof (width = parseInt(width)) === 'number'){
+    if(typeof (width = parseInt(width)) === 'number'){
         width = Math.max(0,width);
         var colsWidth = this.domCache.colsWidth,
             colsLeft = this.domCache.colsLeft;
@@ -733,9 +730,7 @@ TableCell.prototype._resizeCellDom = function (rowIndex,colIndex) {
         }
     }
 
-
-    this.cursor.style.left = colsLeft[colsLeft.length - 1] + colsWidth[colsWidth.length - 1];
-    this.cursor.style.top = rowsTop[rowsTop.length - 1] + rowsHeight[rowsHeight.length - 1];
+    this.syncCursor();
 
 };
 TableCell.prototype.resizeCell = function (rowIndex,colIndex,width,height) {
@@ -764,7 +759,8 @@ TableCell.prototype._bindResizeCellEvent = function () {
 
         var rowHit = 0,rowIndex = undefined;
         rowResize && rowsTop.some(function (rowTop,index) {
-            if(Math.abs(rowTop - scrollTo.scrollTop - relY) < mouseHit){
+            var h = rowsHeight[index];
+            if(Math.abs(rowTop + h - scrollTo.scrollTop - relY) < mouseHit){
                 rowHit = 1;
                 rowIndex = index;
                 return true;
@@ -773,7 +769,8 @@ TableCell.prototype._bindResizeCellEvent = function () {
 
         var colHit = 0,colIndex = undefined;
         colResize && colsLeft.some(function (colLeft,index) {
-            if(Math.abs(colLeft - scrollTo.scrollLeft - relX) < mouseHit){
+            var w = colsWidth[index];
+            if(Math.abs(colLeft + w - scrollTo.scrollLeft - relX) < mouseHit){
                 colHit = 2;
                 colIndex = index;
                 return true;
@@ -783,8 +780,8 @@ TableCell.prototype._bindResizeCellEvent = function () {
         return {
             cursor:cursor,
             position:position,
-            rowIndex:rowIndex - 1,
-            colIndex:colIndex - 1
+            rowIndex:rowIndex,
+            colIndex:colIndex
 
         };
     }
