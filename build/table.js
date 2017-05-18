@@ -465,6 +465,7 @@ ScrollBar.prototype._renderV = function () {
 /**
  * Created by koujp on 2016/10/17.
  */
+var headerContentClassName = 'header-content';
 function TableCell(tableModel,config){
 
     if(!(tableModel instanceof TableModel)){
@@ -522,7 +523,6 @@ TableCell.prototype.getFullClassSelector = function (selector) {
 TableCell.prototype.render = function (renderTo) {
 
     this._setRenderTo(renderTo);
-
     this.refresh();
 
 };
@@ -534,14 +534,10 @@ TableCell.prototype.refresh = function () {
         throw new TypeError('parent container is invalid !');
     }
 
-    this._cachePanelSize();
-
     var tablePanel = this.tablePanel = document.createElement('div');
     tablePanel.className = this.getFullClassName();
     var dirtyPanel = renderTo.querySelector(this.getFullClassSelector());
     dirtyPanel && renderTo.removeChild(dirtyPanel);
-
-    this._initRowHeightIndex();
 
     tablePanel.appendChild(this._createHeader());
 
@@ -552,11 +548,9 @@ TableCell.prototype.refresh = function () {
 
     this._createCursor();
 
-    this.syncCursor();
-
     this._bindEvent();
 
-    this.executeFunctionDelay('paintRequest',this.repaint);
+    this.executeFunctionDelay('paintRequest',this.paint);
 
 
 };
@@ -659,17 +653,17 @@ TableCell.prototype.getCurrentRowArea = function () {
     return this.getThresholdArea(panelSize.height,rowsTop,top);
 
 };
-TableCell.prototype.getRowRepaintAreas = function () {
+TableCell.prototype.getRowPaintAreas = function () {
 
-    return this._getRepaintAreas('row');
-
-};
-TableCell.prototype.getColRepaintAreas = function () {
-
-    return this._getRepaintAreas('col');
+    return this._getPaintAreas('row');
 
 };
-TableCell.prototype._getRepaintAreas_ = function (type) {
+TableCell.prototype.getColPaintAreas = function () {
+
+    return this._getPaintAreas('col');
+
+};
+TableCell.prototype._getPaintAreas_ = function (type) {
 
     var lastArea = type === 'row'?this.rowClientArea:this.colClientArea,
         curArea = type === 'row'?this.getCurrentRowArea():this.getCurrentColArea();
@@ -713,7 +707,7 @@ TableCell.prototype._getRepaintAreas_ = function (type) {
     return areas;
 
 };
-TableCell.prototype._getRepaintAreas = function (type) {
+TableCell.prototype._getPaintAreas = function (type) {
 
     var lastArea = type === 'row'?this.rowClientArea:this.colClientArea,
         curArea = type === 'row'?this.getCurrentRowArea():this.getCurrentColArea();
@@ -763,32 +757,55 @@ TableCell.prototype._getRepaintAreas = function (type) {
     return areas;
 
 };
+TableCell.prototype.paint = function () {
+
+    this._cachePanelSize();
+    this._initCellSizeIndex();
+    this.paintHeader();
+    this.paintBody();
+    this.syncCursor();
+
+};
 TableCell.prototype.repaint = function () {
-    this.repaintHeader();
-    this.repaintBody();
-};
-TableCell.prototype.repaintHeader = function () {
+
+    this.paintHeader();
+    this.paintBody();
 
 };
-TableCell.prototype.repaintBody = function () {
+TableCell.prototype.paintHeader = function () {
 
-    var rowRepaintAreas = this.getRowRepaintAreas(),
-        colRepaintAreas = this.getColRepaintAreas();
+    var cellsCache = this.domCache.headerCells,
+        headerContentPanel = this.headerPanel.querySelector(this.getFullClassSelector(headerContentClassName));
+    tableModel.header.fields.forEach(function (field,index) {
+        var headerCell = cellsCache[index];
+        if(!headerCell){
+            headerCell = this._createCell(0,index,field,cellsCache);
+            headerContentPanel.appendChild(headerCell);
+        }else{
+            this._paintCell(headerCell,0,index,field);
+        }
+    }.bind(this));
 
-    var rowClientArea = rowRepaintAreas.currentArea,
-        colClientArea = colRepaintAreas.currentArea;
+};
+TableCell.prototype.paintBody = function () {
+
+    var rowPaintAreas = this.getRowPaintAreas(),
+        colPaintAreas = this.getColPaintAreas();
+
+    var rowClientArea = rowPaintAreas.currentArea,
+        colClientArea = colPaintAreas.currentArea;
     this.rowClientArea = rowClientArea;
     this.colClientArea = colClientArea;
 
-    if(rowRepaintAreas.length === 0 && colRepaintAreas.length === 0){
+    if(rowPaintAreas.length === 0 && colPaintAreas.length === 0){
         return;
     }
 
-    if(rowRepaintAreas.length === 0){
-        rowRepaintAreas.push(rowClientArea);
+    if(rowPaintAreas.length === 0){
+        rowPaintAreas.push(rowClientArea);
     }
-    if(colRepaintAreas.length === 0){
-        colRepaintAreas.push(colClientArea);
+    if(colPaintAreas.length === 0){
+        colPaintAreas.push(colClientArea);
     }
 
     var cacheCells = this.domCache.cells;
@@ -802,12 +819,12 @@ TableCell.prototype.repaintBody = function () {
 
     var rows = this.tableModel.rows;
 
-    rowRepaintAreas.forEach(function (area) {
+    rowPaintAreas.forEach(function (area) {
         var row;
         for(var rowIndex = area.from;rowIndex < area.from + area.pageSize;rowIndex++){
 
             row = rows[rowIndex];
-            colRepaintAreas.forEach(function (colArea) {
+            colPaintAreas.forEach(function (colArea) {
                 var cell,field;
                 for(var colIndex = colArea.from;colIndex < colArea.from + colArea.pageSize;colIndex++){
                     field = row.fields[colIndex];
@@ -816,7 +833,7 @@ TableCell.prototype.repaintBody = function () {
                         cell = this._createCell(rowIndex,colIndex,field);
                         this.rowPanel.appendChild(cell);
                     }else{
-                        this._repaintCell(cell,rowIndex,colIndex,field);
+                        this._paintCell(cell,rowIndex,colIndex,field);
                     }
                 }
             }.bind(this));
@@ -836,7 +853,7 @@ TableCell.prototype.computeRowTop = function (row) {
     return rowsTop[row];
 
 };
-TableCell.prototype._repaintCell = function (cell,row,col,field) {
+TableCell.prototype._paintCell = function (cell,row,col,field) {
 
     cell.setAttribute('row','' + row);
     cell.setAttribute('col','' + col);
@@ -912,20 +929,11 @@ TableCell.prototype._reLayoutCell = function (cell) {
     cell.setAttribute('row-last',rowLast);
 
 };
-TableCell.prototype.updateCursorHeight = function () {
+TableCell.prototype._onAppendRows = function () {
 
-    var tableModel = this.tableModel;
-    var rowsTop = this.domCache.rowsTop,
-        rowsHeight = this.domCache.rowsHeight;
-
-    var rows = tableModel.rows;
-    for(var rowIndex = rowsHeight.length;rowIndex < rows.length;rowIndex++){
-        var rowHeight = this._parseRowHeight(rows[rowIndex].height);
-        rowsHeight[rowIndex] = rowHeight;
-        rowsTop[rowIndex] = rowsTop[rowIndex - 1] + rowsHeight[rowIndex - 1];
-    }
-
-    this.syncCursor();
+    var rowsHeight = this.domCache.rowsHeight;
+    this._initCellHeightIndex(rowsHeight.length);
+    this.repaint();
 
 };
 TableCell.prototype.syncCursor = function () {
@@ -946,7 +954,36 @@ TableCell.prototype.syncCursor = function () {
     this.scrollbar.refresh();
 
 };
-TableCell.prototype._initRowHeightIndex = function () {
+TableCell.prototype._initCellSizeIndex = function () {
+
+    this._initCellWidthIndex();
+    this._initCellHeightIndex();
+
+};
+TableCell.prototype._initCellWidthIndex = function () {
+
+    var colsWidth = this.domCache.colsWidth,
+        colsLeft = this.domCache.colsLeft;
+
+    var maxWidth = 0;
+    tableModel.header.fields.forEach(function (field,index) {
+        var colWidth = this._parseColWidth(field.width);
+        colsWidth[index] = colWidth;
+        maxWidth += colWidth;
+        if(index === 0){
+            colsLeft[index] = 0;
+        }else{
+            colsLeft[index] = colsLeft[index - 1] + colsWidth[index - 1];
+        }
+
+    }.bind(this));
+
+    var panelSize = this.getPanelSize();
+    if(maxWidth <= panelSize.width){
+        this.config.overflowX = 'hidden';
+    }
+};
+TableCell.prototype._initCellHeightIndex = function (startIndex) {
 
     var tableModel = this.tableModel;
     var rows = tableModel.rows;
@@ -954,7 +991,7 @@ TableCell.prototype._initRowHeightIndex = function () {
         rowsHeight = this.domCache.rowsHeight;
 
     //create page cursor
-    rows.forEach(function (row,index) {
+    rows.slice(startIndex).forEach(function (row,index) {
         var rowHeight = this._parseRowHeight(row.height);
         rowsHeight[index] = rowHeight;
         if(index === 0){
@@ -1037,30 +1074,7 @@ TableCell.prototype._createHeader = function () {
     this.headerHeight(tableModel.header.height);
 
     var headerContentPanel = document.createElement('div');
-    headerContentPanel.className = this.getFullClassName('header-content');
-    var colsWidth = this.domCache.colsWidth,
-        colsLeft = this.domCache.colsLeft,
-        cellsCache = this.domCache.headerCells;
-
-    var maxWidth = 0;
-    tableModel.header.fields.forEach(function (field,index) {
-        var colWidth = this._parseColWidth(field.width);
-        colsWidth[index] = colWidth;
-        maxWidth += colWidth;
-        if(index === 0){
-            colsLeft[index] = 0;
-        }else{
-            colsLeft[index] = colsLeft[index - 1] + colsWidth[index - 1];
-        }
-        var headerCell = this._createCell(0,index,field,cellsCache);
-        headerContentPanel.appendChild(headerCell);
-
-    }.bind(this));
-
-    var panelSize = this.getPanelSize();
-    if(maxWidth <= panelSize.width){
-        this.config.overflowX = 'hidden';
-    }
+    headerContentPanel.className = this.getFullClassName(headerContentClassName);
 
     headerContainer.appendChild(headerContentPanel);
     return headerContainer;
@@ -1075,7 +1089,7 @@ TableCell.prototype._bindTableModelEvent = function () {
 
     this.tableModel.bind('appendRows', function () {
         if(this.renderTo){
-            this.executeFunctionDelay('updateCursorHeight',this.updateCursorHeight);
+            this.executeFunctionDelay('appendRows',this._onAppendRows);
         }
     }.bind(this));
 };
@@ -1095,7 +1109,7 @@ TableCell.prototype._bindEvent = function () {
             scrollTop = scrollbar.scrollTop;
         headerContentPanel.style.left = this.rowPanel.style.left = -scrollLeft + 'px';
         this.rowPanel.style.top = -scrollTop + 'px';
-        this.executeFunctionDelay('paintRequest',this.repaint);
+        this.executeFunctionDelay('repaintRequest',this.repaint);
 
     }.bind(this));
 
