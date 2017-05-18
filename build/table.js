@@ -83,15 +83,388 @@ TableModel.prototype.appendRows = function (rows) {
     this.trigger('appendRows');
 };
 
-/**
- * Created by koujp on 2016/10/17.
- */
+function getMousePosition(e){
+    var pageX = e.pageX || e.clientX,
+        pageY = e.pageY || e.clientY;
+    return {
+        pageX:pageX,
+        pageY:pageY
+    };
+}
+function isDomElement(object) {
+
+    if(!object){
+        return false;
+    }
+    var tagName = object.tagName;
+    if(!tagName){
+        return false;
+    }
+    var ele = document.createElement(tagName);
+    if(ele.__proto__){
+        return ele.__proto__ === object.__proto__;
+    }
+    return Object.keys(ele).every(function (key) {
+        return object['hasOwnProperty'](key);
+    });
+
+}
 var requestAnimationFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || function(executor){
             return setTimeout(executor,1000/60);
         };
 var cancelAnimationFrame = window.cancelAnimationFrame || window.webkitCancelAnimationFrame || window.mozCancelAnimationFrame || window.clearTimeout;
 
+var _timeoutCache = {};
+function executeFunctionDelay(timeoutId,func,context) {
 
+    if(typeof func !== 'function'){
+        return;
+    }
+    context = context || this;
+    cancelAnimationFrame(_timeoutCache[timeoutId]);
+    return _timeoutCache[timeoutId] = requestAnimationFrame(func.bind(context));
+
+}
+
+var scrollbarId = 1;
+function ScrollBar(ele,config){
+    this._id = '_id' + scrollbarId++;
+    this.init(ele,config);
+}
+ScrollBar.mouseupListeners = null;
+ScrollBar.mousemoveListeners = null;
+ScrollBar.initEventListeners = function () {
+    if(!ScrollBar.mouseupListeners){
+        ScrollBar.mouseupListeners = {};
+        ScrollBar.mousemoveListeners = {};
+        document.body.addEventListener('mouseup', function (evt) {
+            var self = this;
+            Object.keys(ScrollBar.mouseupListeners).forEach(function (key) {
+                var listener = ScrollBar.mouseupListeners[key];
+                try{
+                    listener.call(self,evt);
+                }catch(e){}
+            });
+        },true);
+
+        document.body.addEventListener('mousemove', function (evt) {
+            var self = this;
+            Object.keys(ScrollBar.mousemoveListeners).forEach(function (key) {
+                var listener = ScrollBar.mousemoveListeners[key];
+                try{
+                    listener.call(self,evt);
+                }catch(e){}
+            });
+        },true);
+    }
+};
+function getWidth(ele){
+    return ele.clientWidth;
+}
+function getScrollWidth(ele){
+    return ele.scrollWidth;
+}
+function getHeight(ele){
+    return ele.clientHeight;
+}
+function getScrollHeight(ele){
+    return ele.scrollHeight;
+}
+function style(ele,style){
+    Object.keys(style).forEach(function (key) {
+        ele.style[key] = style[key];
+    });
+}
+function disableUserSelect(){
+    style(document.body,{
+        '-webkit-user-select':'none'
+    });
+}
+function enableUserSelect(){
+    style(document.body,{
+        '-webkit-user-select':'inherit'
+    });
+}
+ScrollBar.prototype.init = function (ele,config) {
+
+    this.element = ele;
+    this.overflowX = false;
+    this.overflowY = false;
+    this.scrollWidth = 0;
+    this.clientWidth = 0;
+    this.scrollHeight = 0;
+    this.clientHeight = 0;
+
+
+    this._scrollTop = 0;
+    this._scrollLeft = 0;
+    var self = this;
+    Object.defineProperty(this,'scrollTop',{
+        set: function (val) {
+            self.scrollTopTo(val);
+        },
+        get: function () {
+            return self._scrollTop;
+        }
+    });
+    Object.defineProperty(this,'scrollLeft',{
+        set: function (val) {
+            self.scrollLeftTo(val);
+        },
+        get: function () {
+            return this._scrollLeft;
+        }
+    });
+
+    this.config = Object.assign({
+        width:18,
+        hTrackColor:'#e4f0e2',
+        hScrollColor:'#ddd',
+        vTrackColor:'#e4f0e2',
+        vScrollColor:'#ddd',
+        height:18
+    },config);
+
+    this.eventListeners = {};
+
+    this.vScrollbar = null;
+    this.hScrollbar = null;
+
+    ScrollBar.initEventListeners();
+
+    this.initUI();
+
+};
+ScrollBar.prototype.initUI = function () {
+
+    this.updateScrollSize();
+    this._renderV();
+    this._renderH();
+
+};
+ScrollBar.prototype.triggerScrollEvent = function () {
+
+    var scrollEvtKey = this._id + 'scroll';
+    executeFunctionDelay(scrollEvtKey, function () {
+        this.triggerEvent('scroll');
+    },this);
+
+};
+ScrollBar.prototype.refresh = function () {
+
+    this.updateScrollSize();
+    var bar,left,top,ratio,barHidden = true;
+    if(this.hScrollbar){
+        ratio = this.getHScrollRatio();
+        left = this.scrollLeft / ratio;
+        console.log('left:' + left);
+        bar = this.hScrollbar.children[0];
+        var barWidth = this.getScrollbarWidth();
+        barHidden = this.scrollWidth - this.config.width <= this.clientWidth;
+        style(bar,{
+            'background-color':this.config.hScrollColor,
+            left:left + 'px',
+            display:barHidden ? 'none' : 'block',
+            width:barWidth + 'px'
+        });
+
+    }
+
+    if(this.vScrollbar){
+        ratio = this.getVScrollRatio();
+        top = this.scrollTop / ratio;
+        bar = this.vScrollbar.children[0];
+        var barHeight = this.getScrollbarHeight();
+        barHidden = this.scrollHeight - this.config.height <= this.clientHeight;
+        style(bar,{
+            top:top + 'px',
+            'background-color':this.config.vScrollColor,
+            display:barHidden ? 'none' : 'block',
+            height:barHeight + 'px'
+        });
+    }
+};
+ScrollBar.prototype.updateScrollSize = function () {
+
+    var width = getWidth(this.element),scrollWidth = getScrollWidth(this.element.children[0]);
+    this.scrollWidth = Math.max(width,scrollWidth) + this.config.width;
+    this.clientWidth = width;
+
+    var height = getHeight(this.element),scrollHeight = getScrollHeight(this.element.children[0]);
+    this.scrollHeight = Math.max(height,scrollHeight) + this.config.height;
+    this.clientHeight = height;
+};
+ScrollBar.prototype._createScrollBarBlock = function () {
+
+    var bar = document.createElement('div');
+    bar.className = 'scrollbar-block';
+    return bar;
+
+};
+ScrollBar.prototype._renderH = function () {
+
+    var dom = document.createElement('div');
+    this.hScrollbar = dom;
+    dom.className = 'scrollbar-hor';
+    style(dom,{
+        height:this.config.height + 'px',
+        'background-color':this.config.hTrackColor
+    });
+
+    var bar = this._createScrollBarBlock();
+    dom.appendChild(bar);
+    this.element.appendChild(dom);
+
+    this._bindHorEvent();
+
+};
+ScrollBar.prototype.addEventListener = function (eventType,listener) {
+    var listeners = this.eventListeners[eventType];
+    if(!listeners){
+        listeners = this.eventListeners[eventType] = [];
+    }
+    listeners.push(listener);
+};
+ScrollBar.prototype.triggerEvent = function (eventType) {
+    var listeners = this.eventListeners[eventType];
+    if(!listeners){
+        return;
+    }
+    listeners.forEach(function (listener) {
+        try{
+            listener.call(this);
+        }catch(e){}
+    }.bind(this));
+};
+ScrollBar.prototype._bindHorEvent = function () {
+
+    var bar = this.hScrollbar.children[0];
+    var startX,relativeLeft;
+    bar.addEventListener('mousedown', function (e) {
+        e.stopPropagation();
+        var pos = getMousePosition(e);
+        startX = pos.pageX;
+        relativeLeft = parseFloat(bar.style.left) || 0;
+        disableUserSelect();
+    }.bind(this));
+    var eventKey = this._id + 'hor';
+    ScrollBar.mousemoveListeners[eventKey] = function (e) {
+
+        if(!startX){
+            return;
+        }
+        e.stopPropagation();
+        var pos = getMousePosition(e);
+        var left = relativeLeft + pos.pageX - startX;
+        this.scrollLeft = this.getHScrollRatio() * left;
+
+    }.bind(this);
+    ScrollBar.mouseupListeners[eventKey] = function () {
+        startX = relativeLeft = undefined;
+        enableUserSelect();
+    };
+};
+ScrollBar.prototype.getHScrollRatio = function () {
+    var barWidth = this.getScrollbarWidth();
+    var scrollRatio = (this.scrollWidth - this.clientWidth)/(this.clientWidth - barWidth);
+    return scrollRatio;
+};
+ScrollBar.prototype.getVScrollRatio = function () {
+    var barHeight = this.getScrollbarHeight();
+    var scrollRatio = (this.scrollHeight - this.clientHeight)/(this.clientHeight - barHeight);
+    return scrollRatio;
+};
+ScrollBar.prototype.scrollLeftTo = function (scrollLeft) {
+
+    var maxScrollLeft = this.scrollWidth - this.clientWidth;
+    scrollLeft = Math.min(maxScrollLeft,scrollLeft);
+    scrollLeft = Math.max(0,scrollLeft);
+    var scrollRatio = this.getHScrollRatio();
+    var barLeft = scrollLeft / scrollRatio;
+    var bar = this.hScrollbar.children[0];
+    style(bar,{
+        left:barLeft + 'px'
+    });
+    this._scrollLeft = scrollLeft;
+    this.triggerScrollEvent();
+
+};
+ScrollBar.prototype.scrollTopTo = function (scrollTop) {
+
+    var maxScrollTop = this.scrollHeight - this.clientHeight;
+    scrollTop = Math.min(maxScrollTop,scrollTop);
+    scrollTop = Math.max(0,scrollTop);
+    var scrollRatio = this.getVScrollRatio();
+    var barTop = scrollTop / scrollRatio;
+    var bar = this.vScrollbar.children[0];
+    style(bar,{
+        top:barTop + 'px'
+    });
+    this._scrollTop = scrollTop;
+    this.triggerScrollEvent();
+
+};
+ScrollBar.prototype._bindVerEvent = function () {
+
+    var bar = this.vScrollbar.children[0];
+    var startY,relativeTop;
+    bar.addEventListener('mousedown', function (e) {
+        e.stopPropagation();
+        var pos = getMousePosition(e);
+        startY = pos.pageY;
+        relativeTop = parseFloat(bar.style.top) || 0;
+
+        disableUserSelect();
+    }.bind(this));
+    var eventKey = this._id + 'ver';
+    ScrollBar.mousemoveListeners[eventKey] = function (e) {
+        if(!startY){
+            return;
+        }
+        e.stopPropagation();
+        var pos = getMousePosition(e);
+        var top = relativeTop + pos.pageY - startY;
+        this.scrollTop = this.getVScrollRatio() * top;
+
+    }.bind(this);
+    ScrollBar.mouseupListeners[eventKey] = function () {
+        startY = relativeTop = undefined;
+        enableUserSelect();
+    };
+};
+ScrollBar.prototype.getScrollbarHeight = function () {
+    var height = this.clientHeight,scrollHeight = this.scrollHeight;
+    var barHeight = height / (scrollHeight / height);
+    barHeight = Math.max(50,barHeight);
+    return barHeight;
+};
+ScrollBar.prototype.getScrollbarWidth = function () {
+    var width = this.clientWidth,scrollWidth = this.scrollWidth;
+    var barWidth = width / (scrollWidth / width);
+    barWidth = Math.max(50,barWidth);
+    return barWidth;
+};
+ScrollBar.prototype._renderV = function () {
+
+    var dom = document.createElement('div');
+    this.vScrollbar = dom;
+    dom.className = 'scrollbar-ver';
+    style(dom,{
+        width:this.config.width + 'px',
+        'background-color':this.config.vTrackColor
+    });
+
+    var bar = this._createScrollBarBlock();
+    dom.appendChild(bar);
+    this.element.appendChild(dom);
+
+    this._bindVerEvent();
+
+};
+
+/**
+ * Created by koujp on 2016/10/17.
+ */
 function TableCell(tableModel,config){
 
     if(!(tableModel instanceof TableModel)){
@@ -107,8 +480,6 @@ function TableCell(tableModel,config){
         overflowY:''
     },config);
 
-    this._timeoutCache = {};
-
     this._bindTableModelEvent();
 
 }
@@ -120,11 +491,13 @@ TableCell.prototype.init = function () {
     this.bodyPanel = null;
     this.rowPanel = null;
     this.cursor = null;
+    this.scrollbar = null;
 
     this.rowClientArea = null;
     this.colClientArea = null;
 
     this.domCache = {
+        headerCells:[],
         cells:[],
         colsWidth:[],
         colsLeft:[],
@@ -175,9 +548,16 @@ TableCell.prototype.refresh = function () {
     tablePanel.appendChild(this._createBodyContainer());
     renderTo.appendChild(tablePanel);
 
+    this.scrollbar = new ScrollBar(this.bodyPanel);
+
+    this._createCursor();
+
+    this.syncCursor();
+
     this._bindEvent();
 
-    this.dispatchScrollEvent();
+    this.executeFunctionDelay('paintRequest',this.repaint);
+
 
 };
 TableCell.prototype._setRenderTo = function (renderTo) {
@@ -186,51 +566,25 @@ TableCell.prototype._setRenderTo = function (renderTo) {
         renderTo = document.querySelector(renderTo);
     }
 
-    if(!this.checkDomElement(renderTo)){
+    if(!isDomElement(renderTo)){
         throw new TypeError('renderTo must be a dom element !');
     }
 
     this.renderTo = renderTo;
 
 };
-TableCell.prototype.checkDomElement = function (object) {
-
-    if(!object){
-        return false;
-    }
-    var tagName = object.tagName;
-    if(!tagName){
-        return false;
-    }
-    var ele = document.createElement(tagName);
-    if(ele.__proto__){
-        return ele.__proto__ === object.__proto__;
-    }
-    return Object.keys(ele).every(function (key) {
-        return object['hasOwnProperty'](key);
-    });
-
-};
-TableCell.prototype.dispatchScrollEvent = function () {
-
-    var bodyPanel = this.bodyPanel;
-    var scrollEvent = document.createEvent('Event');
-    scrollEvent.initEvent('scroll',true,true);
-    bodyPanel.dispatchEvent(scrollEvent);
-
-};
 TableCell.prototype.scrollTo = function (scrollTop,scrollLeft) {
 
-    var bodyPanel = this.bodyPanel;
+    var scrollbar = this.scrollbar;
 
     if(arguments.length === 0){
         return {
-            scrollLeft:bodyPanel.scrollLeft,
-            scrollTop:bodyPanel.scrollTop
+            scrollLeft:scrollbar.scrollLeft,
+            scrollTop:scrollbar.scrollTop
         };
     }
-    bodyPanel.scrollLeft = scrollLeft;
-    bodyPanel.scrollTop = scrollTop;
+    scrollbar.scrollLeft = scrollLeft;
+    scrollbar.scrollTop = scrollTop;
 
 };
 TableCell.prototype._cachePanelSize = function () {
@@ -263,7 +617,7 @@ TableCell.prototype.getCurrentColArea = function () {
 
     var panelSize = this.getPanelSize();
     var colsLeft = this.domCache.colsLeft;
-    var left = this.bodyPanel.scrollLeft;
+    var left = this.scrollbar.scrollLeft;
     return this.getThresholdArea(panelSize.width,colsLeft,left);
 
 };
@@ -301,7 +655,7 @@ TableCell.prototype.getCurrentRowArea = function () {
 
     var panelSize = this.getPanelSize();
     var rowsTop = this.domCache.rowsTop;
-    var top = this.bodyPanel.scrollTop;
+    var top = this.scrollbar.scrollTop;
     return this.getThresholdArea(panelSize.height,rowsTop,top);
 
 };
@@ -410,6 +764,13 @@ TableCell.prototype._getRepaintAreas = function (type) {
 
 };
 TableCell.prototype.repaint = function () {
+    this.repaintHeader();
+    this.repaintBody();
+};
+TableCell.prototype.repaintHeader = function () {
+
+};
+TableCell.prototype.repaintBody = function () {
 
     var rowRepaintAreas = this.getRowRepaintAreas(),
         colRepaintAreas = this.getColRepaintAreas();
@@ -515,9 +876,9 @@ TableCell.prototype._configCell = function (cell,field) {
     return cell;
 
 };
-TableCell.prototype._createCell = function (row,col,field,cacheDisabled) {
+TableCell.prototype._createCell = function (row,col,field,cacheCells) {
 
-    var cacheCells = this.domCache.cells;
+    var cacheCells = cacheCells || this.domCache.cells;
     var cell = document.createElement('div');
     this._configCell(cell,field);
 
@@ -526,7 +887,7 @@ TableCell.prototype._createCell = function (row,col,field,cacheDisabled) {
     var classNames = [this.getFullClassName('cell')];
     cell.className = classNames.join(' ');
 
-    !cacheDisabled && cacheCells.push(cell);
+    cacheCells.push(cell);
 
     this._reLayoutCell(cell);
     return cell;
@@ -568,6 +929,7 @@ TableCell.prototype.updateCursorHeight = function () {
 
 };
 TableCell.prototype.syncCursor = function () {
+
     var cursor = this.cursor;
     if(!cursor){
         return;
@@ -580,6 +942,8 @@ TableCell.prototype.syncCursor = function () {
         curWidth = colsLeft[colsLeft.length - 1] + colsWidth[colsWidth.length - 1];
     cursor.style.top = curTop + 'px';
     cursor.style.width = curWidth + 'px';
+
+    this.scrollbar.refresh();
 
 };
 TableCell.prototype._initRowHeightIndex = function () {
@@ -607,8 +971,7 @@ TableCell.prototype._createCursor = function () {
     cursor.className = this.getFullClassName('row-cursor');
 
     this.cursor = cursor;
-
-    this.syncCursor();
+    this.rowPanel.appendChild(cursor);
 
     return cursor;
 
@@ -617,12 +980,6 @@ TableCell.prototype._createBodyContainer = function () {
 
     var bodyContainer = this.bodyPanel = document.createElement('div');
     bodyContainer.className = this.getFullClassName('body-container');
-    if(this.config.overflowX){
-        bodyContainer.style.overflowX = this.config.overflowX;
-    }
-    if(this.config.overflowY){
-        bodyContainer.style.overflowY = this.config.overflowY;
-    }
 
     bodyContainer.appendChild(this._createRowContainer());
     return bodyContainer;
@@ -632,9 +989,6 @@ TableCell.prototype._createRowContainer = function () {
     var rowContainer = document.createElement('div');
     rowContainer.className = this.getFullClassName('row-container');
     this.rowPanel = rowContainer;
-    var cursor = this._createCursor();
-    rowContainer.appendChild(cursor);
-
     return rowContainer;
 
 };
@@ -685,7 +1039,8 @@ TableCell.prototype._createHeader = function () {
     var headerContentPanel = document.createElement('div');
     headerContentPanel.className = this.getFullClassName('header-content');
     var colsWidth = this.domCache.colsWidth,
-        colsLeft = this.domCache.colsLeft;
+        colsLeft = this.domCache.colsLeft,
+        cellsCache = this.domCache.headerCells;
 
     var maxWidth = 0;
     tableModel.header.fields.forEach(function (field,index) {
@@ -697,7 +1052,7 @@ TableCell.prototype._createHeader = function () {
         }else{
             colsLeft[index] = colsLeft[index - 1] + colsWidth[index - 1];
         }
-        var headerCell = this._createCell(0,index,field,true);
+        var headerCell = this._createCell(0,index,field,cellsCache);
         headerContentPanel.appendChild(headerCell);
 
     }.bind(this));
@@ -726,23 +1081,20 @@ TableCell.prototype._bindTableModelEvent = function () {
 };
 TableCell.prototype.executeFunctionDelay = function (timeoutId,func,context) {
 
-    if(typeof func !== 'function'){
-        return;
-    }
-    context = context || this;
-    cancelAnimationFrame(this._timeoutCache[timeoutId]);
-    return this._timeoutCache[timeoutId] = requestAnimationFrame(func.bind(context));
+    return executeFunctionDelay(timeoutId,func,context || this);
 
 };
 TableCell.prototype._bindEvent = function () {
 
     var headerPanel = this.headerPanel,
-        bodyPanel = this.bodyPanel;
+        scrollbar = this.scrollbar;
     var headerContentPanel = headerPanel.querySelector(this.getFullClassSelector('header-content'));
-    bodyPanel.addEventListener('scroll', function () {
+    scrollbar.addEventListener('scroll', function () {
 
-        var scrollLeft = bodyPanel.scrollLeft;
-        headerContentPanel.style.transform = 'translate3d(' + -scrollLeft + 'px' + ',0,0)';
+        var scrollLeft = scrollbar.scrollLeft,
+            scrollTop = scrollbar.scrollTop;
+        headerContentPanel.style.left = this.rowPanel.style.left = -scrollLeft + 'px';
+        this.rowPanel.style.top = -scrollTop + 'px';
         this.executeFunctionDelay('paintRequest',this.repaint);
 
     }.bind(this));
@@ -750,14 +1102,6 @@ TableCell.prototype._bindEvent = function () {
     this._bindResizeCellEvent();
 
 };
-function getMousePosition(e){
-    var pageX = e.pageX || e.clientX,
-        pageY = e.pageY || e.clientY;
-    return {
-        pageX:pageX,
-        pageY:pageY
-    };
-}
 TableCell.prototype.resizeRowHeight = function (rowIndex,height) {
     this.resizeCell(rowIndex,null,null,height);
 };
@@ -823,6 +1167,8 @@ TableCell.prototype._resizeCellDom = function (rowIndex,colIndex) {
             cell.style.left = colsLeft[col] + 'px';
         }
     }
+
+    this.syncCursor();
 };
 TableCell.prototype.resizeCell = function (rowIndex,colIndex,width,height) {
     this._updateDomCache(rowIndex,colIndex,width,height);
@@ -951,7 +1297,6 @@ TableCell.prototype._bindResizeCellEvent = function () {
     function mouseup(){
         resizeManager.reset();
         this.tablePanel.setAttribute('resize',String(false));
-        this.syncCursor();
     }
     bodyPanel.addEventListener('mouseup',mouseup.bind(this));
     bodyPanel.addEventListener('mouseleave',mouseup.bind(this));

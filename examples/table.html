@@ -21,12 +21,12 @@
     <script>
         var tableModel = new CELL.TableModel();
         var header = [];
-        var colNum = 10;
+        var colNum = 20;
         for(var i = 0; i< colNum;i++){
             header.push({name:'column' + i,width:'23.3%'});
         }
         var rows = [];
-        for(var i = 0;i < 2;i++){
+        for(var i = 0;i < 100;i++){
             rows.push((function(){
                 var fields = [];
                 for(var col = 0;col < colNum;col++){
@@ -55,11 +55,12 @@
             console.timeEnd('start-render');
 
             window.addEventListener('resize', function () {
-                tableCell.executeFunctionDelay('resize', function () {
+                tableCell.repaint();
+                /*tableCell.executeFunctionDelay('resize', function () {
                     var scrollTo = tableCell.scrollTo();
                     tableCell.refresh();
                     tableCell.scrollTo(scrollTo.scrollTop,scrollTo.scrollLeft);
-                });
+                });*/
             });
 
         }

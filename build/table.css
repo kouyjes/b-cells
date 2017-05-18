@@ -47,7 +47,8 @@
     width: 100%;
     overflow: auto;
     border: 1px solid #000;
-    border-top: none; }
+    border-top: none;
+    overflow: hidden; }
   .d1012 .d1012-row-container {
     position: relative; }
   .d1012 .d1012-row-cursor {
@@ -57,3 +58,23 @@
     font-size: 0;
     left: 0;
     visibility: hidden; }
+  .d1012 .scrollbar-block {
+    position: relative;
+    border-radius: 10px;
+    cursor: pointer; }
+  .d1012 .scrollbar-ver {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #e4f0e2; }
+    .d1012 .scrollbar-ver .scrollbar-block {
+      width: 100%; }
+  .d1012 .scrollbar-hor {
+    position: absolute;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    background-color: #e4f0e2; }
+    .d1012 .scrollbar-hor .scrollbar-block {
+      height: 100%; }

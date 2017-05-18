@@ -2,12 +2,8 @@
  * Created by koujp on 2016/10/17.
  */
 import { TableModel } from '../model/TableModel';
-
-var requestAnimationFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || function(executor){
-            return setTimeout(executor,1000/60);
-        },
-    cancelAnimationFrame = window.cancelAnimationFrame || window.webkitCancelAnimationFrame || window.mozCancelAnimationFrame || window.clearTimeout;
-
+import { ScrollBar } from './ScrollBar'
+import { getMousePosition,isDomElement,requestAnimationFrame,cancelAnimationFrame,executeFunctionDelay } from './domUtil'
 
 function TableCell(tableModel,config){
 
@@ -24,8 +20,6 @@ function TableCell(tableModel,config){
         overflowY:''
     },config);
 
-    this._timeoutCache = {};
-
     this._bindTableModelEvent();
 
 }
@@ -37,11 +31,13 @@ TableCell.prototype.init = function () {
     this.bodyPanel = null;
     this.rowPanel = null;
     this.cursor = null;
+    this.scrollbar = null;
 
     this.rowClientArea = null;
     this.colClientArea = null;
 
     this.domCache = {
+        headerCells:[],
         cells:[],
         colsWidth:[],
         colsLeft:[],
@@ -92,9 +88,16 @@ TableCell.prototype.refresh = function () {
     tablePanel.appendChild(this._createBodyContainer());
     renderTo.appendChild(tablePanel);
 
+    this.scrollbar = new ScrollBar(this.bodyPanel);
+
+    this._createCursor();
+
+    this.syncCursor();
+
     this._bindEvent();
 
-    this.dispatchScrollEvent();
+    this.executeFunctionDelay('paintRequest',this.repaint);
+
 
 };
 TableCell.prototype._setRenderTo = function (renderTo) {
@@ -103,51 +106,25 @@ TableCell.prototype._setRenderTo = function (renderTo) {
         renderTo = document.querySelector(renderTo);
     }
 
-    if(!this.checkDomElement(renderTo)){
+    if(!isDomElement(renderTo)){
         throw new TypeError('renderTo must be a dom element !');
     }
 
     this.renderTo = renderTo;
 
 };
-TableCell.prototype.checkDomElement = function (object) {
-
-    if(!object){
-        return false;
-    }
-    var tagName = object.tagName;
-    if(!tagName){
-        return false;
-    }
-    var ele = document.createElement(tagName);
-    if(ele.__proto__){
-        return ele.__proto__ === object.__proto__;
-    }
-    return Object.keys(ele).every(function (key) {
-        return object['hasOwnProperty'](key);
-    });
-
-};
-TableCell.prototype.dispatchScrollEvent = function () {
-
-    var bodyPanel = this.bodyPanel;
-    var scrollEvent = document.createEvent('Event');
-    scrollEvent.initEvent('scroll',true,true);
-    bodyPanel.dispatchEvent(scrollEvent);
-
-};
 TableCell.prototype.scrollTo = function (scrollTop,scrollLeft) {
 
-    var bodyPanel = this.bodyPanel;
+    var scrollbar = this.scrollbar;
 
     if(arguments.length === 0){
         return {
-            scrollLeft:bodyPanel.scrollLeft,
-            scrollTop:bodyPanel.scrollTop
+            scrollLeft:scrollbar.scrollLeft,
+            scrollTop:scrollbar.scrollTop
         };
     }
-    bodyPanel.scrollLeft = scrollLeft;
-    bodyPanel.scrollTop = scrollTop;
+    scrollbar.scrollLeft = scrollLeft;
+    scrollbar.scrollTop = scrollTop;
 
 };
 TableCell.prototype._cachePanelSize = function () {
@@ -180,7 +157,7 @@ TableCell.prototype.getCurrentColArea = function () {
 
     var panelSize = this.getPanelSize();
     var colsLeft = this.domCache.colsLeft;
-    var left = this.bodyPanel.scrollLeft;
+    var left = this.scrollbar.scrollLeft;
     return this.getThresholdArea(panelSize.width,colsLeft,left);
 
 };
@@ -218,7 +195,7 @@ TableCell.prototype.getCurrentRowArea = function () {
 
     var panelSize = this.getPanelSize();
     var rowsTop = this.domCache.rowsTop;
-    var top = this.bodyPanel.scrollTop;
+    var top = this.scrollbar.scrollTop;
     return this.getThresholdArea(panelSize.height,rowsTop,top);
 
 };
@@ -327,6 +304,13 @@ TableCell.prototype._getRepaintAreas = function (type) {
 
 };
 TableCell.prototype.repaint = function () {
+    this.repaintHeader();
+    this.repaintBody();
+};
+TableCell.prototype.repaintHeader = function () {
+
+};
+TableCell.prototype.repaintBody = function () {
 
     var rowRepaintAreas = this.getRowRepaintAreas(),
         colRepaintAreas = this.getColRepaintAreas();
@@ -432,9 +416,9 @@ TableCell.prototype._configCell = function (cell,field) {
     return cell;
 
 };
-TableCell.prototype._createCell = function (row,col,field,cacheDisabled) {
+TableCell.prototype._createCell = function (row,col,field,cacheCells) {
 
-    var cacheCells = this.domCache.cells;
+    var cacheCells = cacheCells || this.domCache.cells;
     var cell = document.createElement('div');
     this._configCell(cell,field);
 
@@ -443,7 +427,7 @@ TableCell.prototype._createCell = function (row,col,field,cacheDisabled) {
     var classNames = [this.getFullClassName('cell')];
     cell.className = classNames.join(' ');
 
-    !cacheDisabled && cacheCells.push(cell);
+    cacheCells.push(cell);
 
     this._reLayoutCell(cell);
     return cell;
@@ -485,6 +469,7 @@ TableCell.prototype.updateCursorHeight = function () {
 
 };
 TableCell.prototype.syncCursor = function () {
+
     var cursor = this.cursor;
     if(!cursor){
         return;
@@ -497,6 +482,8 @@ TableCell.prototype.syncCursor = function () {
         curWidth = colsLeft[colsLeft.length - 1] + colsWidth[colsWidth.length - 1];
     cursor.style.top = curTop + 'px';
     cursor.style.width = curWidth + 'px';
+
+    this.scrollbar.refresh();
 
 };
 TableCell.prototype._initRowHeightIndex = function () {
@@ -524,8 +511,7 @@ TableCell.prototype._createCursor = function () {
     cursor.className = this.getFullClassName('row-cursor');
 
     this.cursor = cursor;
-
-    this.syncCursor();
+    this.rowPanel.appendChild(cursor);
 
     return cursor;
 
@@ -534,12 +520,6 @@ TableCell.prototype._createBodyContainer = function () {
 
     var bodyContainer = this.bodyPanel = document.createElement('div');
     bodyContainer.className = this.getFullClassName('body-container');
-    if(this.config.overflowX){
-        bodyContainer.style.overflowX = this.config.overflowX;
-    }
-    if(this.config.overflowY){
-        bodyContainer.style.overflowY = this.config.overflowY;
-    }
 
     bodyContainer.appendChild(this._createRowContainer());
     return bodyContainer;
@@ -549,9 +529,6 @@ TableCell.prototype._createRowContainer = function () {
     var rowContainer = document.createElement('div');
     rowContainer.className = this.getFullClassName('row-container');
     this.rowPanel = rowContainer;
-    var cursor = this._createCursor();
-    rowContainer.appendChild(cursor);
-
     return rowContainer;
 
 };
@@ -602,7 +579,8 @@ TableCell.prototype._createHeader = function () {
     var headerContentPanel = document.createElement('div');
     headerContentPanel.className = this.getFullClassName('header-content');
     var colsWidth = this.domCache.colsWidth,
-        colsLeft = this.domCache.colsLeft;
+        colsLeft = this.domCache.colsLeft,
+        cellsCache = this.domCache.headerCells;
 
     var maxWidth = 0;
     tableModel.header.fields.forEach(function (field,index) {
@@ -614,7 +592,7 @@ TableCell.prototype._createHeader = function () {
         }else{
             colsLeft[index] = colsLeft[index - 1] + colsWidth[index - 1];
         }
-        var headerCell = this._createCell(0,index,field,true);
+        var headerCell = this._createCell(0,index,field,cellsCache);
         headerContentPanel.appendChild(headerCell);
 
     }.bind(this));
@@ -643,23 +621,20 @@ TableCell.prototype._bindTableModelEvent = function () {
 };
 TableCell.prototype.executeFunctionDelay = function (timeoutId,func,context) {
 
-    if(typeof func !== 'function'){
-        return;
-    }
-    context = context || this;
-    cancelAnimationFrame(this._timeoutCache[timeoutId]);
-    return this._timeoutCache[timeoutId] = requestAnimationFrame(func.bind(context));
+    return executeFunctionDelay(timeoutId,func,context || this);
 
 };
 TableCell.prototype._bindEvent = function () {
 
     var headerPanel = this.headerPanel,
-        bodyPanel = this.bodyPanel;
+        scrollbar = this.scrollbar;
     var headerContentPanel = headerPanel.querySelector(this.getFullClassSelector('header-content'));
-    bodyPanel.addEventListener('scroll', function () {
+    scrollbar.addEventListener('scroll', function () {
 
-        var scrollLeft = bodyPanel.scrollLeft;
-        headerContentPanel.style.transform = 'translate3d(' + -scrollLeft + 'px' + ',0,0)';
+        var scrollLeft = scrollbar.scrollLeft,
+            scrollTop = scrollbar.scrollTop;
+        headerContentPanel.style.left = this.rowPanel.style.left = -scrollLeft + 'px'
+        this.rowPanel.style.top = -scrollTop + 'px';
         this.executeFunctionDelay('paintRequest',this.repaint);
 
     }.bind(this));
@@ -667,14 +642,6 @@ TableCell.prototype._bindEvent = function () {
     this._bindResizeCellEvent();
 
 };
-function getMousePosition(e){
-    var pageX = e.pageX || e.clientX,
-        pageY = e.pageY || e.clientY;
-    return {
-        pageX:pageX,
-        pageY:pageY
-    };
-}
 TableCell.prototype.resizeRowHeight = function (rowIndex,height) {
     this.resizeCell(rowIndex,null,null,height);
 };
@@ -740,6 +707,8 @@ TableCell.prototype._resizeCellDom = function (rowIndex,colIndex) {
             cell.style.left = colsLeft[col] + 'px';
         }
     }
+
+    this.syncCursor();
 };
 TableCell.prototype.resizeCell = function (rowIndex,colIndex,width,height) {
     this._updateDomCache(rowIndex,colIndex,width,height);
@@ -868,7 +837,6 @@ TableCell.prototype._bindResizeCellEvent = function () {
     function mouseup(){
         resizeManager.reset();
         this.tablePanel.setAttribute('resize',String(false));
-        this.syncCursor();
     }
     bodyPanel.addEventListener('mouseup',mouseup.bind(this));
     bodyPanel.addEventListener('mouseleave',mouseup.bind(this))
