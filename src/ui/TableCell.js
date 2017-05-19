@@ -481,6 +481,7 @@ TableCell.prototype._onAppendRows = function () {
 
     var rowsHeight = this.domCache.rowsHeight;
     this._initCellHeightIndex(rowsHeight.length);
+    this.syncCursor();
     this.executeFunctionDelay('repaintRequest',this.repaint);
 
 };
@@ -798,15 +799,17 @@ TableCell.prototype._bindResizeCellEvent = function () {
         rowIndex:undefined,
         colIndex:undefined,
         reset: function () {
-            this.resetX().resetY();
+            return this.resetX() || this.resetY();
         },
         resetX: function () {
+            var bln = !!this.colIndex || !!this.lastPageX;
             this.lastPageX = this.colIndex = undefined;
-            return this;
+            return bln;
         },
         resetY: function () {
+            var bln = !!this.rowIndex || !!this.lastPageY;
             this.lastPageY = this.rowIndex  = undefined;
-            return this;
+            return bln;
         }
     };
     bodyPanel.addEventListener('mousemove', function (e) {
@@ -865,9 +868,10 @@ TableCell.prototype._bindResizeCellEvent = function () {
 
     }.bind(this));
     function mouseup(){
-        resizeManager.reset();
         this.tablePanel.setAttribute('resize',String(false));
-        this.syncCursor();
+        if(resizeManager.reset()){
+            this.syncCursor();
+        }
     }
     bodyPanel.addEventListener('mouseup',mouseup.bind(this));
     bodyPanel.addEventListener('mouseleave',mouseup.bind(this))

@@ -92,6 +92,7 @@ $prefix:d1012;
     top:0;
     right:0;
     bottom:0;
+    overflow:hidden;
     background-color: $scrollTrackColor;
     .scrollbar-block{
       width:100%;
@@ -102,6 +103,7 @@ $prefix:d1012;
     right:0;
     left:0;
     bottom:0;
+    overflow:hidden;
     background-color: $scrollTrackColor;
     .scrollbar-block{
       height:100%;

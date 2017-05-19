@@ -84,6 +84,10 @@ TableModel.prototype.appendRows = function (rows) {
 };
 
 function getMousePosition(e){
+    var touches = e['touches'];
+    if(touches && touches.length > 0){
+        e = touches[0];
+    }
     var pageX = e.pageX || e.clientX,
         pageY = e.pageY || e.clientY;
     return {
@@ -109,6 +113,11 @@ function isDomElement(object) {
     });
 
 }
+function isTouchSupported(){
+
+    return document['ontouchstart'] !== undefined;
+
+}
 var requestAnimationFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || function(executor){
             return setTimeout(executor,1000/60);
         };
@@ -124,6 +133,9 @@ function executeFunctionDelay(timeoutId,func,context) {
     cancelAnimationFrame(_timeoutCache[timeoutId]);
     return _timeoutCache[timeoutId] = requestAnimationFrame(func.bind(context));
 
+}
+function isElementInDom(element){
+    return document.contains(element);
 }
 
 var scrollbarId = 1;
@@ -161,14 +173,40 @@ ScrollBar.initEventListeners = function () {
 function getWidth(ele){
     return ele.clientWidth;
 }
-function getScrollWidth(ele){
-    return ele.scrollWidth;
+function getScrollWidth(element){
+
+    var children = element.children;
+    var length = children.length,width = 0,ele;
+    if(length > 0){
+        for(var i = 0;i < length;i++){
+            ele = children[i];
+            if(ele.vScrollbar || ele.hScrollbar){
+                continue;
+            }
+            width += Math.max(ele.scrollWidth,ele.clientWidth);
+        }
+    }
+    return Math.max(element.scrollWidth,element.clientWidth,width);
+
 }
 function getHeight(ele){
     return ele.clientHeight;
 }
-function getScrollHeight(ele){
-    return ele.scrollHeight;
+function getScrollHeight(element){
+
+    var children = element.children;
+    var length = children.length,height = 0,ele;
+    if(length > 0){
+        for(var i = 0;i < length;i++){
+            ele = children[i];
+            if(ele.vScrollbar || ele.hScrollbar){
+                continue;
+            }
+            height += Math.max(ele.scrollHeight,ele.clientHeight);
+        }
+    }
+    return Math.max(element.scrollHeight,element.clientHeight,height);
+
 }
 function style(ele,style){
     Object.keys(style).forEach(function (key) {
@@ -188,9 +226,9 @@ function enableUserSelect(){
 ScrollBar.prototype.init = function (ele,config) {
 
     this.element = ele;
-    this.scrollWidth = 0;
+    this._scrollWidth = 0;
     this.clientWidth = 0;
-    this.scrollHeight = 0;
+    this._scrollHeight = 0;
     this.clientHeight = 0;
 
 
@@ -202,7 +240,7 @@ ScrollBar.prototype.init = function (ele,config) {
             _.scrollTopTo(val);
         },
         get: function () {
-            return _.getScrollTop();
+            return _.scrollTopTo();
         }
     });
     Object.defineProperty(this,'scrollLeft',{
@@ -210,19 +248,36 @@ ScrollBar.prototype.init = function (ele,config) {
             _.scrollLeftTo(val);
         },
         get: function () {
-            return _.getScrollLeft();
+            return _.scrollLeftTo();
         }
     });
-
+    Object.defineProperty(this,'scrollWidth',{
+        set: function (val) {
+            _._setScrollWidth(val);
+        },
+        get: function () {
+            return _._getScrollWidth();
+        }
+    });
+    Object.defineProperty(this,'scrollHeight',{
+        set: function (val) {
+            _._setScrollHeight(val);
+        },
+        get: function () {
+            return _._getScrollHeight();
+        }
+    });
+    this.overflowX = true;
+    this.overflowY = true;
     this.config = Object.assign({
         overflowX:false,
         overflowY:false,
-        width:18,
+        width:12,
         hTrackColor:'#e4f0e2',
         hScrollColor:'#ddd',
         vTrackColor:'#e4f0e2',
         vScrollColor:'#ddd',
-        height:18
+        height:12
     },config);
 
     this.eventListeners = {};
@@ -241,13 +296,24 @@ ScrollBar.prototype.initUI = function () {
         overflow:'hidden'
     });
 
-    this.updateScrollSize();
     this._renderV();
     this._renderH();
+    this.syncScrollbarSize();
 
-    this._bindHorEvent();
-    this._bindVerEvent();
-    this._bindMouseWheelEvent();
+    this._bindScrollEvent();
+
+};
+ScrollBar.prototype.syncScrollbarSize = function () {
+
+    executeFunctionDelay(this._id + 'syncScrollSize', function () {
+
+        var clientWidth = this.vScrollbar.clientWidth;
+        this.config.width = Math.max(clientWidth,this.config.width);
+
+        var clientHeight = this.hScrollbar.clientHeight;
+        this.config.height = Math.max(clientHeight,this.config.height);
+
+    },this);
 
 };
 ScrollBar.prototype.triggerScrollEvent = function () {
@@ -261,61 +327,81 @@ ScrollBar.prototype.triggerScrollEvent = function () {
 ScrollBar.prototype.resize = function () {
 
     this.updateScrollSize();
-    var bar,left,top,ratio,barHidden = true;
+    var bar;
     if(this.hScrollbar){
-        ratio = this.getHScrollRatio();
-        left = this.scrollLeft / ratio;
         bar = this.hScrollbar.children[0];
         var barWidth = this.getScrollbarWidth();
-        barHidden = this.scrollWidth - this.config.width <= this.clientWidth;
         style(bar,{
-            left:left + 'px',
             width:barWidth + 'px'
         });
 
         style(this.hScrollbar,{
-            display:this.config.overflowX || barHidden ? 'none' : 'block'
+            display:this.config.overflowX || this.overflowX ? 'none' : 'block'
         });
     }
 
     if(this.vScrollbar){
-        ratio = this.getVScrollRatio();
-        top = this.scrollTop / ratio;
         bar = this.vScrollbar.children[0];
         var barHeight = this.getScrollbarHeight();
-        barHidden = this.scrollHeight - this.config.height <= this.clientHeight;
         style(bar,{
-            top:top + 'px',
             height:barHeight + 'px'
         });
 
         style(this.vScrollbar,{
-            display:this.config.overflowY || barHidden ? 'none' : 'block'
+            display:this.config.overflowY || this.overflowY ? 'none' : 'block'
         });
     }
+
+    this.refresh();
 };
 ScrollBar.prototype.refresh = function () {
+
     this.scrollLeft = this.scrollLeft;
     this.scrollTop = this.scrollTop;
+
 };
 ScrollBar.prototype.updateScrollSize = function () {
 
-    var width = getWidth(this.element),scrollWidth = getScrollWidth(this.element.children[0]);
-    scrollWidth = Math.max(width,scrollWidth) + this.config.width;
-    this.clientWidth = width;
+    var clientWidth = getWidth(this.element),scrollWidth = getScrollWidth(this.element);
 
-    var height = getHeight(this.element),scrollHeight = getScrollHeight(this.element.children[0]);
-    scrollHeight = Math.max(height,scrollHeight);
-    this.clientHeight = height;
+    var clientHeight = getHeight(this.element),scrollHeight = getScrollHeight(this.element);
 
-    if(this.config.overflowY && scrollWidth > width){
-        scrollHeight += this.config.height;
-    }
-    if(this.config.overflowX && scrollHeight > height){
-        scrollWidth += this.config.width;
-    }
+    this.overflowX = scrollWidth <= clientWidth;
+    this.overflowY = scrollHeight <= clientHeight;
+
+    this.clientWidth = clientWidth;
+    this.clientHeight = clientHeight;
     this.scrollWidth = scrollWidth;
     this.scrollHeight = scrollHeight;
+
+};
+ScrollBar.prototype._setScrollWidth = function (scrollWidth) {
+
+    this._scrollWidth = scrollWidth;
+
+};
+ScrollBar.prototype._getScrollWidth = function () {
+
+    var scrollWidth = this._scrollWidth;
+    if(!this.overflowY){
+        scrollWidth += this.config.width;
+    }
+    return scrollWidth;
+
+};
+ScrollBar.prototype._setScrollHeight = function (scrollHeight) {
+
+    this._scrollHeight = scrollHeight;
+
+};
+ScrollBar.prototype._getScrollHeight = function () {
+
+    var scrollHeight = this._scrollHeight;
+    if(!this.overflowX){
+        scrollHeight += this.config.height;
+    }
+    return scrollHeight;
+
 };
 ScrollBar.prototype._createScrollBarBlock = function () {
 
@@ -327,10 +413,12 @@ ScrollBar.prototype._createScrollBarBlock = function () {
 ScrollBar.prototype._renderH = function () {
 
     var dom = document.createElement('div');
+    dom.hScrollbar = true;
     this.hScrollbar = dom;
     dom.className = 'scrollbar-hor';
     style(dom,{
         height:this.config.height + 'px',
+        display:'none',
         'background-color':this.config.hTrackColor
     });
 
@@ -339,19 +427,21 @@ ScrollBar.prototype._renderH = function () {
         'background-color':this.config.hScrollColor
     });
 
-
     dom.appendChild(bar);
     this.element.appendChild(dom);
 
 };
 ScrollBar.prototype.addEventListener = function (eventType,listener) {
+
     var listeners = this.eventListeners[eventType];
     if(!listeners){
         listeners = this.eventListeners[eventType] = [];
     }
     listeners.push(listener);
+
 };
 ScrollBar.prototype.triggerEvent = function (eventType) {
+
     var listeners = this.eventListeners[eventType];
     if(!listeners){
         return;
@@ -361,6 +451,7 @@ ScrollBar.prototype.triggerEvent = function (eventType) {
             listener.call(this);
         }catch(e){}
     }.bind(this));
+
 };
 ScrollBar.prototype._bindHorEvent = function () {
 
@@ -388,30 +479,36 @@ ScrollBar.prototype._bindHorEvent = function () {
     ScrollBar.mouseupListeners[eventKey] = function () {
         startX = relativeLeft = undefined;
         enableUserSelect();
-    };
+        if(!isElementInDom(this.element)){
+            delete ScrollBar.mousemoveListeners[eventKey];
+            delete ScrollBar.mouseupListeners[eventKey];
+        }
+    }.bind(this);
 
 };
 ScrollBar.prototype.getHScrollRatio = function () {
+
     var barWidth = this.getScrollbarWidth();
     var scrollRatio = (this.scrollWidth - this.clientWidth)/(this.clientWidth - barWidth);
     return scrollRatio;
+
 };
 ScrollBar.prototype.getVScrollRatio = function () {
+
     var barHeight = this.getScrollbarHeight();
     var scrollRatio = (this.scrollHeight - this.clientHeight)/(this.clientHeight - barHeight);
     return scrollRatio;
-};
-ScrollBar.prototype.getScrollLeft = function () {
-
-    var maxScrollLeft = this.scrollWidth - this.clientWidth;
-    this._scrollLeft = Math.min(maxScrollLeft,this._scrollLeft);
-    this._scrollLeft = Math.max(0,this._scrollLeft);
-    return this._scrollLeft;
 
 };
 ScrollBar.prototype.scrollLeftTo = function (scrollLeft) {
 
     var maxScrollLeft = this.scrollWidth - this.clientWidth;
+    if(arguments.length === 0){
+        this._scrollLeft = Math.min(maxScrollLeft,this._scrollLeft);
+        this._scrollLeft = Math.max(0,this._scrollLeft);
+        return this._scrollLeft;
+    }
+
     scrollLeft = Math.min(maxScrollLeft,scrollLeft);
     scrollLeft = Math.max(0,scrollLeft);
     var scrollRatio = this.getHScrollRatio();
@@ -421,21 +518,38 @@ ScrollBar.prototype.scrollLeftTo = function (scrollLeft) {
         left:barLeft + 'px'
     });
     this._scrollLeft = scrollLeft;
-    style(this.element.children[0],{
-        left: -scrollLeft + 'px'
+
+    this._getContentChildren().forEach(function (ele) {
+        style(ele,{
+            left: -scrollLeft + 'px'
+        });
     });
+
     this.triggerScrollEvent();
 
 };
-ScrollBar.prototype.getScrollTop = function () {
+ScrollBar.prototype._getContentChildren = function () {
 
-    var maxScrollTop = this.scrollHeight - this.clientHeight;
-    this._scrollTop = Math.min(maxScrollTop,this._scrollTop);
-    this._scrollTop = Math.max(0,this._scrollTop);
-    return this._scrollTop;
+    var children = this.element.children,length = children.length;
+    var elements = [],ele;
+    for(var i = 0;i < length;i++){
+        ele = children[i];
+        if(ele.vScrollbar || ele.hScrollbar){
+            continue;
+        }
+        elements.push(ele);
+    }
+    return elements;
 
 };
 ScrollBar.prototype.scrollTopTo = function (scrollTop) {
+
+    var maxScrollTop = this.scrollHeight - this.clientHeight;
+    if(arguments.length === 0){
+        this._scrollTop = Math.min(maxScrollTop,this._scrollTop);
+        this._scrollTop = Math.max(0,this._scrollTop);
+        return this._scrollTop;
+    }
 
     var maxScrollTop = this.scrollHeight - this.clientHeight;
     scrollTop = Math.min(maxScrollTop,scrollTop);
@@ -447,8 +561,11 @@ ScrollBar.prototype.scrollTopTo = function (scrollTop) {
         top:barTop + 'px'
     });
     this._scrollTop = scrollTop;
-    style(this.element.children[0],{
-        top:-scrollTop + 'px'
+
+    this._getContentChildren().forEach(function (ele) {
+        style(ele,{
+            top: -scrollTop + 'px'
+        });
     });
     this.triggerScrollEvent();
 
@@ -479,9 +596,21 @@ ScrollBar.prototype._bindVerEvent = function () {
     ScrollBar.mouseupListeners[eventKey] = function () {
         startY = relativeTop = undefined;
         enableUserSelect();
-    };
-};
+        if(!isElementInDom(this.element)){
+            delete ScrollBar.mousemoveListeners[eventKey];
+            delete ScrollBar.mouseupListeners[eventKey];
+        }
+    }.bind(this);
 
+};
+ScrollBar.prototype._bindScrollEvent = function () {
+
+    this._bindHorEvent();
+    this._bindVerEvent();
+    this._bindMouseWheelEvent();
+    this._bindTouchScrollEvent();
+
+};
 ScrollBar.prototype._bindMouseWheelEvent = function () {
 
     var _ = this;
@@ -502,26 +631,99 @@ ScrollBar.prototype._bindMouseWheelEvent = function () {
         return;
     }
     this.element.addEventListener('DOMMouseScroll',wheelEvent);
+
+};
+ScrollBar.prototype._getTouchEventListeners = function () {
+
+    var _ = this;
+    var listeners = this._touchListeners;
+    if(!listeners){
+        listeners = this._touchListeners = {
+            startX:undefined,
+            lastPageX:undefined,
+            scrollTop:undefined,
+            scrollLeft:undefined,
+            startY:undefined,
+            lastPageY:undefined,
+            destroy: function () {
+                this.startX = this.startY = undefined;
+                this.lastPageX = this.lastPageY = undefined;
+                this.scrollTop = this.scrollLeft = undefined;
+            }
+        };
+        listeners.touchstart = function (e) {
+
+            var pos = getMousePosition(e);
+            listeners.startX = listeners.lastPageX = pos.pageX;
+            listeners.startY = listeners.lastPageY = pos.pageY;
+            listeners.scrollTop = this.scrollTop;
+            listeners.scrollLeft = this.scrollLeft;
+            disableUserSelect();
+
+        };
+        listeners.touchmove = function (e) {
+
+            if(!listeners.startX || !listeners.startY){
+                return;
+            }
+            var pos = getMousePosition(e);
+            var moveRatio = 0.2;
+            if(Math.abs(pos.pageY - listeners.lastPageY) >= Math.abs(pos.pageX - listeners.lastPageX)){
+                _.scrollTop += -(pos.pageY - listeners.startY) * moveRatio;
+            }else{
+                _.scrollLeft += -(pos.pageX - listeners.startX) * moveRatio;
+            }
+
+            listeners.lastPageY = pos.pageY;
+            listeners.lastPageX = pos.pageX;
+        };
+        listeners.touchend = function () {
+
+            listeners.destroy();
+            enableUserSelect();
+
+        };
+    }
+    return listeners;
+
+};
+ScrollBar.prototype._bindTouchScrollEvent = function () {
+
+    if(!isTouchSupported()){
+        return;
+    }
+    var listeners = this._getTouchEventListeners();
+    this.element.addEventListener('touchstart', listeners.touchstart,true);
+    this.element.addEventListener('touchmove', listeners.touchmove,true);
+    this.element.addEventListener('touchend', listeners.touchend,true);
+    this.element.addEventListener('touchcancel', listeners.touchend,true);
+
 };
 ScrollBar.prototype.getScrollbarHeight = function () {
+
     var height = this.clientHeight,scrollHeight = this.scrollHeight;
     var barHeight = height / (scrollHeight / height);
     barHeight = Math.max(50,barHeight);
     return barHeight;
+
 };
 ScrollBar.prototype.getScrollbarWidth = function () {
+
     var width = this.clientWidth,scrollWidth = this.scrollWidth;
     var barWidth = width / (scrollWidth / width);
     barWidth = Math.max(50,barWidth);
     return barWidth;
+
 };
 ScrollBar.prototype._renderV = function () {
 
     var dom = document.createElement('div');
+    dom.vScrollbar = true;
     this.vScrollbar = dom;
     dom.className = 'scrollbar-ver';
     style(dom,{
         width:this.config.width + 'px',
+        display:'none',
         'background-color':this.config.vTrackColor
     });
 
@@ -532,8 +734,6 @@ ScrollBar.prototype._renderV = function () {
 
     dom.appendChild(bar);
     this.element.appendChild(dom);
-
-    this._bindVerEvent();
 
 };
 
@@ -1016,6 +1216,7 @@ TableCell.prototype._onAppendRows = function () {
 
     var rowsHeight = this.domCache.rowsHeight;
     this._initCellHeightIndex(rowsHeight.length);
+    this.syncCursor();
     this.executeFunctionDelay('repaintRequest',this.repaint);
 
 };
@@ -1333,15 +1534,17 @@ TableCell.prototype._bindResizeCellEvent = function () {
         rowIndex:undefined,
         colIndex:undefined,
         reset: function () {
-            this.resetX().resetY();
+            return this.resetX() || this.resetY();
         },
         resetX: function () {
+            var bln = !!this.colIndex || !!this.lastPageX;
             this.lastPageX = this.colIndex = undefined;
-            return this;
+            return bln;
         },
         resetY: function () {
+            var bln = !!this.rowIndex || !!this.lastPageY;
             this.lastPageY = this.rowIndex  = undefined;
-            return this;
+            return bln;
         }
     };
     bodyPanel.addEventListener('mousemove', function (e) {
@@ -1400,9 +1603,10 @@ TableCell.prototype._bindResizeCellEvent = function () {
 
     }.bind(this));
     function mouseup(){
-        resizeManager.reset();
         this.tablePanel.setAttribute('resize',String(false));
-        this.syncCursor();
+        if(resizeManager.reset()){
+            this.syncCursor();
+        }
     }
     bodyPanel.addEventListener('mouseup',mouseup.bind(this));
     bodyPanel.addEventListener('mouseleave',mouseup.bind(this));

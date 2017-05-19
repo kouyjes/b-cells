@@ -26,7 +26,7 @@
             header.push({name:'column' + i,width:'100px'});
         }
         var rows = [];
-        for(var i = 0;i < 5;i++){
+        for(var i = 0;i < 100;i++){
             rows.push((function(){
                 var fields = [];
                 for(var col = 0;col < colNum;col++){
@@ -57,12 +57,7 @@
             console.timeEnd('start-render');
 
             window.addEventListener('resize', function () {
-                tableCell.paint();
-                /*tableCell.executeFunctionDelay('resize', function () {
-                    var scrollTo = tableCell.scrollTo();
-                    tableCell.refresh();
-                    tableCell.scrollTo(scrollTo.scrollTop,scrollTo.scrollLeft);
-                });*/
+                tableCell.repaint();
             });
 
         }

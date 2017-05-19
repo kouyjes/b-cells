@@ -1,4 +1,8 @@
 function getMousePosition(e){
+    var touches = e['touches'];
+    if(touches && touches.length > 0){
+        e = touches[0];
+    }
     var pageX = e.pageX || e.clientX,
         pageY = e.pageY || e.clientY;
     return {
@@ -24,6 +28,11 @@ function isDomElement(object) {
     });
 
 }
+function isTouchSupported(){
+
+    return document['ontouchstart'] !== undefined;
+
+}
 var requestAnimationFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || function(executor){
             return setTimeout(executor,1000/60);
         },
@@ -43,4 +52,4 @@ function executeFunctionDelay(timeoutId,func,context) {
 function isElementInDom(element){
     return document.contains(element);
 }
-export { isElementInDom,getMousePosition,isDomElement,requestAnimationFrame,cancelAnimationFrame,executeFunctionDelay }
+export { isElementInDom,isTouchSupported,getMousePosition,isDomElement,requestAnimationFrame,cancelAnimationFrame,executeFunctionDelay }
