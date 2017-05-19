@@ -15,7 +15,7 @@
         }
         #table{
             width:100%;
-            height:60%;
+            height:500px;
         }
     </style>
     <script>
@@ -23,10 +23,10 @@
         var header = [];
         var colNum = 20;
         for(var i = 0; i< colNum;i++){
-            header.push({name:'column' + i,width:'23.3%'});
+            header.push({name:'column' + i,width:'100px'});
         }
         var rows = [];
-        for(var i = 0;i < 100;i++){
+        for(var i = 0;i < 5;i++){
             rows.push((function(){
                 var fields = [];
                 for(var col = 0;col < colNum;col++){
@@ -48,7 +48,9 @@
         function init(){
             var tableCell = new CELL.TableCell(tableModel,{
                 rowResize:true,
-                colResize:true
+                colResize:true,
+                overflowY:false,
+                enableCustomScroll:true
             });
             console.time('start-render');
             tableCell.render('#table');

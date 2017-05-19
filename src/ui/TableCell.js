@@ -14,11 +14,12 @@ function TableCell(tableModel,config){
     this.tableModel = tableModel;
 
     this.config = Object.assign({
+        enableCustomScroll:false,
         textTitle:false,
         colResize:false,
         rowResize:false,
-        overflowX:'',
-        overflowY:''
+        overflowX:false,
+        overflowY:false
     },config);
 
     this._bindTableModelEvent();
@@ -84,7 +85,12 @@ TableCell.prototype.refresh = function () {
     tablePanel.appendChild(this._createBodyContainer());
     renderTo.appendChild(tablePanel);
 
-    this.scrollbar = new ScrollBar(this.bodyPanel);
+    if(this.config.enableCustomScroll){
+        this.scrollbar = new ScrollBar(this.bodyPanel,{
+            overflowX:this.config.overflowX,
+            overflowY:this.config.overflowY
+        });
+    }
 
     this._createCursor();
 
@@ -109,7 +115,7 @@ TableCell.prototype._setRenderTo = function (renderTo) {
 };
 TableCell.prototype.scrollTo = function (scrollTop,scrollLeft) {
 
-    var scrollbar = this.scrollbar;
+    var scrollbar = this.scrollbar || this.bodyPanel;
 
     if(arguments.length === 0){
         return {
@@ -149,9 +155,10 @@ TableCell.prototype.getPanelSize = function () {
 };
 TableCell.prototype.getCurrentColArea = function () {
 
+    var scrollbar = this.scrollbar || this.bodyPanel;
     var panelSize = this.getPanelSize();
     var colsLeft = this.domCache.colsLeft;
-    var left = this.scrollbar.scrollLeft;
+    var left = scrollbar.scrollLeft;
     return this.getThresholdArea(panelSize.width,colsLeft,left);
 
 };
@@ -187,9 +194,10 @@ TableCell.prototype.getThresholdArea = function (viewSize,positions,cursor) {
 };
 TableCell.prototype.getCurrentRowArea = function () {
 
+    var scrollbar = this.scrollbar || this.bodyPanel;
     var panelSize = this.getPanelSize();
     var rowsTop = this.domCache.rowsTop;
-    var top = this.scrollbar.scrollTop;
+    var top = scrollbar.scrollTop;
     return this.getThresholdArea(panelSize.height,rowsTop,top);
 
 };
@@ -473,7 +481,7 @@ TableCell.prototype._onAppendRows = function () {
 
     var rowsHeight = this.domCache.rowsHeight;
     this._initCellHeightIndex(rowsHeight.length);
-    this.repaint();
+    this.executeFunctionDelay('repaintRequest',this.repaint);
 
 };
 TableCell.prototype.syncCursor = function () {
@@ -491,7 +499,15 @@ TableCell.prototype.syncCursor = function () {
     cursor.style.top = curTop + 'px';
     cursor.style.width = curWidth + 'px';
 
-    this.scrollbar.refresh();
+    this.executeFunctionDelay('resizeScrollbar',this.resizeScrollbar);
+
+};
+TableCell.prototype.resizeScrollbar = function () {
+
+    if(this.scrollbar){
+        this.scrollbar.resize();
+        return;
+    }
 
 };
 TableCell.prototype._initCellSizeIndex = function () {
@@ -507,7 +523,7 @@ TableCell.prototype._initCellWidthIndex = function () {
 
     var maxWidth = 0;
     tableModel.header.fields.forEach(function (field,index) {
-        var colWidth = this._parseColWidth(field.width);
+        var colWidth = this._parseCellWidth(field.width);
         colsWidth[index] = colWidth;
         maxWidth += colWidth;
         if(index === 0){
@@ -518,12 +534,10 @@ TableCell.prototype._initCellWidthIndex = function () {
 
     }.bind(this));
 
-    var panelSize = this.getPanelSize();
-    if(maxWidth <= panelSize.width){
-        this.config.overflowX = 'hidden';
-    }
 };
 TableCell.prototype._initCellHeightIndex = function (startIndex) {
+
+    startIndex = startIndex || 0;
 
     var tableModel = this.tableModel;
     var rows = tableModel.rows;
@@ -532,7 +546,8 @@ TableCell.prototype._initCellHeightIndex = function (startIndex) {
 
     //create page cursor
     rows.slice(startIndex).forEach(function (row,index) {
-        var rowHeight = this._parseRowHeight(row.height);
+        index += startIndex;
+        var rowHeight = this._parseCellHeight(row.height);
         rowsHeight[index] = rowHeight;
         if(index === 0){
             rowsTop[index] = 0;
@@ -558,6 +573,9 @@ TableCell.prototype._createBodyContainer = function () {
     var bodyContainer = this.bodyPanel = document.createElement('div');
     bodyContainer.className = this.getFullClassName('body-container');
 
+    bodyContainer.setAttribute('overflowX',String(this.config.overflowX));
+    bodyContainer.setAttribute('overflowY',String(this.config.overflowY))
+
     bodyContainer.appendChild(this._createRowContainer());
     return bodyContainer;
 };
@@ -569,7 +587,7 @@ TableCell.prototype._createRowContainer = function () {
     return rowContainer;
 
 };
-TableCell.prototype._parseColWidth = function (width) {
+TableCell.prototype._parseCellWidth = function (width) {
 
     var panelSize = this.getPanelSize();
     var clientWidth = panelSize.width;
@@ -581,7 +599,7 @@ TableCell.prototype._parseColWidth = function (width) {
     return isNaN(width)?100:width;
 
 };
-TableCell.prototype._parseRowHeight = function (height) {
+TableCell.prototype._parseCellHeight = function (height) {
 
     if(typeof height === 'string' && height && height.indexOf('%') === height.length - 1){
         var clientHeight = this.getPanelSize().height;
@@ -641,14 +659,13 @@ TableCell.prototype.executeFunctionDelay = function (timeoutId,func,context) {
 TableCell.prototype._bindEvent = function () {
 
     var headerPanel = this.headerPanel,
-        scrollbar = this.scrollbar;
+        scrollbar = this.scrollbar || this.bodyPanel;
     var headerContentPanel = headerPanel.querySelector(this.getFullClassSelector('header-content'));
     scrollbar.addEventListener('scroll', function () {
 
-        var scrollLeft = scrollbar.scrollLeft,
-            scrollTop = scrollbar.scrollTop;
-        headerContentPanel.style.left = this.rowPanel.style.left = -scrollLeft + 'px'
-        this.rowPanel.style.top = -scrollTop + 'px';
+        var scrollLeft = scrollbar.scrollLeft;
+        headerContentPanel.style.left = -scrollLeft + 'px'
+
         this.executeFunctionDelay('repaintRequest',this.repaint);
 
     }.bind(this));
@@ -722,7 +739,6 @@ TableCell.prototype._resizeCellDom = function (rowIndex,colIndex) {
         }
     }
 
-    this.syncCursor();
 };
 TableCell.prototype.resizeCell = function (rowIndex,colIndex,width,height) {
     this._updateDomCache(rowIndex,colIndex,width,height);
@@ -741,10 +757,10 @@ TableCell.prototype._bindResizeCellEvent = function () {
         rowsHeight = this.domCache.rowsHeight,
         colsWidth = this.domCache.colsWidth;
 
-    var self = this;
+    var _ = this;
     function getMouseInfo(e){
         var position = getMousePosition(e);
-        var scrollTo = self.scrollTo();
+        var scrollTo = _.scrollTo();
         var bound = bodyPanel.getBoundingClientRect(),relY = position.pageY - bound.top,
             relX = position.pageX - bound.left;
 
@@ -851,6 +867,7 @@ TableCell.prototype._bindResizeCellEvent = function () {
     function mouseup(){
         resizeManager.reset();
         this.tablePanel.setAttribute('resize',String(false));
+        this.syncCursor();
     }
     bodyPanel.addEventListener('mouseup',mouseup.bind(this));
     bodyPanel.addEventListener('mouseleave',mouseup.bind(this))

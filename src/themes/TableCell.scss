@@ -63,7 +63,12 @@ $prefix:d1012;
     overflow:auto;
     border:1px solid $tableBorderColor;
     border-top:none;
-    overflow:hidden;
+    &[overflowX='true']{
+      overflow-x:hidden;
+    }
+    &[overflowY='true']{
+      overflow-y:hidden;
+    }
   }
   .#{$prefix}-row-container{
     position: relative;

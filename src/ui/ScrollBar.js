@@ -11,21 +11,21 @@ ScrollBar.initEventListeners = function () {
         ScrollBar.mouseupListeners = {};
         ScrollBar.mousemoveListeners = {};
         document.body.addEventListener('mouseup', function (evt) {
-            var self = this;
+            var _ = this;
             Object.keys(ScrollBar.mouseupListeners).forEach(function (key) {
                 var listener = ScrollBar.mouseupListeners[key];
                 try{
-                    listener.call(self,evt);
+                    listener.call(_,evt);
                 }catch(e){}
             });
         },true);
 
         document.body.addEventListener('mousemove', function (evt) {
-            var self = this;
+            var _ = this;
             Object.keys(ScrollBar.mousemoveListeners).forEach(function (key) {
                 var listener = ScrollBar.mousemoveListeners[key];
                 try{
-                    listener.call(self,evt);
+                    listener.call(_,evt);
                 }catch(e){}
             });
         },true)
@@ -61,8 +61,6 @@ function enableUserSelect(){
 ScrollBar.prototype.init = function (ele,config) {
 
     this.element = ele;
-    this.overflowX = false;
-    this.overflowY = false;
     this.scrollWidth = 0;
     this.clientWidth = 0;
     this.scrollHeight = 0;
@@ -71,25 +69,27 @@ ScrollBar.prototype.init = function (ele,config) {
 
     this._scrollTop = 0;
     this._scrollLeft = 0;
-    var self = this;
+    var _ = this;
     Object.defineProperty(this,'scrollTop',{
         set: function (val) {
-            self.scrollTopTo(val);
+            _.scrollTopTo(val);
         },
         get: function () {
-            return self._scrollTop;
+            return _.getScrollTop();
         }
     });
     Object.defineProperty(this,'scrollLeft',{
         set: function (val) {
-            self.scrollLeftTo(val);
+            _.scrollLeftTo(val);
         },
         get: function () {
-            return this._scrollLeft;
+            return _.getScrollLeft();
         }
     });
 
     this.config = Object.assign({
+        overflowX:false,
+        overflowY:false,
         width:18,
         hTrackColor:'#e4f0e2',
         hScrollColor:'#ddd',
@@ -110,9 +110,17 @@ ScrollBar.prototype.init = function (ele,config) {
 };
 ScrollBar.prototype.initUI = function () {
 
+    style(this.element,{
+        overflow:'hidden'
+    });
+
     this.updateScrollSize();
     this._renderV();
     this._renderH();
+
+    this._bindHorEvent();
+    this._bindVerEvent();
+    this._bindMouseWheelEvent();
 
 };
 ScrollBar.prototype.triggerScrollEvent = function () {
@@ -123,24 +131,24 @@ ScrollBar.prototype.triggerScrollEvent = function () {
     },this);
 
 };
-ScrollBar.prototype.refresh = function () {
+ScrollBar.prototype.resize = function () {
 
     this.updateScrollSize();
     var bar,left,top,ratio,barHidden = true;
     if(this.hScrollbar){
         ratio = this.getHScrollRatio();
         left = this.scrollLeft / ratio;
-        console.log('left:' + left);
         bar = this.hScrollbar.children[0];
         var barWidth = this.getScrollbarWidth();
         barHidden = this.scrollWidth - this.config.width <= this.clientWidth;
         style(bar,{
-            'background-color':this.config.hScrollColor,
             left:left + 'px',
-            display:barHidden ? 'none' : 'block',
             width:barWidth + 'px'
         });
 
+        style(this.hScrollbar,{
+            display:this.config.overflowX || barHidden ? 'none' : 'block'
+        });
     }
 
     if(this.vScrollbar){
@@ -151,21 +159,36 @@ ScrollBar.prototype.refresh = function () {
         barHidden = this.scrollHeight - this.config.height <= this.clientHeight;
         style(bar,{
             top:top + 'px',
-            'background-color':this.config.vScrollColor,
-            display:barHidden ? 'none' : 'block',
             height:barHeight + 'px'
         });
+
+        style(this.vScrollbar,{
+            display:this.config.overflowY || barHidden ? 'none' : 'block'
+        });
     }
+};
+ScrollBar.prototype.refresh = function () {
+    this.scrollLeft = this.scrollLeft;
+    this.scrollTop = this.scrollTop;
 };
 ScrollBar.prototype.updateScrollSize = function () {
 
     var width = getWidth(this.element),scrollWidth = getScrollWidth(this.element.children[0]);
-    this.scrollWidth = Math.max(width,scrollWidth) + this.config.width;
+    scrollWidth = Math.max(width,scrollWidth) + this.config.width;
     this.clientWidth = width;
 
     var height = getHeight(this.element),scrollHeight = getScrollHeight(this.element.children[0]);
-    this.scrollHeight = Math.max(height,scrollHeight) + this.config.height;
+    scrollHeight = Math.max(height,scrollHeight);
     this.clientHeight = height;
+
+    if(this.config.overflowY && scrollWidth > width){
+        scrollHeight += this.config.height;;
+    }
+    if(this.config.overflowX && scrollHeight > height){
+        scrollWidth += this.config.width;;
+    }
+    this.scrollWidth = scrollWidth;
+    this.scrollHeight = scrollHeight;
 };
 ScrollBar.prototype._createScrollBarBlock = function () {
 
@@ -185,10 +208,13 @@ ScrollBar.prototype._renderH = function () {
     });
 
     var bar = this._createScrollBarBlock();
+    style(bar,{
+        'background-color':this.config.hScrollColor
+    });
+
+
     dom.appendChild(bar);
     this.element.appendChild(dom);
-
-    this._bindHorEvent();
 
 };
 ScrollBar.prototype.addEventListener = function (eventType,listener) {
@@ -236,6 +262,7 @@ ScrollBar.prototype._bindHorEvent = function () {
         startX = relativeLeft = undefined;
         enableUserSelect();
     };
+
 };
 ScrollBar.prototype.getHScrollRatio = function () {
     var barWidth = this.getScrollbarWidth();
@@ -246,6 +273,14 @@ ScrollBar.prototype.getVScrollRatio = function () {
     var barHeight = this.getScrollbarHeight();
     var scrollRatio = (this.scrollHeight - this.clientHeight)/(this.clientHeight - barHeight);
     return scrollRatio;
+};
+ScrollBar.prototype.getScrollLeft = function () {
+
+    var maxScrollLeft = this.scrollWidth - this.clientWidth;
+    this._scrollLeft = Math.min(maxScrollLeft,this._scrollLeft);
+    this._scrollLeft = Math.max(0,this._scrollLeft);
+    return this._scrollLeft;
+
 };
 ScrollBar.prototype.scrollLeftTo = function (scrollLeft) {
 
@@ -259,7 +294,18 @@ ScrollBar.prototype.scrollLeftTo = function (scrollLeft) {
         left:barLeft + 'px'
     });
     this._scrollLeft = scrollLeft;
+    style(this.element.children[0],{
+        left: -scrollLeft + 'px'
+    });
     this.triggerScrollEvent();
+
+};
+ScrollBar.prototype.getScrollTop = function () {
+
+    var maxScrollTop = this.scrollHeight - this.clientHeight;
+    this._scrollTop = Math.min(maxScrollTop,this._scrollTop);
+    this._scrollTop = Math.max(0,this._scrollTop);
+    return this._scrollTop;
 
 };
 ScrollBar.prototype.scrollTopTo = function (scrollTop) {
@@ -274,6 +320,9 @@ ScrollBar.prototype.scrollTopTo = function (scrollTop) {
         top:barTop + 'px'
     });
     this._scrollTop = scrollTop;
+    style(this.element.children[0],{
+        top:-scrollTop + 'px'
+    });
     this.triggerScrollEvent();
 
 };
@@ -305,6 +354,28 @@ ScrollBar.prototype._bindVerEvent = function () {
         enableUserSelect();
     };
 };
+
+ScrollBar.prototype._bindMouseWheelEvent = function () {
+
+    var _ = this;
+    if(this.config.overflowY){
+        return;
+    }
+    function wheelEvent(e){
+        var length = e.wheelDelta ? e.wheelDelta / 40 : e.detail || -e.deltaY;
+        _.scrollTop += -length * 5;
+    }
+    var support = ['wheel','mousewheel'].some(function (evtType) {
+        if(document['on' + evtType] !== undefined){
+            this.element.addEventListener(evtType,wheelEvent);
+            return true;
+        }
+    }.bind(this));
+    if(support){
+        return;
+    }
+    this.element.addEventListener('DOMMouseScroll',wheelEvent);
+};
 ScrollBar.prototype.getScrollbarHeight = function () {
     var height = this.clientHeight,scrollHeight = this.scrollHeight;
     var barHeight = height / (scrollHeight / height);
@@ -328,6 +399,10 @@ ScrollBar.prototype._renderV = function () {
     });
 
     var bar = this._createScrollBarBlock();
+    style(bar,{
+        'background-color':this.config.vScrollColor
+    });
+
     dom.appendChild(bar);
     this.element.appendChild(dom);
 

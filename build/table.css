@@ -47,8 +47,11 @@
     width: 100%;
     overflow: auto;
     border: 1px solid #000;
-    border-top: none;
-    overflow: hidden; }
+    border-top: none; }
+    .d1012 .d1012-body-container[overflowX='true'] {
+      overflow-x: hidden; }
+    .d1012 .d1012-body-container[overflowY='true'] {
+      overflow-y: hidden; }
   .d1012 .d1012-row-container {
     position: relative; }
   .d1012 .d1012-row-cursor {
