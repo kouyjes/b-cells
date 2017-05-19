@@ -475,12 +475,12 @@ ScrollBar.prototype._bindScrollEvent = function () {
 ScrollBar.prototype._bindMouseWheelEvent = function () {
 
     var _ = this;
-    if(this.config.overflowY){
-        return;
-    }
     function wheelEvent(e){
+        if(_.overflowY){
+            return;
+        }
         var length = e.wheelDelta ? e.wheelDelta / 40 : e.detail || -e.deltaY;
-        _.scrollTop += -length * 5;
+        _.scrollTop += -length * 10;
     }
     var support = ['wheel','mousewheel'].some(function (evtType) {
         if(document['on' + evtType] !== undefined){
