@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "build": "rollup -c",
-    "build-uglify": "rollup -c && uglifyjs build/Table.js > build/table.min.js",
-    "build-css":"scss src/themes/TableCell.scss > build/table.css",
+    "build-uglify": "rollup -c && uglifyjs build/Cells.js > build/Cells.min.js",
+    "build-css":"scss src/themes/Cells.scss > build/Cells.css",
     "build-all": "npm run build-uglify && npm run build-css",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>big data table</title>
-    <link rel="stylesheet" href="../build/table.css"/>
-    <script src="../build/table.js"></script>
+    <link rel="stylesheet" href="../build/Cells.css"/>
+    <script src="../build/Cells.js"></script>
     <style>
         html,body{
             width:100%;
@@ -19,14 +19,14 @@
         }
     </style>
     <script>
-        var tableModel = new CELL.TableModel();
+        var cellsModel = new CELL.CellsModel();
         var header = [];
         var colNum = 20;
         for(var i = 0; i< colNum;i++){
             header.push({name:'column' + i,width:'100px'});
         }
         var rows = [];
-        for(var i = 0;i < 100;i++){
+        for(var i = 0;i < 3;i++){
             rows.push((function(){
                 var fields = [];
                 for(var col = 0;col < colNum;col++){
@@ -39,30 +39,42 @@
             })());
         }
         var maxRowIndex = i;
-        tableModel.header = {
+        cellsModel.header = {
             height:50,
             fields:header
         };
-        tableModel.rows = rows;
+        cellsModel.rows = rows;
 
         function init(){
-            var tableCell = new CELL.TableCell(tableModel,{
+            var tableCell = new CELL.Cells(cellsModel,{
                 rowResize:true,
                 colResize:true,
                 overflowY:false,
-                enableCustomScroll:true
+                enableCustomScroll:false
             });
             console.time('start-render');
             tableCell.render('#table');
             console.timeEnd('start-render');
 
             window.addEventListener('resize', function () {
-                tableCell.repaint();
+                tableCell.executeFunctionDelay('windowResize',tableCell.paint)
             });
+
+            tableCell.addEventListener('click', function (e) {
+                console.log('click start');
+                console.log(e);
+                console.log('click end');
+            })
+
+            tableCell.addEventListener('cellClick', function (e) {
+                console.log('cell click start');
+                console.log(e);
+                console.log('cell click end');
+            })
 
         }
         function refresh(){
-            tableModel.refresh();
+            cellsModel.refresh();
         }
         function appendData(){
             var rows = [];
@@ -79,7 +91,7 @@
                 })());
             }
             maxRowIndex = i;
-            tableModel.appendRows(rows);
+            cellsModel.appendRows(rows);
         }
         function appendHtmlData(){
             var rows = [];
@@ -97,7 +109,7 @@
                 })());
             }
             maxRowIndex = i;
-            tableModel.appendRows(rows);
+            cellsModel.appendRows(rows);
         }
 
     </script>

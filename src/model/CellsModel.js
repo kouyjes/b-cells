@@ -1,10 +1,10 @@
 /**
  * Created by koujp on 2016/10/17.
  */
-function TableModel(tableModel){
+function CellsModel(cellsModel){
     this.header = {
-        fields:[]
-    };//{name:''}
+        fields:[] //{name:''}
+    };
     this.rows = [];//[{fields:[]}]
 
     this._eventListener = {
@@ -13,17 +13,17 @@ function TableModel(tableModel){
     };
 
     if(arguments.length > 0){
-        this.init(tableModel);
+        this.init(cellsModel);
     }
 }
-TableModel.prototype.init = function (tableModel) {
-    if(tableModel.header && tableModel.header.fields instanceof Array){
-        this.header.fields = tableModel.header.fields;
+CellsModel.prototype.init = function (cellsModel) {
+    if(cellsModel.header && cellsModel.header.fields instanceof Array){
+        this.header.fields = cellsModel.header.fields;
     }
-    if(tableModel.rows instanceof Array){
-        this.rows = tableModel.rows;
+    if(cellsModel.rows instanceof Array){
+        this.rows = cellsModel.rows;
     }
-    var eventListener = tableModel._eventListener;
+    var eventListener = cellsModel._eventListener;
     if(!eventListener){
         return;
     }
@@ -37,7 +37,7 @@ TableModel.prototype.init = function (tableModel) {
         }
     });
 };
-TableModel.prototype.bind = function (eventName,listener) {
+CellsModel.prototype.bind = function (eventName,listener) {
     if(typeof eventName !== 'string' || typeof listener !== 'function'){
         return;
     }
@@ -46,7 +46,7 @@ TableModel.prototype.bind = function (eventName,listener) {
         this._eventListener[eventName].push(listener);
     }
 };
-TableModel.prototype.getEventKey = function (eventName) {
+CellsModel.prototype.getEventKey = function (eventName) {
     if(eventName.length > 1){
         eventName = 'on' + eventName[0].toUpperCase()  + eventName.substring(1);
         if(this._eventListener[eventName] instanceof Array){
@@ -55,7 +55,7 @@ TableModel.prototype.getEventKey = function (eventName) {
     }
     return null;
 };
-TableModel.prototype.trigger = function (eventName) {
+CellsModel.prototype.trigger = function (eventName) {
     eventName = this.getEventKey(eventName);
     var listeners = this._eventListener[eventName];
     if(!(listeners instanceof Array)){
@@ -69,11 +69,11 @@ TableModel.prototype.trigger = function (eventName) {
         }catch(e) {}
     });
 };
-TableModel.prototype.refresh = function () {
+CellsModel.prototype.refresh = function () {
     this.trigger('refresh');
 };
-TableModel.prototype.appendRows = function (rows) {
+CellsModel.prototype.appendRows = function (rows) {
     this.rows = this.rows.concat(rows);
     this.trigger('appendRows');
 };
-export { TableModel }
+export { CellsModel }

@@ -1,2 +1,2 @@
-export { TableModel } from './model/TableModel';
-export { TableCell } from './ui/TableCell';
+export { CellsModel } from './model/CellsModel';
+export { Cells } from './ui/Cells';

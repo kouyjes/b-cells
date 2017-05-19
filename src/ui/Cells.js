@@ -1,17 +1,17 @@
 /**
  * Created by koujp on 2016/10/17.
  */
-import { TableModel } from '../model/TableModel';
+import { CellsModel } from '../model/CellsModel';
 import { ScrollBar } from './ScrollBar'
 import { getMousePosition,isDomElement,requestAnimationFrame,cancelAnimationFrame,executeFunctionDelay } from './domUtil'
 
 var headerContentClassName = 'header-content';
-function TableCell(tableModel,config){
+function Cells(cellsModel,config){
 
-    if(!(tableModel instanceof TableModel)){
-        throw new TypeError('arguments must be instanceof TableModel !');
+    if(!(cellsModel instanceof CellsModel)){
+        throw new TypeError('arguments must be instanceof CellsModel !');
     }
-    this.tableModel = tableModel;
+    this.cellsModel = cellsModel;
 
     this.config = Object.assign({
         enableCustomScroll:false,
@@ -22,13 +22,13 @@ function TableCell(tableModel,config){
         overflowY:false
     },config);
 
-    this._bindTableModelEvent();
+    this._bindCellsModelEvent();
 
 }
-TableCell.prototype.themesPrefix = 'd1012';
-TableCell.prototype.init = function () {
+Cells.prototype.themesPrefix = 'd1012';
+Cells.prototype.init = function () {
 
-    this.tablePanel = null;
+    this.cellPanel = null;
     this.headerPanel = null;
     this.bodyPanel = null;
     this.rowPanel = null;
@@ -47,8 +47,16 @@ TableCell.prototype.init = function () {
         rowsHeight:[]
     };
 
+    Object.defineProperty(this,'eventManager',{
+        value:{
+            click:[], //cells click event
+            cellClick:[] //cell click event
+        }
+    });
+
+
 };
-TableCell.prototype.getFullClassName = function (className) {
+Cells.prototype.getFullClassName = function (className) {
 
     if(!className){
         return this.themesPrefix;
@@ -56,18 +64,54 @@ TableCell.prototype.getFullClassName = function (className) {
     return this.themesPrefix + '-' + className;
 
 };
-TableCell.prototype.getFullClassSelector = function (selector) {
+Cells.prototype.getFullClassSelector = function (selector) {
 
     return '.' + this.getFullClassName(selector);
 
 };
-TableCell.prototype.render = function (renderTo) {
+Cells.prototype.addEventListener = function (eventType,func) {
+
+    var handlers = this.eventManager[eventType];
+    if(!handlers){
+        handlers = this.eventManager[eventType] = [];
+    }
+    if(handlers.indexOf(func) === -1){
+        handlers.push(func);
+    }
+};
+Cells.prototype.removeEventListener = function (eventType,func) {
+
+    var handlers = this.eventManager[eventType];
+    if(!handlers){
+        return;
+    }
+    var index = handlers.indexOf(func);
+    if(index >= 0){
+        handlers.splice(index,1);
+    }
+
+};
+Cells.prototype.triggerEvent = function (event) {
+
+    var eventType = event.type;
+    var handlers = this.eventManager[eventType];
+    if(!handlers){
+        return;
+    }
+    handlers.forEach(function (handler) {
+        requestAnimationFrame(function () {
+            handler.call(event.target,event);
+        });
+    }.bind(this));
+
+};
+Cells.prototype.render = function (renderTo) {
 
     this._setRenderTo(renderTo);
     this.refresh();
 
 };
-TableCell.prototype.refresh = function () {
+Cells.prototype.refresh = function () {
 
     this.init();
     var renderTo = this.renderTo;
@@ -75,15 +119,15 @@ TableCell.prototype.refresh = function () {
         throw new TypeError('parent container is invalid !');
     }
 
-    var tablePanel = this.tablePanel = document.createElement('div');
-    tablePanel.className = this.getFullClassName();
+    var cellPanel = this.cellPanel = document.createElement('div');
+    cellPanel.className = this.getFullClassName();
     var dirtyPanel = renderTo.querySelector(this.getFullClassSelector());
     dirtyPanel && renderTo.removeChild(dirtyPanel);
 
-    tablePanel.appendChild(this._createHeader());
+    cellPanel.appendChild(this._createHeader());
 
-    tablePanel.appendChild(this._createBodyContainer());
-    renderTo.appendChild(tablePanel);
+    cellPanel.appendChild(this._createBodyContainer());
+    renderTo.appendChild(cellPanel);
 
     if(this.config.enableCustomScroll){
         this.scrollbar = new ScrollBar(this.bodyPanel,{
@@ -100,7 +144,7 @@ TableCell.prototype.refresh = function () {
 
 
 };
-TableCell.prototype._setRenderTo = function (renderTo) {
+Cells.prototype._setRenderTo = function (renderTo) {
 
     if(typeof renderTo === 'string'){
         renderTo = document.querySelector(renderTo);
@@ -113,7 +157,7 @@ TableCell.prototype._setRenderTo = function (renderTo) {
     this.renderTo = renderTo;
 
 };
-TableCell.prototype.scrollTo = function (scrollTop,scrollLeft) {
+Cells.prototype.scrollTo = function (scrollTop,scrollLeft) {
 
     var scrollbar = this.scrollbar || this.bodyPanel;
 
@@ -127,7 +171,7 @@ TableCell.prototype.scrollTo = function (scrollTop,scrollLeft) {
     scrollbar.scrollTop = scrollTop;
 
 };
-TableCell.prototype._cachePanelSize = function () {
+Cells.prototype._cachePanelSize = function () {
 
     var renderTo = this.renderTo;
 
@@ -145,7 +189,7 @@ TableCell.prototype._cachePanelSize = function () {
     }
 
 };
-TableCell.prototype.getPanelSize = function () {
+Cells.prototype.getPanelSize = function () {
 
     return {
         width:this.renderTo.currentWidth,
@@ -153,7 +197,7 @@ TableCell.prototype.getPanelSize = function () {
     };
 
 };
-TableCell.prototype.getCurrentColArea = function () {
+Cells.prototype.getCurrentColArea = function () {
 
     var scrollbar = this.scrollbar || this.bodyPanel;
     var panelSize = this.getPanelSize();
@@ -162,7 +206,7 @@ TableCell.prototype.getCurrentColArea = function () {
     return this.getThresholdArea(panelSize.width,colsLeft,left);
 
 };
-TableCell.prototype.getThresholdArea = function (viewSize,positions,cursor) {
+Cells.prototype.getThresholdArea = function (viewSize,positions,cursor) {
 
     var from = 0,
         end;
@@ -192,7 +236,7 @@ TableCell.prototype.getThresholdArea = function (viewSize,positions,cursor) {
     return area;
 
 };
-TableCell.prototype.getCurrentRowArea = function () {
+Cells.prototype.getCurrentRowArea = function () {
 
     var scrollbar = this.scrollbar || this.bodyPanel;
     var panelSize = this.getPanelSize();
@@ -201,17 +245,17 @@ TableCell.prototype.getCurrentRowArea = function () {
     return this.getThresholdArea(panelSize.height,rowsTop,top);
 
 };
-TableCell.prototype.getRowPaintAreas = function () {
+Cells.prototype.getRowPaintAreas = function () {
 
     return this._getPaintAreas('row');
 
 };
-TableCell.prototype.getColPaintAreas = function () {
+Cells.prototype.getColPaintAreas = function () {
 
     return this._getPaintAreas('col');
 
 };
-TableCell.prototype._getPaintAreas_ = function (type) {
+Cells.prototype._getPaintAreas_ = function (type) {
 
     var lastArea = type === 'row'?this.rowClientArea:this.colClientArea,
         curArea = type === 'row'?this.getCurrentRowArea():this.getCurrentColArea();
@@ -255,7 +299,7 @@ TableCell.prototype._getPaintAreas_ = function (type) {
     return areas;
 
 };
-TableCell.prototype._getPaintAreas = function (type) {
+Cells.prototype._getPaintAreas = function (type) {
 
     var lastArea = type === 'row'?this.rowClientArea:this.colClientArea,
         curArea = type === 'row'?this.getCurrentRowArea():this.getCurrentColArea();
@@ -305,7 +349,7 @@ TableCell.prototype._getPaintAreas = function (type) {
     return areas;
 
 };
-TableCell.prototype.paint = function () {
+Cells.prototype.paint = function () {
 
     this._cachePanelSize();
     this._initCellSizeIndex();
@@ -314,20 +358,21 @@ TableCell.prototype.paint = function () {
     this.syncCursor();
 
 };
-TableCell.prototype.repaint = function () {
+Cells.prototype.repaint = function () {
 
     this.paintHeader();
     this.paintBody();
 
 };
-TableCell.prototype.paintHeader = function () {
+Cells.prototype.paintHeader = function () {
 
     var cellsCache = this.domCache.headerCells,
         headerContentPanel = this.headerPanel.querySelector(this.getFullClassSelector(headerContentClassName))
-    tableModel.header.fields.forEach(function (field,index) {
+    cellsModel.header.fields.forEach(function (field,index) {
         var headerCell = cellsCache[index];
         if(!headerCell){
             headerCell = this._createCell(0,index,field,cellsCache);
+            headerCell._headerCell = true;
             headerContentPanel.appendChild(headerCell);
         }else{
             this._paintCell(headerCell,0,index,field);
@@ -335,7 +380,7 @@ TableCell.prototype.paintHeader = function () {
     }.bind(this));
 
 };
-TableCell.prototype.paintBody = function () {
+Cells.prototype.paintBody = function () {
 
     var rowPaintAreas = this.getRowPaintAreas(),
         colPaintAreas = this.getColPaintAreas();
@@ -365,7 +410,7 @@ TableCell.prototype.paintBody = function () {
         return !inRow || !inCol;
     });
 
-    var rows = this.tableModel.rows;
+    var rows = this.cellsModel.rows;
 
     rowPaintAreas.forEach(function (area) {
         var row;
@@ -395,13 +440,13 @@ TableCell.prototype.paintBody = function () {
     });
 
 };
-TableCell.prototype.computeRowTop = function (row) {
+Cells.prototype.computeRowTop = function (row) {
 
     var rowsTop = this.domCache.rowsTop;
     return rowsTop[row];
 
 };
-TableCell.prototype._paintCell = function (cell,row,col,field) {
+Cells.prototype._paintCell = function (cell,row,col,field) {
 
     cell.setAttribute('row','' + row);
     cell.setAttribute('col','' + col);
@@ -409,7 +454,7 @@ TableCell.prototype._paintCell = function (cell,row,col,field) {
     this._reLayoutCell(cell);
 
 };
-TableCell.prototype._configCell = function (cell,field) {
+Cells.prototype._configCell = function (cell,field) {
 
     var isHtml = typeof field.html === 'string',
     isHtmlCell = cell.getAttribute('html_content') === 'true';
@@ -441,10 +486,11 @@ TableCell.prototype._configCell = function (cell,field) {
     return cell;
 
 };
-TableCell.prototype._createCell = function (row,col,field,cacheCells) {
+Cells.prototype._createCell = function (row,col,field,cacheCells) {
 
     var cacheCells = cacheCells || this.domCache.cells;
     var cell = document.createElement('div');
+    cell._cell = true;
     this._configCell(cell,field);
 
     cell.setAttribute('row','' + row);
@@ -458,7 +504,7 @@ TableCell.prototype._createCell = function (row,col,field,cacheCells) {
     return cell;
 
 };
-TableCell.prototype._reLayoutCell = function (cell) {
+Cells.prototype._reLayoutCell = function (cell) {
 
     var row = parseInt(cell.getAttribute('row')),
         col = parseInt(cell.getAttribute('col'));
@@ -471,13 +517,13 @@ TableCell.prototype._reLayoutCell = function (cell) {
     cell.style.height = rowsHeight[row] + 'px';
 
     //last column flag
-    var colLast = String(this.tableModel.header.fields.length - 1 === col),
-        rowLast = String(this.tableModel.rows.length - 1 === row);
+    var colLast = String(this.cellsModel.header.fields.length - 1 === col),
+        rowLast = String(this.cellsModel.rows.length - 1 === row);
     cell.setAttribute('col-last',colLast);
     cell.setAttribute('row-last',rowLast);
 
 };
-TableCell.prototype._onAppendRows = function () {
+Cells.prototype._onAppendRows = function () {
 
     var rowsHeight = this.domCache.rowsHeight;
     this._initCellHeightIndex(rowsHeight.length);
@@ -485,7 +531,7 @@ TableCell.prototype._onAppendRows = function () {
     this.executeFunctionDelay('repaintRequest',this.repaint);
 
 };
-TableCell.prototype.syncCursor = function () {
+Cells.prototype.syncCursor = function () {
 
     var cursor = this.cursor;
     if(!cursor){
@@ -503,7 +549,7 @@ TableCell.prototype.syncCursor = function () {
     this.executeFunctionDelay('resizeScrollbar',this.resizeScrollbar);
 
 };
-TableCell.prototype.resizeScrollbar = function () {
+Cells.prototype.resizeScrollbar = function () {
 
     if(this.scrollbar){
         this.scrollbar.resize();
@@ -511,19 +557,19 @@ TableCell.prototype.resizeScrollbar = function () {
     }
 
 };
-TableCell.prototype._initCellSizeIndex = function () {
+Cells.prototype._initCellSizeIndex = function () {
 
     this._initCellWidthIndex();
     this._initCellHeightIndex();
 
 };
-TableCell.prototype._initCellWidthIndex = function () {
+Cells.prototype._initCellWidthIndex = function () {
 
     var colsWidth = this.domCache.colsWidth,
         colsLeft = this.domCache.colsLeft;
 
     var maxWidth = 0;
-    tableModel.header.fields.forEach(function (field,index) {
+    cellsModel.header.fields.forEach(function (field,index) {
         var colWidth = this._parseCellWidth(field.width);
         colsWidth[index] = colWidth;
         maxWidth += colWidth;
@@ -536,12 +582,12 @@ TableCell.prototype._initCellWidthIndex = function () {
     }.bind(this));
 
 };
-TableCell.prototype._initCellHeightIndex = function (startIndex) {
+Cells.prototype._initCellHeightIndex = function (startIndex) {
 
     startIndex = startIndex || 0;
 
-    var tableModel = this.tableModel;
-    var rows = tableModel.rows;
+    var cellsModel = this.cellsModel;
+    var rows = cellsModel.rows;
     var rowsTop = this.domCache.rowsTop,
         rowsHeight = this.domCache.rowsHeight;
 
@@ -558,7 +604,7 @@ TableCell.prototype._initCellHeightIndex = function (startIndex) {
     }.bind(this));
 
 };
-TableCell.prototype._createCursor = function () {
+Cells.prototype._createCursor = function () {
 
     var cursor = document.createElement('i');
     cursor.className = this.getFullClassName('row-cursor');
@@ -569,7 +615,7 @@ TableCell.prototype._createCursor = function () {
     return cursor;
 
 };
-TableCell.prototype._createBodyContainer = function () {
+Cells.prototype._createBodyContainer = function () {
 
     var bodyContainer = this.bodyPanel = document.createElement('div');
     bodyContainer.className = this.getFullClassName('body-container');
@@ -580,7 +626,7 @@ TableCell.prototype._createBodyContainer = function () {
     bodyContainer.appendChild(this._createRowContainer());
     return bodyContainer;
 };
-TableCell.prototype._createRowContainer = function () {
+Cells.prototype._createRowContainer = function () {
 
     var rowContainer = document.createElement('div');
     rowContainer.className = this.getFullClassName('row-container');
@@ -588,7 +634,7 @@ TableCell.prototype._createRowContainer = function () {
     return rowContainer;
 
 };
-TableCell.prototype._parseCellWidth = function (width) {
+Cells.prototype._parseCellWidth = function (width) {
 
     var panelSize = this.getPanelSize();
     var clientWidth = panelSize.width;
@@ -600,7 +646,7 @@ TableCell.prototype._parseCellWidth = function (width) {
     return isNaN(width)?100:width;
 
 };
-TableCell.prototype._parseCellHeight = function (height) {
+Cells.prototype._parseCellHeight = function (height) {
 
     if(typeof height === 'string' && height && height.indexOf('%') === height.length - 1){
         var clientHeight = this.getPanelSize().height;
@@ -611,26 +657,26 @@ TableCell.prototype._parseCellHeight = function (height) {
     return height?height:30;
 
 };
-TableCell.prototype.headerHeight = function (height) {
+Cells.prototype.headerHeight = function (height) {
 
-    var tableModel = this.tableModel;
+    var cellsModel = this.cellsModel;
     if(!height){
-        return tableModel.header.height;
+        return cellsModel.header.height;
     }
     height = parseInt(height);
     if(typeof height === 'number'){
         height = height + 'px';
     }
-    tableModel.header.height = height;
+    cellsModel.header.height = height;
     this.headerPanel.style.height = height;
 };
-TableCell.prototype._createHeader = function () {
+Cells.prototype._createHeader = function () {
 
-    var tableModel = this.tableModel;
+    var cellsModel = this.cellsModel;
     var headerContainer = document.createElement('header');
     headerContainer.className = this.getFullClassName('header');
     this.headerPanel = headerContainer;
-    this.headerHeight(tableModel.header.height);
+    this.headerHeight(cellsModel.header.height);
 
     var headerContentPanel = document.createElement('div');
     headerContentPanel.className = this.getFullClassName(headerContentClassName);
@@ -639,25 +685,25 @@ TableCell.prototype._createHeader = function () {
     return headerContainer;
 
 };
-TableCell.prototype._bindTableModelEvent = function () {
-    this.tableModel.bind('refresh', function () {
+Cells.prototype._bindCellsModelEvent = function () {
+    this.cellsModel.bind('refresh', function () {
         if(this.renderTo){
             this.executeFunctionDelay('refresh',this.refresh);
         }
     }.bind(this));
 
-    this.tableModel.bind('appendRows', function () {
+    this.cellsModel.bind('appendRows', function () {
         if(this.renderTo){
             this.executeFunctionDelay('appendRows',this._onAppendRows);
         }
     }.bind(this));
 };
-TableCell.prototype.executeFunctionDelay = function (timeoutId,func,context) {
+Cells.prototype.executeFunctionDelay = function (timeoutId,func,context) {
 
     return executeFunctionDelay(timeoutId,func,context || this);
 
 };
-TableCell.prototype._bindEvent = function () {
+Cells.prototype._bindEvent = function () {
 
     var headerPanel = this.headerPanel,
         scrollbar = this.scrollbar || this.bodyPanel;
@@ -673,14 +719,16 @@ TableCell.prototype._bindEvent = function () {
 
     this._bindResizeCellEvent();
 
+    this._bindClickEvent();
+
 };
-TableCell.prototype.resizeRowHeight = function (rowIndex,height) {
+Cells.prototype.resizeRowHeight = function (rowIndex,height) {
     this.resizeCell(rowIndex,null,null,height);
 };
-TableCell.prototype.resizeColWidth = function (colIndex,width) {
+Cells.prototype.resizeColWidth = function (colIndex,width) {
     this.resizeCell(null,colIndex,width,null);
 };
-TableCell.prototype._updateDomCache = function (rowIndex,colIndex,width,height) {
+Cells.prototype._updateDomCache = function (rowIndex,colIndex,width,height) {
 
     if(typeof (height = parseInt(height)) === 'number'){
         height = Math.max(0,height);
@@ -701,7 +749,7 @@ TableCell.prototype._updateDomCache = function (rowIndex,colIndex,width,height) 
         }
     }
 };
-TableCell.prototype._resizeCellDom = function (rowIndex,colIndex) {
+Cells.prototype._resizeCellDom = function (rowIndex,colIndex) {
 
     var rowsHeight = this.domCache.rowsHeight,
         rowsTop = this.domCache.rowsTop;
@@ -741,11 +789,11 @@ TableCell.prototype._resizeCellDom = function (rowIndex,colIndex) {
     }
 
 };
-TableCell.prototype.resizeCell = function (rowIndex,colIndex,width,height) {
+Cells.prototype.resizeCell = function (rowIndex,colIndex,width,height) {
     this._updateDomCache(rowIndex,colIndex,width,height);
     this._resizeCellDom(rowIndex,colIndex,width,height);
 };
-TableCell.prototype._bindResizeCellEvent = function () {
+Cells.prototype._bindResizeCellEvent = function () {
     if(!this.config.colResize && !this.config.rowResize){
         return;
     }
@@ -799,7 +847,9 @@ TableCell.prototype._bindResizeCellEvent = function () {
         rowIndex:undefined,
         colIndex:undefined,
         reset: function () {
-            return this.resetX() || this.resetY();
+            var resetX = this.resetX(),
+                resetY = this.resetY();
+            return resetX || resetY;
         },
         resetX: function () {
             var bln = !!this.colIndex || !!this.lastPageX;
@@ -829,16 +879,15 @@ TableCell.prototype._bindResizeCellEvent = function () {
             resizeFlag = false;
         if(resizeManager.lastPageY  !== undefined){
             height = mouseInfo.position.pageY - resizeManager.lastPageY + rowsHeight[rowIndex]
-            resizeFlag = true;
             resizeManager.lastPageY = mouseInfo.position.pageY;
+            resizeFlag = true;
         }
 
         if(resizeManager.lastPageX !== undefined){
             width = mouseInfo.position.pageX - resizeManager.lastPageX + colsWidth[colIndex];
-            resizeFlag = true;
             resizeManager.lastPageX = mouseInfo.position.pageX;
+            resizeFlag = true;
         }
-
         if(resizeFlag){
             this.resizeCell(rowIndex,colIndex,width,height);
         }
@@ -864,16 +913,68 @@ TableCell.prototype._bindResizeCellEvent = function () {
             resizeManager.resetX();
         }
 
-        this.tablePanel.setAttribute('resize',String(resizeFlag));
+        this.cellPanel.setAttribute('resize',String(resizeFlag));
 
     }.bind(this));
     function mouseup(){
-        this.tablePanel.setAttribute('resize',String(false));
+        this.cellPanel.setAttribute('resize',String(false));
         if(resizeManager.reset()){
             this.syncCursor();
         }
     }
     bodyPanel.addEventListener('mouseup',mouseup.bind(this));
     bodyPanel.addEventListener('mouseleave',mouseup.bind(this))
+
 };
-export { TableCell }
+Cells.prototype.createEvent = function (eventType,target,data) {
+
+   return {
+       type:eventType,
+       target:target,
+       data:data
+   };
+
+};
+Cells.prototype.tiggerCellEvent = function (cell) {
+
+    var cellsModel = this.cellsModel,col = parseInt(cell.getAttribute('col'));
+    if(cell._headerCell){
+        this.triggerEvent(this.createEvent('cellClick',cell,cellsModel.header.fields[col]));
+        return;
+    }
+    var row = parseInt(cell.getAttribute('row'));
+    var rowData = cellsModel.rows[row];
+    if(rowData){
+        this.triggerEvent(this.createEvent('cellClick',cell,rowData.fields[col]));
+    }
+};
+Cells.prototype._bindClickEvent = function () {
+
+    var _ = this,cellPanel = this.cellPanel;
+    cellPanel.addEventListener('click', function (e) {
+
+        var target = e.target;
+        if(target === cellPanel){
+            _.tiggerCellEvent(_.createEvent('click',target,_.cellsModel));
+            return;
+        }
+        if(_.eventManager.cellClick && _.eventManager.cellClick.length >= 0){
+            if(target._cell){
+                _.tiggerCellEvent(target);
+            }else{
+                while(target = target.parentNode){
+                    if(target === cellPanel){
+                        break;
+                    }
+                    if(target._cell){
+                        _.tiggerCellEvent(target);
+                        break;
+                    }
+                }
+            }
+        }
+        _.triggerEvent(_.createEvent('click',target,_.cellsModel));
+    });
+
+};
+export { Cells }
