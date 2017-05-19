@@ -1,2 +1,2 @@
-# b-table
-B-table is a table component for rendering big data
+# b-cells
+B-cells is a component for rendering big data
