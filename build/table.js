@@ -667,11 +667,11 @@ ScrollBar.prototype._getTouchEventListeners = function () {
                 return;
             }
             var pos = getMousePosition(e);
-            var moveRatio = 0.2;
+            var moveRatio = 0.8;
             if(Math.abs(pos.pageY - listeners.lastPageY) >= Math.abs(pos.pageX - listeners.lastPageX)){
-                _.scrollTop += -(pos.pageY - listeners.startY) * moveRatio;
+                _.scrollTop += -(pos.pageY - listeners.lastPageY) * moveRatio;
             }else{
-                _.scrollLeft += -(pos.pageX - listeners.startX) * moveRatio;
+                _.scrollLeft += -(pos.pageX - listeners.lastPageX) * moveRatio;
             }
 
             listeners.lastPageY = pos.pageY;
