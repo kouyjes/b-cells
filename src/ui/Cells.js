@@ -368,16 +368,34 @@ Cells.prototype.paintHeader = function () {
 
     var cellsCache = this.domCache.headerCells,
         headerContentPanel = this.headerPanel.querySelector(this.getFullClassSelector(headerContentClassName))
-    cellsModel.header.fields.forEach(function (field,index) {
-        var headerCell = cellsCache[index];
-        if(!headerCell){
-            headerCell = this._createCell(0,index,field,cellsCache);
-            headerCell._headerCell = true;
-            headerContentPanel.appendChild(headerCell);
-        }else{
-            this._paintCell(headerCell,0,index,field);
+    var colPaintAreas = this.getColPaintAreas(),
+        colClientArea = colPaintAreas.currentArea;
+    if(colPaintAreas.length === 0){
+        colPaintAreas.push(colClientArea);
+    }
+    var cells = cellsCache.filter(function (cell) {
+        var col = parseInt(cell.getAttribute('col'));
+        var inCol = col >= colClientArea.from && col < colClientArea.from + colClientArea.pageSize;
+        return inCol;
+    });
+
+    var fields = cellsModel.header.fields;
+    colPaintAreas.forEach(function (colArea) {
+        var cell,field;
+        for(var colIndex = colArea.from;colIndex < colArea.from + colArea.pageSize;colIndex++){
+            field = fields[colIndex];
+            cell = cells.pop();
+            if(!cell){
+                cell = this._createCell(0,colIndex,field,cellsCache);
+                cell._headerCell = true;
+                headerContentPanel.appendChild(cell);
+            }else{
+                this._paintCell(cell,0,colIndex,field);
+            }
         }
     }.bind(this));
+
+    this.removeCells(cellsCache,cells);
 
 };
 Cells.prototype.paintBody = function () {
@@ -432,6 +450,12 @@ Cells.prototype.paintBody = function () {
             }.bind(this));
         }
     }.bind(this));
+
+    this.removeCells(cacheCells,cells);
+
+};
+Cells.prototype.removeCells = function (cacheCells,cells) {
+
     cells.forEach(function (cell) {
         if(cell.parentNode){
             cell.parentNode.removeChild(cell);
