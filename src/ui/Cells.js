@@ -797,7 +797,7 @@ Cells.prototype._bindResizeCellEvent = function () {
     if(!this.config.colResize && !this.config.rowResize){
         return;
     }
-    var mouseHit = 3,cursors = ['auto','n-resize','w-resize','nw-resize'];
+    var mouseHit = 3,cursors = ['auto','ns-resize','ew-resize','nwse-resize'];
     var bodyPanel = this.bodyPanel,
         rowsTop = this.domCache.rowsTop,
         colsLeft = this.domCache.colsLeft,

@@ -6,7 +6,7 @@
   "scripts": {
     "build": "rollup -c",
     "build-uglify": "rollup -c && uglifyjs build/Cells.js > build/Cells.min.js",
-    "build-css":"scss src/themes/Cells.scss > build/Cells.css",
+    "build-css": "scss src/themes/Cells.scss > build/Cells.css",
     "build-all": "npm run build-uglify && npm run build-css",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -20,7 +20,9 @@
   "devDependencies": {
     "rollup": "^0.36.3",
     "rollup-plugin-scss": "^0.1.0",
-    "rollup-plugin-uglify": "^1.0.1"
+    "rollup-plugin-uglify": "^1.0.1",
+    "ruby": "^0.6.1",
+    "scss": "^0.2.4"
   },
   "repository": {
     "type": "git",
