@@ -1645,6 +1645,8 @@ Cells.prototype._bindResizeCellEvent = function () {
             resizeManager.colIndex = mouseInfo.colIndex;
             resizeFlag = true;
         }else{
+            e.stopPropagation();
+            e.preventDefault();
             resizeManager.resetX();
         }
 
