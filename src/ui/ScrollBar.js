@@ -472,15 +472,45 @@ ScrollBar.prototype._bindScrollEvent = function () {
     this._bindTouchScrollEvent();
 
 };
+function isDefined(val){
+    return val !== undefined;
+}
+function getWheelData (e,type) {
+
+    var value = 0;
+    if(isDefined(value = e['delta' + type])){
+        return value;
+    }
+    if(isDefined(value = e['wheelDelta' + type])){
+        return value;
+    }
+    if(isDefined(value = e['wheelDelta'])){
+        return value / 40;
+    }
+    if(isDefined(value = e.detail)){
+        return value;
+    }
+    return value;
+
+}
 ScrollBar.prototype._bindMouseWheelEvent = function () {
 
     var _ = this;
     function wheelEvent(e){
-        if(_.overflowY){
-            return;
+
+        var lengthX = _.overflowX ? 0 : getWheelData(e,'X'),
+            lengthY = _.overflowY ? 0 : getWheelData(e,'Y');
+
+
+        if(Math.abs(lengthX) > Math.abs(lengthY)){
+            if(lengthX){
+                _.scrollLeft += -lengthX * 10;
+            }
+        }else{
+            if(lengthY){
+                _.scrollTop += -lengthY * 10;
+            }
         }
-        var length = e.wheelDelta ? e.wheelDelta / 40 : e.detail || -e.deltaY;
-        _.scrollTop += -length * 10;
     }
     var support = ['wheel','mousewheel'].some(function (evtType) {
         if(document['on' + evtType] !== undefined){
