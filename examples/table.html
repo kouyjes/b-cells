@@ -15,13 +15,13 @@
         }
         #table{
             width:100%;
-            height:200px;
+            height:80%;
         }
     </style>
     <script>
         var cellsModel = new CELL.CellsModel();
         var header = [];
-        var colNum = 10;
+        var colNum = 100;
         for(var i = 0; i< colNum;i++){
             header.push({name:'column' + i,width:'20%'});
         }
@@ -44,21 +44,26 @@
             fields:header
         };
         cellsModel.rows = rows;
-
+        var tableCell;
         function init(){
-            var tableCell = new CELL.Cells(cellsModel,{
+            tableCell = new CELL.Cells(cellsModel,{
+                renderTo:'#table',
                 rowResize:true,
                 colResize:true,
                 overflowY:false,
                 enableCustomScroll:true
             });
-            console.time('start-render');
-            tableCell.render('#table');
-            console.timeEnd('start-render');
 
-            window.addEventListener('resize', function () {
+
+            /*window.addEventListener('resize', function () {
                 tableCell.executeFunctionDelay('windowResize',tableCell.paint)
-            });
+            });*/
+
+        }
+        function render(){
+            console.time('start-render');
+            tableCell.render();
+            console.timeEnd('start-render');
 
             tableCell.addEventListener('click', function (e) {
                 console.log('click start');
@@ -74,7 +79,8 @@
 
         }
         function refresh(){
-            cellsModel.refresh();
+            //cellsModel.refresh();
+            tableCell.paint();
         }
         function appendData(){
             var rows = [];
@@ -120,8 +126,8 @@
 
     </script>
 </head>
-<body>
-    <button onclick="init()">render</button>
+<body onload="init()">
+    <button onclick="render()">render</button>
     <button onclick="refresh()">refresh</button>
     <button onclick="appendData()">appendData</button>
     <button onclick="appendHtmlData()">appendHtmlData</button>

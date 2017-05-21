@@ -1,6 +1,8 @@
 import { getFullClassName,getFullClassSelector,getMousePosition } from './domUtil'
 
-var CellsResize = Object.create(null);
+function CellsResize(){
+
+}
 
 CellsResize.resizeRowHeight = function resizeRowHeight(rowIndex,height) {
 
@@ -38,7 +40,8 @@ CellsResize._resizeCellDom = function _resizeCellDom(rowIndex,colIndex) {
     }
 
     //update header col width
-    cells = this.headerPanel.querySelectorAll(getFullClassSelector('cell')),size = cells.length;
+    cells = this.getHeaderCells(),
+        size = cells.length;
     for(var i = 0;i < size;i++){
         cell = cells[i];
         if(rowIndex === -1){
@@ -156,6 +159,7 @@ function _bindResizeCellEvent() {
         }
         if(resizeFlag){
             this.resizeCell(rowIndex,colIndex,width,height);
+            e.stopPropagation();
         }
     }.bind(this));
 
@@ -184,7 +188,7 @@ function _bindResizeCellEvent() {
         this.cellPanel.setAttribute('resize',String(resizeFlag));
 
     }.bind(this));
-    function mouseup(){
+    function mouseup(e){
         this.cellPanel.setAttribute('resize',String(false));
         if(resizeManager.reset()){
             this.syncCursor();

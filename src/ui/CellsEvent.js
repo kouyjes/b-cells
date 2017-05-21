@@ -1,6 +1,16 @@
 import { getFullClassName,getFullClassSelector,requestAnimationFrame,cancelAnimationFrame,executeFunctionDelay } from './domUtil'
 
-var CellsEvent = Object.create(null);
+function CellsEvent(){
+
+    Object.defineProperty(this,'eventManager',{
+        value:{
+            click:[], //cells click event
+            cellClick:[], //cell click event
+            scroll:[] // scroll event
+        }
+    });
+
+}
 
 var bindEventExecutors = [];
 CellsEvent.extendBindEventExecutor = function (executor) {

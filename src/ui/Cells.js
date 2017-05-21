@@ -6,8 +6,44 @@ import { CellsRender } from './CellsRender';
 import { CellsEvent } from './CellsEvent';
 import { CellsResize } from './CellsResize';
 import { isDomElement,requestAnimationFrame,cancelAnimationFrame,executeFunctionDelay } from './domUtil'
+function _setRenderTo(renderTo) {
 
+    if(typeof renderTo === 'string'){
+        renderTo = document.querySelector(renderTo);
+    }
+
+    if(!isDomElement(renderTo)){
+        throw new TypeError('renderTo must be a dom element !');
+    }
+
+    this.renderTo = renderTo;
+
+};
 function Cells(cellsModel,config){
+
+    init.apply(this,arguments);
+
+}
+
+var _initHooks = [];
+Cells.addInitHooks = function (initHook) {
+
+    var index = _initHooks.indexOf(initHook);
+    if(index === -1){
+        _initHooks.push(initHook);
+    }
+
+};
+Cells.removeInitHooks = function (initHook) {
+
+    var index = _initHooks.indexOf(initHook);
+    if(index >= 0){
+        _initHooks.splice(index,1);
+    }
+
+};
+
+function init(cellsModel,config) {
 
     if(!(cellsModel instanceof CellsModel)){
         throw new TypeError('arguments must be instanceof CellsModel !');
@@ -15,6 +51,11 @@ function Cells(cellsModel,config){
     Object.defineProperty(this,'cellsModel',{
         value:cellsModel
     });
+
+    var renderTo = config.renderTo;
+    delete config.renderTo;
+    _setRenderTo.call(this,renderTo);
+
 
     this.config = Object.assign({
         enableCustomScroll:false,
@@ -26,51 +67,25 @@ function Cells(cellsModel,config){
     },config);
     Object.freeze(this.config);
 
-    this._bindCellsModelEvent();
 
-}
-Cells.prototype.themesPrefix = 'd1012';
-Cells.prototype.init = function () {
+    var _ = this,initParams = arguments;
+    var initHooks = this.initHooks || _initHooks;
 
-    this.cellPanel = null;
-    this.headerPanel = null;
-    this.bodyPanel = null;
-    this.rowPanel = null;
-    this.cursor = null;
+    if(!initHooks){
+        initHooks = _initHooks;
+        this.initHooks = [].concat(initHooks);
+    }
 
-    this.rowClientArea = null;
-    this.colClientArea = null;
-
-    this.domCache = {
-        headerCells:[],
-        cells:[],
-        colsWidth:[],
-        colsLeft:[],
-        rowsTop:[],
-        rowsHeight:[]
-    };
-
-    Object.defineProperty(this,'eventManager',{
-        value:{
-            click:[], //cells click event
-            cellClick:[] //cell click event
+    initHooks.forEach(function (initHook) {
+        try{
+           initHook.apply(_,initParams);
+        }catch(e){
+            console.error(e);
         }
     });
 
+    this._bindCellsModelEvent();
 
-};
-
-Cells.prototype._setRenderTo = function (renderTo) {
-
-    if(typeof renderTo === 'string'){
-        renderTo = document.querySelector(renderTo);
-    }
-
-    if(!isDomElement(renderTo)){
-        throw new TypeError('renderTo must be a dom element !');
-    }
-
-    this.renderTo = renderTo;
 
 };
 Cells.prototype.scrollTo = function (scrollTop,scrollLeft) {
@@ -87,22 +102,13 @@ Cells.prototype.scrollTo = function (scrollTop,scrollLeft) {
     scrollbar.scrollTop = scrollTop;
 
 };
-Cells.prototype._cachePanelSize = function () {
+Cells.prototype._initPanelSize = function () {
 
     var renderTo = this.renderTo;
-
-    renderTo.lastWidth = renderTo.currentWidth;
-    renderTo.lastHeight = renderTo.currentHeight;
 
     renderTo.currentWidth = renderTo.clientWidth;
     renderTo.currentHeight = renderTo.clientHeight;
 
-    if(!renderTo.lastWidth){
-        renderTo.lastWidth = renderTo.currentWidth;
-    }
-    if(!renderTo.lastHeight){
-        renderTo.lastHeight = renderTo.currentHeight;
-    }
 
 };
 Cells.prototype.getPanelSize = function () {
@@ -208,7 +214,7 @@ Cells.prototype.headerHeight = function (height) {
 Cells.prototype._bindCellsModelEvent = function () {
     this.cellsModel.bind('refresh', function () {
         if(this.renderTo){
-            this.executeFunctionDelay('refresh',this.refresh);
+            this.executeFunctionDelay('refresh',this.repaint);
         }
     }.bind(this));
 
@@ -256,6 +262,7 @@ var _prototype = Cells.prototype;
     if(typeof extend.init === 'function'){
         extend.init.call(_prototype);
     }
+    Cells.addInitHooks(extend);
 });
 
 export { Cells }
