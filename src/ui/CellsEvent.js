@@ -86,7 +86,7 @@ function _bindScrollEvent(){
 
         var scrollLeft = scrollbar.scrollLeft;
         headerContentPanel.style.left = -scrollLeft + 'px'
-
+        this.repaint();
         this.executeFunctionDelay('repaintRequest',this.repaint);
 
     }.bind(this));
