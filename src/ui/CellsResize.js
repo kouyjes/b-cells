@@ -1,4 +1,4 @@
-import { getMousePosition } from './domUtil'
+import { getFullClassName,getFullClassSelector,getMousePosition } from './domUtil'
 
 var CellsResize = Object.create(null);
 
@@ -19,7 +19,7 @@ CellsResize._resizeCellDom = function _resizeCellDom(rowIndex,colIndex) {
         rowsTop = this.domCache.rowsTop;
     var colsWidth = this.domCache.colsWidth,
         colsLeft = this.domCache.colsLeft;
-    var cells = this.rowPanel.querySelectorAll(this.getFullClassSelector('cell')),
+    var cells = this.rowPanel.querySelectorAll(getFullClassSelector('cell')),
         size = cells.length,
         cell,row,col;
     for(var i = 0;i < size;i++){
@@ -38,7 +38,7 @@ CellsResize._resizeCellDom = function _resizeCellDom(rowIndex,colIndex) {
     }
 
     //update header col width
-    cells = this.headerPanel.querySelectorAll(this.getFullClassSelector('cell')),size = cells.length;
+    cells = this.headerPanel.querySelectorAll(getFullClassSelector('cell')),size = cells.length;
     for(var i = 0;i < size;i++){
         cell = cells[i];
         if(rowIndex === -1){

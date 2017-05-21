@@ -1,3 +1,4 @@
+import { global } from './../config/Config';
 function getMousePosition(e){
     var touches = e['touches'];
     if(touches && touches.length > 0){
@@ -52,4 +53,18 @@ function executeFunctionDelay(timeoutId,func,context) {
 function isElementInDom(element){
     return document.contains(element);
 }
-export { isElementInDom,isTouchSupported,getMousePosition,isDomElement,requestAnimationFrame,cancelAnimationFrame,executeFunctionDelay }
+function getFullClassName(className) {
+
+    var themesPrefix = global.config.themesPrefix;
+    if(!className){
+        return themesPrefix;
+    }
+    return themesPrefix + '-' + className;
+
+};
+function getFullClassSelector(selector) {
+
+    return '.' + getFullClassName(selector);
+
+};
+export { getFullClassName,getFullClassSelector,isElementInDom,isTouchSupported,getMousePosition,isDomElement,requestAnimationFrame,cancelAnimationFrame,executeFunctionDelay }

@@ -83,6 +83,21 @@ CellsModel.prototype.appendRows = function (rows) {
     this.trigger('appendRows');
 };
 
+var _config = {
+    themesPrefix : 'd1012'
+};
+var global = {};
+Object.defineProperty(global,'config',{
+
+    get : function () {
+        return _config;
+    },
+    set : function (config) {
+        Object.assign(_config,config);
+    }
+
+});
+
 function getMousePosition(e){
     var touches = e['touches'];
     if(touches && touches.length > 0){
@@ -136,6 +151,20 @@ function executeFunctionDelay(timeoutId,func,context) {
 }
 function isElementInDom(element){
     return document.contains(element);
+}
+function getFullClassName(className) {
+
+    var themesPrefix = global.config.themesPrefix;
+    if(!className){
+        return themesPrefix;
+    }
+    return themesPrefix + '-' + className;
+
+}
+function getFullClassSelector(selector) {
+
+    return '.' + getFullClassName(selector);
+
 }
 
 var scrollbarId = 1;
@@ -786,8 +815,8 @@ CellsRender.refresh = function refresh() {
     }
 
     var cellPanel = this.cellPanel = document.createElement('div');
-    cellPanel.className = this.getFullClassName();
-    var dirtyPanel = renderTo.querySelector(this.getFullClassSelector());
+    cellPanel.className = getFullClassName();
+    var dirtyPanel = renderTo.querySelector(getFullClassSelector());
     dirtyPanel && renderTo.removeChild(dirtyPanel);
 
     cellPanel.appendChild(this._createHeader());
@@ -945,7 +974,7 @@ CellsRender.repaint = function repaint() {
 CellsRender.paintHeader = function paintHeader() {
 
     var cellsCache = this.domCache.headerCells,
-        headerContentPanel = this.headerPanel.querySelector(this.getFullClassSelector(headerContentClassName));
+        headerContentPanel = this.headerPanel.querySelector(getFullClassSelector(headerContentClassName));
     var colPaintAreas = this.getColPaintAreas(),
         colClientArea = colPaintAreas.currentArea;
     if(colPaintAreas.length === 0){
@@ -1098,7 +1127,7 @@ CellsRender._createCell = function _createCell(row,col,field,cacheCells) {
 
     cell.setAttribute('row','' + row);
     cell.setAttribute('col','' + col);
-    var classNames = [this.getFullClassName('cell')];
+    var classNames = [getFullClassName('cell')];
     cell.className = classNames.join(' ');
 
     cacheCells.push(cell);
@@ -1129,7 +1158,7 @@ CellsRender._reLayoutCell = function _reLayoutCell(cell) {
 CellsRender._createCursor = function _createCursor() {
 
     var cursor = document.createElement('i');
-    cursor.className = this.getFullClassName('row-cursor');
+    cursor.className = getFullClassName('row-cursor');
 
     this.cursor = cursor;
     this.rowPanel.appendChild(cursor);
@@ -1140,7 +1169,7 @@ CellsRender._createCursor = function _createCursor() {
 CellsRender._createBodyContainer = function _createBodyContainer() {
 
     var bodyContainer = this.bodyPanel = document.createElement('div');
-    bodyContainer.className = this.getFullClassName('body-container');
+    bodyContainer.className = getFullClassName('body-container');
 
     bodyContainer.setAttribute('overflowX',String(this.config.overflowX));
     bodyContainer.setAttribute('overflowY',String(this.config.overflowY));
@@ -1151,7 +1180,7 @@ CellsRender._createBodyContainer = function _createBodyContainer() {
 CellsRender._createRowContainer = function _createRowContainer() {
 
     var rowContainer = document.createElement('div');
-    rowContainer.className = this.getFullClassName('row-container');
+    rowContainer.className = getFullClassName('row-container');
     this.rowPanel = rowContainer;
     return rowContainer;
 
@@ -1160,12 +1189,12 @@ CellsRender._createHeader = function _createHeader() {
 
     var cellsModel = this.cellsModel;
     var headerContainer = document.createElement('header');
-    headerContainer.className = this.getFullClassName('header');
+    headerContainer.className = getFullClassName('header');
     this.headerPanel = headerContainer;
     this.headerHeight(cellsModel.header.height);
 
     var headerContentPanel = document.createElement('div');
-    headerContentPanel.className = this.getFullClassName(headerContentClassName);
+    headerContentPanel.className = getFullClassName(headerContentClassName);
 
     headerContainer.appendChild(headerContentPanel);
     return headerContainer;
@@ -1261,7 +1290,7 @@ CellsEvent.triggerEvent = function triggerEvent(event) {
 function _bindScrollEvent(){
     var headerPanel = this.headerPanel,
         scrollbar = this.scrollbar;
-    var headerContentPanel = headerPanel.querySelector(this.getFullClassSelector('header-content'));
+    var headerContentPanel = headerPanel.querySelector(getFullClassSelector('header-content'));
     scrollbar.addEventListener('scroll', function () {
 
         var scrollLeft = scrollbar.scrollLeft;
@@ -1344,7 +1373,7 @@ CellsResize._resizeCellDom = function _resizeCellDom(rowIndex,colIndex) {
         rowsTop = this.domCache.rowsTop;
     var colsWidth = this.domCache.colsWidth,
         colsLeft = this.domCache.colsLeft;
-    var cells = this.rowPanel.querySelectorAll(this.getFullClassSelector('cell')),
+    var cells = this.rowPanel.querySelectorAll(getFullClassSelector('cell')),
         size = cells.length,
         cell,row,col;
     for(var i = 0;i < size;i++){
@@ -1363,7 +1392,7 @@ CellsResize._resizeCellDom = function _resizeCellDom(rowIndex,colIndex) {
     }
 
     //update header col width
-    cells = this.headerPanel.querySelectorAll(this.getFullClassSelector('cell')),size = cells.length;
+    cells = this.headerPanel.querySelectorAll(getFullClassSelector('cell')),size = cells.length;
     for(var i = 0;i < size;i++){
         cell = cells[i];
         if(rowIndex === -1){
@@ -1582,19 +1611,6 @@ Cells.prototype.init = function () {
 
 
 };
-Cells.prototype.getFullClassName = function (className) {
-
-    if(!className){
-        return this.themesPrefix;
-    }
-    return this.themesPrefix + '-' + className;
-
-};
-Cells.prototype.getFullClassSelector = function (selector) {
-
-    return '.' + this.getFullClassName(selector);
-
-};
 
 Cells.prototype._setRenderTo = function (renderTo) {
 
@@ -1804,6 +1820,7 @@ var _prototype = Cells.prototype;
 
 exports.CellsModel = CellsModel;
 exports.Cells = Cells;
+exports.global = global;
 
 Object.defineProperty(exports, '__esModule', { value: true });
 

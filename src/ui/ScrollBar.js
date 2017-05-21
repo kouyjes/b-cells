@@ -1,4 +1,4 @@
-import { isElementInDom,isTouchSupported,getMousePosition,isDomElement,requestAnimationFrame,cancelAnimationFrame,executeFunctionDelay } from './domUtil'
+import { getFullClassName,getFullClassSelector,isElementInDom,isTouchSupported,getMousePosition,isDomElement,requestAnimationFrame,cancelAnimationFrame,executeFunctionDelay } from './domUtil'
 var scrollbarId = 1;
 function ScrollBar(ele,config){
     this._id = '_id' + scrollbarId++;

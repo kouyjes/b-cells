@@ -59,19 +59,6 @@ Cells.prototype.init = function () {
 
 
 };
-Cells.prototype.getFullClassName = function (className) {
-
-    if(!className){
-        return this.themesPrefix;
-    }
-    return this.themesPrefix + '-' + className;
-
-};
-Cells.prototype.getFullClassSelector = function (selector) {
-
-    return '.' + this.getFullClassName(selector);
-
-};
 
 Cells.prototype._setRenderTo = function (renderTo) {
 

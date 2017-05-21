@@ -1,4 +1,4 @@
-import { requestAnimationFrame,cancelAnimationFrame,executeFunctionDelay } from './domUtil'
+import { getFullClassName,getFullClassSelector,requestAnimationFrame,cancelAnimationFrame,executeFunctionDelay } from './domUtil'
 
 var CellsEvent = Object.create(null);
 
@@ -71,7 +71,7 @@ CellsEvent.triggerEvent = function triggerEvent(event) {
 function _bindScrollEvent(){
     var headerPanel = this.headerPanel,
         scrollbar = this.scrollbar;
-    var headerContentPanel = headerPanel.querySelector(this.getFullClassSelector('header-content'));
+    var headerContentPanel = headerPanel.querySelector(getFullClassSelector('header-content'));
     scrollbar.addEventListener('scroll', function () {
 
         var scrollLeft = scrollbar.scrollLeft;
