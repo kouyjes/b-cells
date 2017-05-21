@@ -799,6 +799,15 @@ ScrollBar.prototype._renderV = function () {
 var CellsRender = Object.create(null);
 
 var headerContentClassName = 'header-content';
+
+CellsRender.resizeScrollbar = function resizeScrollbar() {
+
+    if(this.config.enableCustomScroll){
+        this.scrollbar.resize();
+        return;
+    }
+
+};
 CellsRender.render = function render(renderTo) {
 
     this._setRenderTo(renderTo);
@@ -1672,14 +1681,6 @@ Cells.prototype._onAppendRows = function () {
     this._initCellHeightIndex(rowsHeight.length);
     this.syncCursor();
     this.executeFunctionDelay('repaintRequest',this.repaint);
-
-};
-Cells.prototype.resizeScrollbar = function () {
-
-    if(this.config.enableCustomScroll){
-        this.scrollbar.resize();
-        return;
-    }
 
 };
 Cells.prototype._initCellSizeIndex = function () {

@@ -122,14 +122,6 @@ Cells.prototype._onAppendRows = function () {
     this.executeFunctionDelay('repaintRequest',this.repaint);
 
 };
-Cells.prototype.resizeScrollbar = function () {
-
-    if(this.config.enableCustomScroll){
-        this.scrollbar.resize();
-        return;
-    }
-
-};
 Cells.prototype._initCellSizeIndex = function () {
 
     this._initCellWidthIndex();

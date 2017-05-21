@@ -4,6 +4,15 @@ import { ScrollBar } from './ScrollBar'
 var CellsRender = Object.create(null);
 
 var headerContentClassName = 'header-content';
+
+CellsRender.resizeScrollbar = function resizeScrollbar() {
+
+    if(this.config.enableCustomScroll){
+        this.scrollbar.resize();
+        return;
+    }
+
+};
 CellsRender.render = function render(renderTo) {
 
     this._setRenderTo(renderTo);
