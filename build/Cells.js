@@ -807,8 +807,22 @@ function CellsRender(){
 }
 function initRenderState() {
 
-    this.rowClientArea(null);
-    this.colClientArea(null);
+    this.paintState = {
+        lastRowArea:null,
+        currentRowArea:null,
+        lastColArea:null,
+        currentColArea:null,
+        rowPaintAreas:null,
+        colPaintAreas:null,
+        reset: function () {
+            this.lastRowArea = null;
+            this.currentRowArea = null;
+            this.lastColArea = null;
+            this.currentColArea = null;
+            this.rowPaintAreas = null;
+            this.colPaintAreas = null;
+        }
+    };
     this.domCache = {
         clearCells: function () {
             this.headerCells.length = 0;
@@ -869,22 +883,6 @@ CellsRender.resizeScrollbar = function resizeScrollbar() {
         this.scrollbar.resize();
         return;
     }
-
-};
-CellsRender.rowClientArea = function (rowClientArea) {
-
-    if(arguments.length === 0){
-        return this._rowClientArea;
-    }
-    this._rowClientArea = rowClientArea;
-
-};
-CellsRender.colClientArea = function (colClientArea) {
-
-    if(arguments.length === 0){
-        return this._colClientArea;
-    }
-    this._colClientArea = colClientArea;
 
 };
 CellsRender.getCurrentColArea = function getCurrentColArea() {
@@ -960,14 +958,15 @@ CellsRender.normalizeArea = function (area,positions) {
 };
 CellsRender._getPaintAreas = function _getPaintAreas(type) {
 
-    var lastArea = type === 'row'?this.rowClientArea():this.colClientArea(),
-        curArea = type === 'row'?this.getCurrentRowArea():this.getCurrentColArea();
+    var paintState = this.paintState;
+    var lastArea = type === 'row' ? paintState.lastRowArea : paintState.lastColArea,
+        curArea = type === 'row' ? paintState.currentRowArea : paintState.currentColArea;
 
-    var positions = type === 'row'?this.domCache.rowsTop:this.domCache.colsLeft;
+    var domCache = this.domCache;
+
+    var positions = type === 'row' ? domCache.rowsTop : domCache.colsLeft;
 
     var areas = [];
-    areas.currentArea = curArea;
-
     if(lastArea == null){
         areas.push(curArea);
         return areas;
@@ -1029,8 +1028,7 @@ CellsRender.render = function render() {
 
     this._initPanelSize();
     this._initCellSizeIndex();
-    this.paintHeader();
-    this.paintBody();
+    this.executePaint();
     this.syncCursor();
 
 };
@@ -1043,8 +1041,21 @@ CellsRender.initPaint = function () {
         cells[i].remove();
     }
     domCache.clearCells();
-    this.rowClientArea(null);
-    this.colClientArea(null);
+    var paintState = this.paintState;
+    paintState.reset();
+
+};
+CellsRender.executePaint = function () {
+
+    var paintState = this.paintState;
+    paintState.currentRowArea = this.getCurrentRowArea();
+    paintState.currentColArea = this.getCurrentColArea();
+    paintState.rowPaintAreas = this.getRowPaintAreas();
+    paintState.colPaintAreas = this.getColPaintAreas();
+    this.paintHeader();
+    this.paintBody();
+    paintState.lastRowArea = paintState.currentRowArea;
+    paintState.lastColArea = paintState.currentColArea;
 
 };
 CellsRender.paint = function paint() {
@@ -1053,15 +1064,13 @@ CellsRender.paint = function paint() {
 
     this._initPanelSize();
     this._initCellSizeIndex();
-    this.paintHeader();
-    this.paintBody();
+    this.executePaint();
     this.syncCursor();
 
 };
 CellsRender.repaint = function repaint() {
 
-    this.paintHeader();
-    this.paintBody();
+    this.executePaint();
 
 };
 CellsRender.getHeaderContentPanel = function () {
@@ -1079,8 +1088,9 @@ CellsRender.paintHeader = function paintHeader() {
     var cellsCache = this.domCache.headerCells,
         headerContentPanel = this.getHeaderContentPanel();
 
-    var colPaintAreas = this.getColPaintAreas(),
-        colClientArea = colPaintAreas.currentArea;
+    var paintState = this.paintState;
+    var colPaintAreas = [].concat(paintState.colPaintAreas),
+        colClientArea = paintState.currentColArea;
 
 
     var cells = cellsCache.filter(function (cell) {
@@ -1110,15 +1120,26 @@ CellsRender.paintHeader = function paintHeader() {
 };
 CellsRender.paintBody = function paintBody() {
 
-    var rowPaintAreas = this.getRowPaintAreas(),
-        colPaintAreas = this.getColPaintAreas();
+    var paintState = this.paintState,
+        domCache = this.domCache,
+        rows = this.cellsModel.rows;
+    var rowPaintAreas = [].concat(paintState.rowPaintAreas),
+        colPaintAreas = [].concat(paintState.colPaintAreas);
 
-    var rowClientArea = rowPaintAreas.currentArea,
-        colClientArea = colPaintAreas.currentArea;
-    this.rowClientArea(rowClientArea);
-    this.colClientArea(colClientArea);
+    var rowClientArea = paintState.currentRowArea,
+        colClientArea = paintState.currentColArea;
+
+    var cacheCells = domCache.cells;
+    var cells = cacheCells.filter(function (cell) {
+        var r = parseInt(cell.getAttribute('row')),
+            col = parseInt(cell.getAttribute('col'));
+        var inRow = r >= rowClientArea.from && r < rowClientArea.from + rowClientArea.pageSize,
+            inCol = col >= colClientArea.from && col < colClientArea.from + colClientArea.pageSize;
+        return !inRow || !inCol;
+    });
 
     if(rowPaintAreas.length === 0 && colPaintAreas.length === 0){
+        this.removeCells(cacheCells,cells);
         return;
     }
 
@@ -1130,16 +1151,6 @@ CellsRender.paintBody = function paintBody() {
         colPaintAreas.push(colClientArea);
     }
 
-    var cacheCells = this.domCache.cells;
-    var cells = cacheCells.filter(function (cell) {
-        var r = parseInt(cell.getAttribute('row')),
-            col = parseInt(cell.getAttribute('col'));
-        var inRow = r >= rowClientArea.from && r < rowClientArea.from + rowClientArea.pageSize,
-            inCol = col >= colClientArea.from && col < colClientArea.from + colClientArea.pageSize;
-        return !inRow || !inCol;
-    });
-
-    var rows = this.cellsModel.rows;
 
     rowPaintAreas.forEach(function (area) {
         var row;
@@ -1150,6 +1161,9 @@ CellsRender.paintBody = function paintBody() {
                 var cell,field;
                 for(var colIndex = colArea.from;colIndex < colArea.from + colArea.pageSize;colIndex++){
                     field = row.fields[colIndex];
+                    if(this.rowPanel.querySelector('[row="' + rowIndex + '"][col="' + colIndex + '"]')){
+                        debugger;
+                    }
                     cell = cells.pop();
                     if(!cell){
                         cell = this._createCell(rowIndex,colIndex,field);
@@ -1243,17 +1257,21 @@ CellsRender._reLayoutCell = function _reLayoutCell(cell) {
 
     var row = parseInt(cell.getAttribute('row')),
         col = parseInt(cell.getAttribute('col'));
-    var colsLeft = this.domCache.colsLeft,
-        colsWidth = this.domCache.colsWidth,
-        rowsHeight = this.domCache.rowsHeight;
+    var domCache = this.domCache,
+        colsLeft = domCache.colsLeft,
+        colsWidth = domCache.colsWidth,
+        rowsHeight = domCache.rowsHeight;
     cell.style.top = this.computeRowTop(row) + 'px';
     cell.style.left = colsLeft[col] + 'px';
     cell.style.width = colsWidth[col] + 'px';
     cell.style.height = rowsHeight[row] + 'px';
 
     //last column flag
-    var colLast = String(this.cellsModel.header.fields.length - 1 === col),
-        rowLast = String(this.cellsModel.rows.length - 1 === row);
+    var cellsModel = this.cellsModel,
+        headerFields = cellsModel.header.fields,
+        rows = cellsModel.rows;
+    var colLast = String(headerFields.length - 1 === col),
+        rowLast = String(rows.length - 1 === row);
     cell.setAttribute('col-last',colLast);
     cell.setAttribute('row-last',rowLast);
 
@@ -1309,10 +1327,11 @@ CellsRender.syncCursor = function syncCursor() {
     if(!cursor){
         return;
     }
-    var rowsTop = this.domCache.rowsTop,
-        rowsHeight = this.domCache.rowsHeight,
-        colsLeft = this.domCache.colsLeft,
-        colsWidth = this.domCache.colsWidth;
+    var domCache = this.domCache;
+    var rowsTop = domCache.rowsTop,
+        rowsHeight = domCache.rowsHeight,
+        colsLeft = domCache.colsLeft,
+        colsWidth = domCache.colsWidth;
     var curTop = rowsTop[rowsTop.length - 1] + rowsHeight[rowsHeight.length - 1],
         curWidth = colsLeft[colsLeft.length - 1] + colsWidth[colsWidth.length - 1];
     cursor.style.top = curTop + 'px';
@@ -1321,6 +1340,28 @@ CellsRender.syncCursor = function syncCursor() {
     this.executeFunctionDelay('resizeScrollbar',this.resizeScrollbar);
 
 };
+function _bindScrollEvent(){
+    var headerPanel = this.headerPanel,
+        scrollbar = this.scrollbar;
+    var headerContentPanel = headerPanel.querySelector(getFullClassSelector('header-content'));
+    scrollbar.addEventListener('scroll', function () {
+
+        var scrollLeft = scrollbar.scrollLeft;
+        headerContentPanel.style.left = -scrollLeft + 'px';
+        this.executeFunctionDelay('repaintRequest',this.repaint);
+
+        var event = this.createEvent('scroll',scrollbar,this.cellsModel);
+        this.triggerEvent(event);
+
+    }.bind(this));
+}
+Object.defineProperty(CellsRender,'init',{
+
+    value: function () {
+        this.extendBindEventExecutor(_bindScrollEvent);
+    }
+
+});
 
 function CellsEvent(){
 
@@ -1373,6 +1414,7 @@ CellsEvent.addEventListener = function addEventListener(eventType,func) {
     if(handlers.indexOf(func) === -1){
         handlers.push(func);
     }
+    return this;
 };
 CellsEvent.removeEventListener = function removeEventListener(eventType,func) {
 
@@ -1383,6 +1425,7 @@ CellsEvent.removeEventListener = function removeEventListener(eventType,func) {
     var index = handlers.indexOf(func);
     if(index >= 0){
         handlers.splice(index,1);
+        return func;
     }
 
 };
@@ -1400,20 +1443,6 @@ CellsEvent.triggerEvent = function triggerEvent(event) {
     }.bind(this));
 
 };
-function _bindScrollEvent(){
-    var headerPanel = this.headerPanel,
-        scrollbar = this.scrollbar;
-    var headerContentPanel = headerPanel.querySelector(getFullClassSelector('header-content'));
-    scrollbar.addEventListener('scroll', function () {
-
-        var scrollLeft = scrollbar.scrollLeft;
-        headerContentPanel.style.left = -scrollLeft + 'px';
-        this.repaint();
-        this.executeFunctionDelay('repaintRequest',this.repaint);
-
-    }.bind(this));
-}
-
 
 function _bindClickEvent() {
 
@@ -1461,7 +1490,6 @@ CellsEvent._bindEvent = function _bindEvent() {
 Object.defineProperty(CellsEvent,'init',{
 
     value: function () {
-        this.extendBindEventExecutor(_bindScrollEvent);
         this.extendBindEventExecutor(_bindClickEvent);
     }
 

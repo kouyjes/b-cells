@@ -51,6 +51,7 @@ CellsEvent.addEventListener = function addEventListener(eventType,func) {
     if(handlers.indexOf(func) === -1){
         handlers.push(func);
     }
+    return this;
 };
 CellsEvent.removeEventListener = function removeEventListener(eventType,func) {
 
@@ -61,6 +62,7 @@ CellsEvent.removeEventListener = function removeEventListener(eventType,func) {
     var index = handlers.indexOf(func);
     if(index >= 0){
         handlers.splice(index,1);
+        return func;
     }
 
 };
@@ -78,20 +80,6 @@ CellsEvent.triggerEvent = function triggerEvent(event) {
     }.bind(this));
 
 };
-function _bindScrollEvent(){
-    var headerPanel = this.headerPanel,
-        scrollbar = this.scrollbar;
-    var headerContentPanel = headerPanel.querySelector(getFullClassSelector('header-content'));
-    scrollbar.addEventListener('scroll', function () {
-
-        var scrollLeft = scrollbar.scrollLeft;
-        headerContentPanel.style.left = -scrollLeft + 'px'
-        this.repaint();
-        this.executeFunctionDelay('repaintRequest',this.repaint);
-
-    }.bind(this));
-}
-
 
 function _bindClickEvent() {
 
@@ -139,7 +127,6 @@ CellsEvent._bindEvent = function _bindEvent() {
 Object.defineProperty(CellsEvent,'init',{
 
     value: function () {
-        this.extendBindEventExecutor(_bindScrollEvent);
         this.extendBindEventExecutor(_bindClickEvent);
     }
 

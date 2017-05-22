@@ -15,7 +15,7 @@
         }
         #table{
             width:100%;
-            height:80%;
+            height:200px;
         }
     </style>
     <script>
@@ -26,7 +26,7 @@
             header.push({name:'column' + i,width:'10%'});
         }
         var rows = [];
-        for(var i = 0;i < 10;i++){
+        for(var i = 0;i < 1000;i++){
             rows.push((function(){
                 var fields = [];
                 for(var col = 0;col < colNum;col++){
@@ -75,7 +75,11 @@
                 console.log('cell click start');
                 console.log(e);
                 console.log('cell click end');
-            })
+            });
+
+            /*tableCell.addEventListener('scroll', function (e) {
+                console.log(e.target);
+            });*/
 
         }
         function refresh(){
