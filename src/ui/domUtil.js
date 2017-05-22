@@ -72,7 +72,8 @@ function style(ele,style){
         ele.style[key] = style[key];
     });
 }
-function userSelect(selected){
-    document.body.setAttribute('user_select',String(selected));
+function userSelect(selected,ele){
+    ele = ele || document.body;
+    ele.setAttribute('user_select',String(selected));
 }
 export { style,userSelect,getFullClassName,getFullClassSelector,isElementInDom,isTouchSupported,getMousePosition,isDomElement,requestAnimationFrame,cancelAnimationFrame,executeFunctionDelay }

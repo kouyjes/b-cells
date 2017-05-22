@@ -171,8 +171,9 @@ function style(ele,style){
         ele.style[key] = style[key];
     });
 }
-function userSelect(selected){
-    document.body.setAttribute('user_select',String(selected));
+function userSelect(selected,ele){
+    ele = ele || document.body;
+    ele.setAttribute('user_select',String(selected));
 }
 
 var scrollbarId = 1;
@@ -1668,17 +1669,15 @@ function _bindResizeCellEvent() {
             resizeManager.colIndex = mouseInfo.colIndex;
             resizeFlag = true;
         }else{
-            e.stopPropagation();
-            e.preventDefault();
             resizeManager.resetX();
         }
         if(resizeFlag){
-            userSelect(false);
+            userSelect(false,this.cellPanel);
         }
 
     }.bind(this));
     function mouseup(){
-        userSelect(true);
+        userSelect(true,this.cellPanel);
         if(resizeManager.reset()){
             this.syncCursor();
         }

@@ -180,17 +180,15 @@ function _bindResizeCellEvent() {
             resizeManager.colIndex = mouseInfo.colIndex;
             resizeFlag = true;
         }else{
-            e.stopPropagation();
-            e.preventDefault();
             resizeManager.resetX();
         }
         if(resizeFlag){
-            userSelect(false);
+            userSelect(false,this.cellPanel);
         }
 
     }.bind(this));
     function mouseup(){
-        userSelect(true);
+        userSelect(true,this.cellPanel);
         if(resizeManager.reset()){
             this.syncCursor();
         }
