@@ -1386,7 +1386,7 @@ CellsEvent.createEvent = function createEvent(eventType,target,data) {
     };
 
 };
-CellsEvent.tiggerCellEvent = function triggerCellEvent(cell) {
+CellsEvent.tiggerCellClickEvent = function triggerCellEvent(cell) {
 
     var cellsModel = this.cellsModel,col = parseInt(cell.getAttribute('col'));
     if(cell._headerCell){
@@ -1445,25 +1445,25 @@ function _bindClickEvent() {
 
         var target = e.target;
         if(target === cellPanel){
-            _.tiggerCellEvent(_.createEvent('click',target,_.cellsModel));
+            _.tiggerCellClickEvent(_.createEvent('click',cellPanel,_.cellsModel));
             return;
         }
         if(_.eventManager.cellClick && _.eventManager.cellClick.length >= 0){
             if(target._cell){
-                _.tiggerCellEvent(target);
+                _.tiggerCellClickEvent(target);
             }else{
                 while(target = target.parentNode){
                     if(target === cellPanel){
                         break;
                     }
                     if(target._cell){
-                        _.tiggerCellEvent(target);
+                        _.tiggerCellClickEvent(target);
                         break;
                     }
                 }
             }
         }
-        _.triggerEvent(_.createEvent('click',target,_.cellsModel));
+        _.triggerEvent(_.createEvent('click',cellPanel,_.cellsModel));
     });
 
 }
