@@ -67,4 +67,12 @@ function getFullClassSelector(selector) {
     return '.' + getFullClassName(selector);
 
 };
-export { getFullClassName,getFullClassSelector,isElementInDom,isTouchSupported,getMousePosition,isDomElement,requestAnimationFrame,cancelAnimationFrame,executeFunctionDelay }
+function style(ele,style){
+    Object.keys(style).forEach(function (key) {
+        ele.style[key] = style[key];
+    });
+}
+function userSelect(selected){
+    document.body.setAttribute('user_select',String(selected));
+}
+export { style,userSelect,getFullClassName,getFullClassSelector,isElementInDom,isTouchSupported,getMousePosition,isDomElement,requestAnimationFrame,cancelAnimationFrame,executeFunctionDelay }

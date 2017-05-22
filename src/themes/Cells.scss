@@ -1,4 +1,9 @@
 $prefix:d1012;
+[user_select='false']{
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  -moz-user-select: none;
+}
 .#{$prefix}{
   $rowBorderColor:#000;
   $colBorderColor: #f0f;
@@ -10,9 +15,6 @@ $prefix:d1012;
   width:100%;
   height:100%;
   overflow-x: auto;
-  &[resize='true']{
-    -webkit-user-select: none;
-  }
   .#{$prefix}-cell{
     position: absolute;
     left:0;

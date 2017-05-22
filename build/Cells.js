@@ -166,6 +166,14 @@ function getFullClassSelector(selector) {
     return '.' + getFullClassName(selector);
 
 }
+function style(ele,style){
+    Object.keys(style).forEach(function (key) {
+        ele.style[key] = style[key];
+    });
+}
+function userSelect(selected){
+    document.body.setAttribute('user_select',String(selected));
+}
 
 var scrollbarId = 1;
 function ScrollBar(ele,config){
@@ -236,21 +244,6 @@ function getScrollHeight(element){
     }
     return Math.max(element.scrollHeight,element.clientHeight,height);
 
-}
-function style(ele,style){
-    Object.keys(style).forEach(function (key) {
-        ele.style[key] = style[key];
-    });
-}
-function disableUserSelect(){
-    style(document.body,{
-        '-webkit-user-select':'none'
-    });
-}
-function enableUserSelect(){
-    style(document.body,{
-        '-webkit-user-select':'inherit'
-    });
 }
 ScrollBar.prototype.init = function (ele,config) {
 
@@ -491,7 +484,7 @@ ScrollBar.prototype._bindHorEvent = function () {
         var pos = getMousePosition(e);
         startX = pos.pageX;
         relativeLeft = parseFloat(bar.style.left) || 0;
-        disableUserSelect();
+        userSelect(false);
     }.bind(this));
     var eventKey = this._id + 'hor';
     ScrollBar.mousemoveListeners[eventKey] = function (e) {
@@ -507,7 +500,7 @@ ScrollBar.prototype._bindHorEvent = function () {
     }.bind(this);
     ScrollBar.mouseupListeners[eventKey] = function () {
         startX = relativeLeft = undefined;
-        enableUserSelect();
+        userSelect(true);
         if(!isElementInDom(this.element)){
             delete ScrollBar.mousemoveListeners[eventKey];
             delete ScrollBar.mouseupListeners[eventKey];
@@ -717,7 +710,7 @@ ScrollBar.prototype._getTouchEventListeners = function () {
             listeners.startY = listeners.lastPageY = pos.pageY;
             listeners.scrollTop = this.scrollTop;
             listeners.scrollLeft = this.scrollLeft;
-            disableUserSelect();
+            userSelect(false);
 
         };
         listeners.touchmove = function (e) {
@@ -739,7 +732,7 @@ ScrollBar.prototype._getTouchEventListeners = function () {
         listeners.touchend = function () {
 
             listeners.destroy();
-            enableUserSelect();
+            userSelect(true);
 
         };
     }
@@ -1679,12 +1672,13 @@ function _bindResizeCellEvent() {
             e.preventDefault();
             resizeManager.resetX();
         }
-
-        this.cellPanel.setAttribute('resize',String(resizeFlag));
+        if(resizeFlag){
+            userSelect(false);
+        }
 
     }.bind(this));
-    function mouseup(e){
-        this.cellPanel.setAttribute('resize',String(false));
+    function mouseup(){
+        userSelect(true);
         if(resizeManager.reset()){
             this.syncCursor();
         }

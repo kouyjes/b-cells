@@ -1,4 +1,4 @@
-import { getFullClassName,getFullClassSelector,getMousePosition } from './domUtil'
+import { userSelect,getFullClassName,getFullClassSelector,getMousePosition } from './domUtil'
 
 function CellsResize(){
 
@@ -184,12 +184,13 @@ function _bindResizeCellEvent() {
             e.preventDefault();
             resizeManager.resetX();
         }
-
-        this.cellPanel.setAttribute('resize',String(resizeFlag));
+        if(resizeFlag){
+            userSelect(false);
+        }
 
     }.bind(this));
-    function mouseup(e){
-        this.cellPanel.setAttribute('resize',String(false));
+    function mouseup(){
+        userSelect(true);
         if(resizeManager.reset()){
             this.syncCursor();
         }
