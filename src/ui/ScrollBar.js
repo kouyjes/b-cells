@@ -426,7 +426,7 @@ ScrollBar.prototype._bindVerEvent = function () {
         startY = pos.pageY;
         relativeTop = parseFloat(bar.style.top) || 0;
 
-        disableUserSelect();
+        userSelect(false);
     }.bind(this));
     var eventKey = this._id + 'ver';
     ScrollBar.mousemoveListeners[eventKey] = function (e) {
@@ -441,7 +441,7 @@ ScrollBar.prototype._bindVerEvent = function () {
     }.bind(this);
     ScrollBar.mouseupListeners[eventKey] = function () {
         startY = relativeTop = undefined;
-        enableUserSelect();
+        userSelect(true);
         if(!isElementInDom(this.element)){
             delete ScrollBar.mousemoveListeners[eventKey];
             delete ScrollBar.mouseupListeners[eventKey];
@@ -462,7 +462,7 @@ function isDefined(val){
 }
 function getWheelData (e,type) {
 
-    var value = 0;
+    var value;
     if(isDefined(value = e['delta' + type])){
         return value;
     }

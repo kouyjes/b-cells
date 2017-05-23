@@ -65,7 +65,7 @@ function initRender() {
 
     var scrollbar = this.config.enableCustomScroll ? new ScrollBar(this.bodyPanel,{
         overflowX:_.config.overflowX,
-        overflowY:this.config.overflowY
+        overflowY:_.config.overflowY
     }) : this.bodyPanel;
     Object.defineProperty(this,'scrollbar',{
         configurable:true,
@@ -284,7 +284,12 @@ CellsRender.getHeaderContentPanel = function () {
 };
 CellsRender.getHeaderCells = function () {
 
-    return this.headerPanel.querySelectorAll(getFullClassSelector('cell'));
+    return this.domCache.headerCells;
+
+};
+CellsRender.getBodyCells = function () {
+
+    return this.domCache.cells;
 
 };
 CellsRender.paintHeader = function paintHeader() {

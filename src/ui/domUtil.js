@@ -1,11 +1,17 @@
 import { global } from './../config/Config';
-function getMousePosition(e){
+function getMousePosition(e,referElement){
     var touches = e['touches'];
     if(touches && touches.length > 0){
         e = touches[0];
     }
     var pageX = e.pageX || e.clientX,
         pageY = e.pageY || e.clientY;
+
+    if(isDomElement(referElement)){
+        var bound = referElement.getBoundingClientRect();
+        pageY = pageY - bound.top,
+        pageX = pageX - bound.left;
+    }
     return {
         pageX:pageX,
         pageY:pageY

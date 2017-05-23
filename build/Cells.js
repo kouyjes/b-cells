@@ -98,13 +98,19 @@ Object.defineProperty(global,'config',{
 
 });
 
-function getMousePosition(e){
+function getMousePosition(e,referElement){
     var touches = e['touches'];
     if(touches && touches.length > 0){
         e = touches[0];
     }
     var pageX = e.pageX || e.clientX,
         pageY = e.pageY || e.clientY;
+
+    if(isDomElement(referElement)){
+        var bound = referElement.getBoundingClientRect();
+        pageY = pageY - bound.top,
+        pageX = pageX - bound.left;
+    }
     return {
         pageX:pageX,
         pageY:pageY
@@ -603,7 +609,7 @@ ScrollBar.prototype._bindVerEvent = function () {
         startY = pos.pageY;
         relativeTop = parseFloat(bar.style.top) || 0;
 
-        disableUserSelect();
+        userSelect(false);
     }.bind(this));
     var eventKey = this._id + 'ver';
     ScrollBar.mousemoveListeners[eventKey] = function (e) {
@@ -618,7 +624,7 @@ ScrollBar.prototype._bindVerEvent = function () {
     }.bind(this);
     ScrollBar.mouseupListeners[eventKey] = function () {
         startY = relativeTop = undefined;
-        enableUserSelect();
+        userSelect(true);
         if(!isElementInDom(this.element)){
             delete ScrollBar.mousemoveListeners[eventKey];
             delete ScrollBar.mouseupListeners[eventKey];
@@ -639,7 +645,7 @@ function isDefined(val){
 }
 function getWheelData (e,type) {
 
-    var value = 0;
+    var value;
     if(isDefined(value = e['delta' + type])){
         return value;
     }
@@ -855,7 +861,7 @@ function initRender() {
 
     var scrollbar = this.config.enableCustomScroll ? new ScrollBar(this.bodyPanel,{
         overflowX:_.config.overflowX,
-        overflowY:this.config.overflowY
+        overflowY:_.config.overflowY
     }) : this.bodyPanel;
     Object.defineProperty(this,'scrollbar',{
         configurable:true,
@@ -1074,7 +1080,12 @@ CellsRender.getHeaderContentPanel = function () {
 };
 CellsRender.getHeaderCells = function () {
 
-    return this.headerPanel.querySelectorAll(getFullClassSelector('cell'));
+    return this.domCache.headerCells;
+
+};
+CellsRender.getBodyCells = function () {
+
+    return this.domCache.cells;
 
 };
 CellsRender.paintHeader = function paintHeader() {
@@ -1506,36 +1517,62 @@ CellsResize.resizeColWidth = function resizeColWidth(colIndex,width) {
 
 CellsResize._resizeCellDom = function _resizeCellDom(rowIndex,colIndex) {
 
-    var rowsHeight = this.domCache.rowsHeight,
-        rowsTop = this.domCache.rowsTop;
-    var colsWidth = this.domCache.colsWidth,
-        colsLeft = this.domCache.colsLeft;
-    var cells = this.rowPanel.querySelectorAll(getFullClassSelector('cell')),
+    this._updateHeaderCells(colIndex);
+    this._updateBodyCells(rowIndex,colIndex);
+
+};
+CellsResize._updateBodyCells = function (rowIndex,colIndex,option) {
+
+    var option = option || {
+            row:true,
+            col:true
+        };
+    if(!option.col && !option.row){
+        return;
+    }
+    var domCache = this.domCache,
+        rowsHeight = domCache.rowsHeight,
+        rowsTop = domCache.rowsTop;
+    var colsWidth = domCache.colsWidth,
+        colsLeft = domCache.colsLeft;
+    var cells = this.getBodyCells(),
         size = cells.length,
         cell,row,col;
     for(var i = 0;i < size;i++){
         cell = cells[i];
-        row = parseInt(cell.getAttribute('row')),col = parseInt(cell.getAttribute('col'));
-        if(row === rowIndex){
-            cell.style.height = rowsHeight[row] + 'px';
-        }else if(row > rowIndex){
-            cell.style.top = rowsTop[row] + 'px';
+
+        if(option.row){
+            row = parseInt(cell.getAttribute('row'));
+            if(row === rowIndex){
+                cell.style.height = rowsHeight[row] + 'px';
+            }else if(row > rowIndex){
+                cell.style.top = rowsTop[row] + 'px';
+            }
         }
-        if(col === colIndex){
-            cell.style.width = colsWidth[col] + 'px';
-        }else if(col > colIndex){
-            cell.style.left = colsLeft[col] + 'px';
+
+        if(option.col){
+            col = parseInt(cell.getAttribute('col'));
+            if(col === colIndex){
+                cell.style.width = colsWidth[col] + 'px';
+            }else if(col > colIndex){
+                cell.style.left = colsLeft[col] + 'px';
+            }
         }
     }
 
+};
+CellsResize._updateHeaderCells = function (colIndex) {
+
+    var domCache = this.domCache;
+    var colsWidth = domCache.colsWidth,
+        colsLeft = domCache.colsLeft;
     //update header col width
-    cells = this.getHeaderCells(),
+    var cells = this.getHeaderCells(),
         size = cells.length;
+
+    var cell,col;
     for(var i = 0;i < size;i++){
         cell = cells[i];
-        if(rowIndex === -1){
-            this.headerHeight(height);
-        }
         col = parseInt(cell.getAttribute('col'));
         if(col === colIndex){
             cell.style.width = colsWidth[col] + 'px';
@@ -1543,7 +1580,6 @@ CellsResize._resizeCellDom = function _resizeCellDom(rowIndex,colIndex) {
             cell.style.left = colsLeft[col] + 'px';
         }
     }
-
 };
 CellsResize.resizeCell = function resizeCell(rowIndex,colIndex,width,height) {
 
@@ -1551,25 +1587,26 @@ CellsResize.resizeCell = function resizeCell(rowIndex,colIndex,width,height) {
     this._resizeCellDom(rowIndex,colIndex,width,height);
 
 };
-function _bindResizeCellEvent() {
-    if(!this.config.colResize && !this.config.rowResize){
-        return;
-    }
-    var mouseHit = 3,cursors = ['auto','ns-resize','ew-resize','nwse-resize'];
-    var bodyPanel = this.bodyPanel,
-        rowsTop = this.domCache.rowsTop,
-        colsLeft = this.domCache.colsLeft,
-        colResize = this.config.colResize,
-        rowResize = this.config.rowResize,
-        rowsHeight = this.domCache.rowsHeight,
-        colsWidth = this.domCache.colsWidth;
+var mouseHit = 3;
+var cursors = ['auto','ns-resize','ew-resize','nwse-resize'];
+function _bindResizeBodyCellEvent() {
+
+    var domCache = this.domCache,
+        bodyPanel = this.bodyPanel,
+        rowsTop = domCache.rowsTop,
+        colsLeft = domCache.colsLeft,
+        rowsHeight = domCache.rowsHeight,
+        colsWidth = domCache.colsWidth;
 
     var _ = this;
     function getMouseInfo(e){
-        var position = getMousePosition(e);
+
+        var colResize = _.config.colResize,
+            rowResize = _.config.rowResize;
+        var position = getMousePosition(e,bodyPanel);
         var scrollTo = _.scrollTo();
-        var bound = bodyPanel.getBoundingClientRect(),relY = position.pageY - bound.top,
-            relX = position.pageX - bound.left;
+        var relY = position.pageY,
+            relX = position.pageX;
 
         var rowHit = 0,rowIndex = undefined;
         rowResize && rowsTop.some(function (rowTop,index) {
@@ -1689,7 +1726,7 @@ function _bindResizeCellEvent() {
 Object.defineProperty(CellsResize,'init',{
 
     value: function () {
-        this.extendBindEventExecutor(_bindResizeCellEvent);
+        this.extendBindEventExecutor(_bindResizeBodyCellEvent);
     }
 
 });
