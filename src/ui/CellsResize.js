@@ -208,12 +208,12 @@ function _bindResizeBodyCellEvent() {
             resizeManager.resetX();
         }
         if(resizeFlag){
-            userSelect(false,this.cellPanel);
+            userSelect(false,this.cellsPanel);
         }
 
     }.bind(this));
     function mouseup(){
-        userSelect(true,this.cellPanel);
+        userSelect(true,this.cellsPanel);
         if(resizeManager.reset()){
             this.syncCursor();
         }

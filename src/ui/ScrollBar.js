@@ -252,7 +252,7 @@ ScrollBar.prototype._getScrollHeight = function () {
 ScrollBar.prototype._createScrollBarBlock = function () {
 
     var bar = document.createElement('div');
-    bar.className = 'scrollbar-block'
+    bar.className = getFullClassName('scrollbar-block');
     return bar;
 
 };
@@ -261,7 +261,7 @@ ScrollBar.prototype._renderH = function () {
     var dom = document.createElement('div');
     dom.hScrollbar = true;
     this.hScrollbar = dom;
-    dom.className = 'scrollbar-hor';
+    dom.className = getFullClassName('scrollbar-hor');
     style(dom,{
         height:this.config.height + 'px',
         display:'none',
@@ -596,7 +596,7 @@ ScrollBar.prototype._renderV = function () {
     var dom = document.createElement('div');
     dom.vScrollbar = true;
     this.vScrollbar = dom;
-    dom.className = 'scrollbar-ver';
+    dom.className = getFullClassName('scrollbar-ver');
     style(dom,{
         width:this.config.width + 'px',
         display:'none',

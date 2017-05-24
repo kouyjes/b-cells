@@ -83,12 +83,12 @@ CellsEvent.triggerEvent = function triggerEvent(event) {
 
 function _bindClickEvent() {
 
-    var _ = this,cellPanel = this.cellPanel;
-    cellPanel.addEventListener('click', function (e) {
+    var _ = this,cellsPanel = this.cellsPanel;
+    cellsPanel.addEventListener('click', function (e) {
 
         var target = e.target;
-        if(target === cellPanel){
-            _.tiggerCellClickEvent(_.createEvent('click',cellPanel,_.cellsModel));
+        if(target === cellsPanel){
+            _.tiggerCellClickEvent(_.createEvent('click',cellsPanel,_.cellsModel));
             return;
         }
         if(_.eventManager.cellClick && _.eventManager.cellClick.length >= 0){
@@ -96,7 +96,7 @@ function _bindClickEvent() {
                 _.tiggerCellClickEvent(target);
             }else{
                 while(target = target.parentNode){
-                    if(target === cellPanel){
+                    if(target === cellsPanel){
                         break;
                     }
                     if(target._cell){
@@ -106,7 +106,7 @@ function _bindClickEvent() {
                 }
             }
         }
-        _.triggerEvent(_.createEvent('click',cellPanel,_.cellsModel));
+        _.triggerEvent(_.createEvent('click',cellsPanel,_.cellsModel));
     });
 
 };

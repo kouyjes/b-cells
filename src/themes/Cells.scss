@@ -84,30 +84,30 @@ $prefix:d1012;
     visibility: hidden;
   }
   $scrollTrackColor: #e4f0e2;
-  .scrollbar-block{
+  .#{$prefix}-scrollbar-block{
     position:relative;
     border-radius: 10px;
     cursor:pointer;
   }
-  .scrollbar-ver{
+  .#{$prefix}-scrollbar-ver{
     position: absolute;
     top:0;
     right:0;
     bottom:0;
     overflow:hidden;
     background-color: $scrollTrackColor;
-    .scrollbar-block{
+    .#{$prefix}-scrollbar-block{
       width:100%;
     }
   }
-  .scrollbar-hor{
+  .#{$prefix}-scrollbar-hor{
     position: absolute;
     right:0;
     left:0;
     bottom:0;
     overflow:hidden;
     background-color: $scrollTrackColor;
-    .scrollbar-block{
+    .#{$prefix}-scrollbar-block{
       height:100%;
     }
   }

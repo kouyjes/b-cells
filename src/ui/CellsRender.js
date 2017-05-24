@@ -2,10 +2,9 @@ import { getFullClassName,getFullClassSelector,getMousePosition,isDomElement,req
 import { ScrollBar } from './ScrollBar'
 function CellsRender(){
 
-    this.cellPanel = null;
+    this.cellsPanel = null;
     this.headerPanel = null;
     this.bodyPanel = null;
-    this.rowPanel = null;
     this.cursor = null;
 
 }
@@ -52,15 +51,15 @@ function initRender() {
         throw new TypeError('parent container is invalid !');
     }
 
-    var cellPanel = this.cellPanel = document.createElement('div');
-    cellPanel.className = getFullClassName();
+    var cellsPanel = this.cellsPanel = document.createElement('div');
+    cellsPanel.className = getFullClassName();
     var dirtyPanel = renderTo.querySelector(getFullClassSelector());
     dirtyPanel && renderTo.removeChild(dirtyPanel);
 
-    cellPanel.appendChild(this._createHeader());
+    cellsPanel.appendChild(this._createHeader());
 
-    cellPanel.appendChild(this._createBodyContainer());
-    renderTo.appendChild(cellPanel);
+    cellsPanel.appendChild(this._createBodyContainer());
+    renderTo.appendChild(cellsPanel);
 
 
     var scrollbar = this.config.enableCustomScroll ? new ScrollBar(this.bodyPanel,{
@@ -360,7 +359,7 @@ CellsRender.paintBody = function paintBody() {
         colPaintAreas.push(colClientArea);
     }
 
-
+    var contentPanel = this.bodyPanel._contentPanel;
     rowPaintAreas.forEach(function (area) {
         var row;
         for(var rowIndex = area.from;rowIndex < area.from + area.pageSize;rowIndex++){
@@ -373,7 +372,7 @@ CellsRender.paintBody = function paintBody() {
                     cell = cells.pop();
                     if(!cell){
                         cell = this._createCell(rowIndex,colIndex,field);
-                        this.rowPanel.appendChild(cell);
+                        contentPanel.appendChild(cell);
                     }else{
                         this._paintCell(cell,rowIndex,colIndex,field);
                     }
@@ -388,10 +387,8 @@ CellsRender.paintBody = function paintBody() {
 CellsRender.removeCells = function removeCells(cacheCells,cells) {
 
     cells.forEach(function (cell) {
-        if(cell.parentNode){
-            cell.parentNode.removeChild(cell);
-            cacheCells.splice(cacheCells.indexOf(cell),1);
-        }
+        cacheCells.splice(cacheCells.indexOf(cell),1);
+        cell.remove();
     });
 
 };
@@ -446,16 +443,19 @@ CellsRender._createCell = function _createCell(row,col,field,cacheCells) {
     var cacheCells = cacheCells || this.domCache.cells;
     var cell = document.createElement('div');
     cell._cell = true;
-    this._configCell(cell,field);
 
     cell.setAttribute('row','' + row);
     cell.setAttribute('col','' + col);
     var classNames = [getFullClassName('cell')];
     cell.className = classNames.join(' ');
 
-    cacheCells.push(cell);
+    this._configCell(cell,field);
 
     this._reLayoutCell(cell);
+
+    cacheCells.push(cell);
+
+
     return cell;
 
 };
@@ -467,10 +467,6 @@ CellsRender._reLayoutCell = function _reLayoutCell(cell) {
         colsLeft = domCache.colsLeft,
         colsWidth = domCache.colsWidth,
         rowsHeight = domCache.rowsHeight;
-    cell.style.top = this.computeRowTop(row) + 'px';
-    cell.style.left = colsLeft[col] + 'px';
-    cell.style.width = colsWidth[col] + 'px';
-    cell.style.height = rowsHeight[row] + 'px';
 
     //last column flag
     var cellsModel = this.cellsModel,
@@ -481,6 +477,11 @@ CellsRender._reLayoutCell = function _reLayoutCell(cell) {
     cell.setAttribute('col-last',colLast);
     cell.setAttribute('row-last',rowLast);
 
+    cell.style.top = this.computeRowTop(row) + 'px';
+    cell.style.left = colsLeft[col] + 'px';
+    cell.style.width = colsWidth[col] + 'px';
+    cell.style.height = rowsHeight[row] + 'px';
+
 };
 CellsRender._createCursor = function _createCursor() {
 
@@ -488,7 +489,7 @@ CellsRender._createCursor = function _createCursor() {
     cursor.className = getFullClassName('row-cursor');
 
     this.cursor = cursor;
-    this.rowPanel.appendChild(cursor);
+    this.bodyPanel._contentPanel.appendChild(cursor);
 
     return cursor;
 
@@ -501,14 +502,16 @@ CellsRender._createBodyContainer = function _createBodyContainer() {
     bodyContainer.setAttribute('overflowX',String(this.config.overflowX));
     bodyContainer.setAttribute('overflowY',String(this.config.overflowY))
 
-    bodyContainer.appendChild(this._createRowContainer());
+    var rowContainer = this._createRowContainer();
+    bodyContainer.appendChild(rowContainer);
+
+    bodyContainer._contentPanel = rowContainer;
     return bodyContainer;
 };
 CellsRender._createRowContainer = function _createRowContainer() {
 
     var rowContainer = document.createElement('div');
     rowContainer.className = getFullClassName('row-container');
-    this.rowPanel = rowContainer;
     return rowContainer;
 
 };
@@ -524,6 +527,8 @@ CellsRender._createHeader = function _createHeader() {
     headerContentPanel.className = getFullClassName(headerContentClassName);
 
     headerContainer.appendChild(headerContentPanel);
+
+    headerContainer._contentPanel = headerContentPanel;
     return headerContainer;
 
 };
