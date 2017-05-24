@@ -1074,7 +1074,7 @@ CellsRender.repaint = function repaint() {
 };
 CellsRender.getHeaderContentPanel = function () {
 
-    var headerContentPanel = this.headerPanel.querySelector(getFullClassSelector(headerContentClassName));
+    var headerContentPanel = this.headerPanel._contentPanel;
     return headerContentPanel;
 };
 CellsRender.getHeaderCells = function () {
@@ -1350,7 +1350,7 @@ CellsRender.syncCursor = function syncCursor() {
 function _bindScrollEvent(){
     var headerPanel = this.headerPanel,
         scrollbar = this.scrollbar;
-    var headerContentPanel = headerPanel.querySelector(getFullClassSelector('header-content'));
+    var headerContentPanel = headerPanel._contentPanel;
     scrollbar.addEventListener('scroll', function () {
 
         var scrollLeft = scrollbar.scrollLeft;
@@ -1399,7 +1399,7 @@ CellsEvent.createEvent = function createEvent(eventType,target,data) {
     };
 
 };
-CellsEvent.tiggerCellClickEvent = function triggerCellEvent(cell) {
+CellsEvent.tiggerCellClickEvent = function tiggerCellClickEvent(cell) {
 
     var cellsModel = this.cellsModel,col = parseInt(cell.getAttribute('col'));
     if(cell._headerCell){
@@ -1458,7 +1458,7 @@ function _bindClickEvent() {
 
         var target = e.target;
         if(target === cellsPanel){
-            _.tiggerCellClickEvent(_.createEvent('click',cellsPanel,_.cellsModel));
+            _.triggerEvent(_.createEvent('click',cellsPanel,_.cellsModel));
             return;
         }
         if(_.eventManager.cellClick && _.eventManager.cellClick.length >= 0){
@@ -1845,18 +1845,18 @@ Cells.prototype.scrollTo = function (scrollTop,scrollLeft) {
 };
 Cells.prototype._initPanelSize = function () {
 
-    var renderTo = this.renderTo;
+    var cellsPanel = this.cellsPanel;
 
-    renderTo.currentWidth = renderTo.clientWidth;
-    renderTo.currentHeight = renderTo.clientHeight;
+    cellsPanel.currentWidth = cellsPanel.clientWidth - 2;
+    cellsPanel.currentHeight = cellsPanel.clientHeight;
 
 
 };
 Cells.prototype.getPanelSize = function () {
 
     return {
-        width:this.renderTo.currentWidth,
-        height:this.renderTo.currentHeight
+        width:this.cellsPanel.currentWidth,
+        height:this.cellsPanel.currentHeight
     };
 
 };

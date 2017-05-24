@@ -278,7 +278,7 @@ CellsRender.repaint = function repaint() {
 };
 CellsRender.getHeaderContentPanel = function () {
 
-    var headerContentPanel = this.headerPanel.querySelector(getFullClassSelector(headerContentClassName))
+    var headerContentPanel = this.headerPanel._contentPanel;
     return headerContentPanel;
 };
 CellsRender.getHeaderCells = function () {
@@ -554,7 +554,7 @@ CellsRender.syncCursor = function syncCursor() {
 function _bindScrollEvent(){
     var headerPanel = this.headerPanel,
         scrollbar = this.scrollbar;
-    var headerContentPanel = headerPanel.querySelector(getFullClassSelector('header-content'));
+    var headerContentPanel = headerPanel._contentPanel;
     scrollbar.addEventListener('scroll', function () {
 
         var scrollLeft = scrollbar.scrollLeft;

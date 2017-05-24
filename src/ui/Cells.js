@@ -115,18 +115,18 @@ Cells.prototype.scrollTo = function (scrollTop,scrollLeft) {
 };
 Cells.prototype._initPanelSize = function () {
 
-    var renderTo = this.renderTo;
+    var cellsPanel = this.cellsPanel;
 
-    renderTo.currentWidth = renderTo.clientWidth;
-    renderTo.currentHeight = renderTo.clientHeight;
+    cellsPanel.currentWidth = cellsPanel.clientWidth - 2;
+    cellsPanel.currentHeight = cellsPanel.clientHeight;
 
 
 };
 Cells.prototype.getPanelSize = function () {
 
     return {
-        width:this.renderTo.currentWidth,
-        height:this.renderTo.currentHeight
+        width:this.cellsPanel.currentWidth,
+        height:this.cellsPanel.currentHeight
     };
 
 };

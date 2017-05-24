@@ -29,7 +29,7 @@ CellsEvent.createEvent = function createEvent(eventType,target,data) {
     };
 
 };
-CellsEvent.tiggerCellClickEvent = function triggerCellEvent(cell) {
+CellsEvent.tiggerCellClickEvent = function tiggerCellClickEvent(cell) {
 
     var cellsModel = this.cellsModel,col = parseInt(cell.getAttribute('col'));
     if(cell._headerCell){
@@ -88,7 +88,7 @@ function _bindClickEvent() {
 
         var target = e.target;
         if(target === cellsPanel){
-            _.tiggerCellClickEvent(_.createEvent('click',cellsPanel,_.cellsModel));
+            _.triggerEvent(_.createEvent('click',cellsPanel,_.cellsModel));
             return;
         }
         if(_.eventManager.cellClick && _.eventManager.cellClick.length >= 0){

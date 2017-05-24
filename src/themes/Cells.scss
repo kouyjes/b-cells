@@ -62,6 +62,7 @@
     overflow:auto;
     border:1px solid $tableBorderColor;
     border-top:none;
+
     &[overflowX='true']{
       overflow-x:hidden;
     }
