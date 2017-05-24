@@ -2008,6 +2008,7 @@ var _prototype = Cells.prototype;
 
 exports.CellsModel = CellsModel;
 exports.Cells = Cells;
+exports.ScrollBar = ScrollBar;
 exports.global = global;
 
 Object.defineProperty(exports, '__esModule', { value: true });

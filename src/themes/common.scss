@@ -1,0 +1,17 @@
+$prefix:d1012;
+$browsePrefixes:-webkit-,-moz-,-ms-;
+
+@mixin css($styleName,$styleValue...){
+
+  #{$styleName}:$styleValue;
+  @each $browsePrefix in $browsePrefixes{
+    #{$browsePrefix}#{$styleName}:$styleValue;
+  }
+
+}
+
+[user_select='false']{
+
+  @include css(user-select,none);
+
+}

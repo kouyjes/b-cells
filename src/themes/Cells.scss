@@ -1,9 +1,5 @@
-$prefix:d1012;
-[user_select='false']{
-  -webkit-user-select: none;
-  -ms-user-select: none;
-  -moz-user-select: none;
-}
+@import "Scrollbar";
+
 .#{$prefix}{
   $rowBorderColor:#000;
   $colBorderColor: #f0f;
@@ -15,6 +11,7 @@ $prefix:d1012;
   width:100%;
   height:100%;
   overflow-x: auto;
+  @include css(transform,translateZ(0));
   .#{$prefix}-cell{
     position: absolute;
     left:0;
@@ -82,33 +79,5 @@ $prefix:d1012;
     font-size:0;
     left:0;
     visibility: hidden;
-  }
-  $scrollTrackColor: #e4f0e2;
-  .#{$prefix}-scrollbar-block{
-    position:relative;
-    border-radius: 10px;
-    cursor:pointer;
-  }
-  .#{$prefix}-scrollbar-ver{
-    position: absolute;
-    top:0;
-    right:0;
-    bottom:0;
-    overflow:hidden;
-    background-color: $scrollTrackColor;
-    .#{$prefix}-scrollbar-block{
-      width:100%;
-    }
-  }
-  .#{$prefix}-scrollbar-hor{
-    position: absolute;
-    right:0;
-    left:0;
-    bottom:0;
-    overflow:hidden;
-    background-color: $scrollTrackColor;
-    .#{$prefix}-scrollbar-block{
-      height:100%;
-    }
   }
 }

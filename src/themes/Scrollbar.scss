@@ -1,0 +1,32 @@
+@import "common.scss";
+
+.#{$prefix}{
+  $scrollTrackColor: #e4f0e2;
+  .#{$prefix}-scrollbar-block{
+    position:relative;
+    border-radius: 10px;
+    cursor:pointer;
+  }
+  .#{$prefix}-scrollbar-ver{
+    position: absolute;
+    top:0;
+    right:0;
+    bottom:0;
+    overflow:hidden;
+    background-color: $scrollTrackColor;
+    .#{$prefix}-scrollbar-block{
+      width:100%;
+    }
+  }
+  .#{$prefix}-scrollbar-hor{
+    position: absolute;
+    right:0;
+    left:0;
+    bottom:0;
+    overflow:hidden;
+    background-color: $scrollTrackColor;
+    .#{$prefix}-scrollbar-block{
+      height:100%;
+    }
+  }
+}
