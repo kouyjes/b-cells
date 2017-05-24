@@ -1166,9 +1166,6 @@ CellsRender.paintBody = function paintBody() {
                 var cell,field;
                 for(var colIndex = colArea.from;colIndex < colArea.from + colArea.pageSize;colIndex++){
                     field = row.fields[colIndex];
-                    if(this.rowPanel.querySelector('[row="' + rowIndex + '"][col="' + colIndex + '"]')){
-                        debugger;
-                    }
                     cell = cells.pop();
                     if(!cell){
                         cell = this._createCell(rowIndex,colIndex,field);
