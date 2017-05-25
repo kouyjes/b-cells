@@ -241,7 +241,7 @@ CellsRender.initPaint = function () {
     var cells = this.renderTo.querySelectorAll(getFullClassSelector('cell')),
         size = cells.length;
     for(var i = 0;i < size;i++){
-        cells[i].remove();
+        this.removeElementFromDom(cells[i]);
     }
     domCache.clearCells();
     var paintState = this.paintState;
@@ -386,10 +386,20 @@ CellsRender.paintBody = function paintBody() {
 };
 CellsRender.removeCells = function removeCells(cacheCells,cells) {
 
+    var _ = this;
     cells.forEach(function (cell) {
         cacheCells.splice(cacheCells.indexOf(cell),1);
-        cell.remove();
+        _.removeElementFromDom(cell);
     });
+
+};
+CellsRender.removeElementFromDom = function (cell) {
+
+    if(cell.remove){
+        cell.remove();
+    }else if(cell.parentNode){
+        cell.parentNode.removeChild(cell);
+    }
 
 };
 CellsRender.computeRowTop = function computeRowTop(row) {
@@ -406,31 +416,30 @@ CellsRender._paintCell = function _paintCell(cell,row,col,field) {
     this._reLayoutCell(cell);
 
 };
+CellsRender.emptyElement = function (element) {
+    while(element.firstChild){
+        this.removeElementFromDom(element.firstChild);
+    }
+};
 CellsRender._configCell = function _configCell(cell,field) {
 
-    var isHtml = typeof field.html === 'string',
-        isHtmlCell = cell.getAttribute('html_content') === 'true';
+    var isHtml = typeof field.html === 'string';
     cell.setAttribute('html_content',isHtml + '');
     if(isHtml){
         cell.innerHTML = field.html;
+        cell._textSpan = null;
     }else{
         var text = field.name || field.value;
         var span;
-        if(isHtmlCell){
+        if(!cell._textSpan){
             cell.innerHTML = '';
             span = document.createElement('span');
-            span.innerText = text;
             cell.appendChild(span);
+            cell._textSpan = span;
         }else{
-            var children = cell.children;
-            if(children.length > 0){
-                span = children[0];
-            }else{
-                span = document.createElement('span');
-                cell.appendChild(span);
-            }
-            span.innerText = text;
+            span = cell._textSpan;
         }
+        span.innerText = text;
         if(this.config.textTitle){
             cell.setAttribute('title',text);
         }

@@ -215,7 +215,12 @@ ScrollBar.initEventListeners = function () {
     }
 };
 function getWidth(ele){
-    return ele.offsetWidth;
+    var style$$1 = window.getComputedStyle(ele);
+    var value = 0;
+    ['paddingLeft','paddingRight','borderLeftWidth','borderRightWidth','width'].forEach(function (key) {
+        value += (parseFloat(style$$1[key]) || 0);
+    });
+    return value;
 }
 function getClientWidth(ele){
     return ele.clientWidth;
@@ -224,7 +229,12 @@ function getScrollWidth(element){
     return Math.max(element.scrollWidth,element.clientWidth);
 }
 function getHeight(ele){
-    return ele.offsetHeight;
+    var style$$1 = window.getComputedStyle(ele);
+    var value = 0;
+    ['paddingTop','paddingBottom','borderTopWidth','borderBottomWidth','height'].forEach(function (key) {
+        value += (parseFloat(style$$1[key]) || 0);
+    });
+    return value;
 }
 function getClientHeight(ele){
     return ele.clientHeight;
@@ -236,9 +246,9 @@ ScrollBar.prototype.init = function (ele,config) {
 
     this.element = ele;
     this._scrollWidth = 0;
-    this.width = 0;
+    this.clientWidth = 0;
     this._scrollHeight = 0;
-    this.height = 0;
+    this.clientHeight = 0;
 
 
     this._scrollTop = 0;
@@ -316,10 +326,10 @@ ScrollBar.prototype.syncScrollbarSize = function () {
 
     executeFunctionDelay(this._id + 'syncScrollSize', function () {
 
-        var width = getWidth(this.vScrollbar);
+        var width = Math.max(getWidth(this.vScrollbar),this.vScrollbar.offsetWidth);
         this.config.width = Math.max(width,this.config.width);
 
-        var height = getHeight(this.hScrollbar);
+        var height = Math.max(getHeight(this.hScrollbar),this.hScrollbar.offsetHeight);
         this.config.height = Math.max(height,this.config.height);
 
     },this);
@@ -371,15 +381,15 @@ ScrollBar.prototype.refresh = function () {
 };
 ScrollBar.prototype.updateScrollSize = function () {
 
-    var width = getClientWidth(this.element),scrollWidth = getScrollWidth(this.element);
+    var clientWidth = getClientWidth(this.element),scrollWidth = getScrollWidth(this.element);
 
-    var height = getClientHeight(this.element),scrollHeight = getScrollHeight(this.element);
+    var clientHeight = getClientHeight(this.element),scrollHeight = getScrollHeight(this.element);
 
-    this.overflowX = scrollWidth <= width;
-    this.overflowY = scrollHeight <= height;
+    this.overflowX = scrollWidth <= clientWidth;
+    this.overflowY = scrollHeight <= clientHeight;
 
-    this.width = width;
-    this.height = height;
+    this.clientWidth = clientWidth;
+    this.clientHeight = clientHeight;
     this.scrollWidth = scrollWidth;
     this.scrollHeight = scrollHeight;
 
@@ -498,20 +508,20 @@ ScrollBar.prototype._bindHorEvent = function () {
 ScrollBar.prototype.getHScrollRatio = function () {
 
     var barWidth = this.getScrollbarWidth();
-    var scrollRatio = (this.scrollWidth - this.width)/(this.width - barWidth);
+    var scrollRatio = (this.scrollWidth - this.clientWidth)/(this.clientWidth - barWidth);
     return scrollRatio;
 
 };
 ScrollBar.prototype.getVScrollRatio = function () {
 
     var barHeight = this.getScrollbarHeight();
-    var scrollRatio = (this.scrollHeight - this.height)/(this.height - barHeight);
+    var scrollRatio = (this.scrollHeight - this.clientHeight)/(this.clientHeight - barHeight);
     return scrollRatio;
 
 };
 ScrollBar.prototype.scrollLeftTo = function (scrollLeft) {
 
-    var maxScrollLeft = this.scrollWidth - this.width;
+    var maxScrollLeft = this.scrollWidth - this.clientWidth;
     if(arguments.length === 0){
         this._scrollLeft = Math.min(maxScrollLeft,this._scrollLeft);
         this._scrollLeft = Math.max(0,this._scrollLeft);
@@ -553,14 +563,14 @@ ScrollBar.prototype._getContentChildren = function () {
 };
 ScrollBar.prototype.scrollTopTo = function (scrollTop) {
 
-    var maxScrollTop = this.scrollHeight - this.height;
+    var maxScrollTop = this.scrollHeight - this.clientHeight;
     if(arguments.length === 0){
         this._scrollTop = Math.min(maxScrollTop,this._scrollTop);
         this._scrollTop = Math.max(0,this._scrollTop);
         return this._scrollTop;
     }
 
-    var maxScrollTop = this.scrollHeight - this.height;
+    var maxScrollTop = this.scrollHeight - this.clientHeight;
     scrollTop = Math.min(maxScrollTop,scrollTop);
     scrollTop = Math.max(0,scrollTop);
     var scrollRatio = this.getVScrollRatio();
@@ -740,7 +750,7 @@ ScrollBar.prototype._bindTouchScrollEvent = function () {
 };
 ScrollBar.prototype.getScrollbarHeight = function () {
 
-    var height = this.height,scrollHeight = this.scrollHeight;
+    var height = this.clientHeight,scrollHeight = this.scrollHeight;
     var barHeight = height / (scrollHeight / height);
     barHeight = Math.max(50,barHeight);
     return barHeight;
@@ -748,7 +758,7 @@ ScrollBar.prototype.getScrollbarHeight = function () {
 };
 ScrollBar.prototype.getScrollbarWidth = function () {
 
-    var width = this.width,scrollWidth = this.scrollWidth;
+    var width = this.clientWidth,scrollWidth = this.scrollWidth;
     var barWidth = width / (scrollWidth / width);
     barWidth = Math.max(50,barWidth);
     return barWidth;
@@ -1017,7 +1027,7 @@ CellsRender.initPaint = function () {
     var cells = this.renderTo.querySelectorAll(getFullClassSelector('cell')),
         size = cells.length;
     for(var i = 0;i < size;i++){
-        cells[i].remove();
+        this.removeElementFromDom(cells[i]);
     }
     domCache.clearCells();
     var paintState = this.paintState;
@@ -1162,10 +1172,20 @@ CellsRender.paintBody = function paintBody() {
 };
 CellsRender.removeCells = function removeCells(cacheCells,cells) {
 
+    var _ = this;
     cells.forEach(function (cell) {
         cacheCells.splice(cacheCells.indexOf(cell),1);
-        cell.remove();
+        _.removeElementFromDom(cell);
     });
+
+};
+CellsRender.removeElementFromDom = function (cell) {
+
+    if(cell.remove){
+        cell.remove();
+    }else if(cell.parentNode){
+        cell.parentNode.removeChild(cell);
+    }
 
 };
 CellsRender.computeRowTop = function computeRowTop(row) {
@@ -1182,31 +1202,30 @@ CellsRender._paintCell = function _paintCell(cell,row,col,field) {
     this._reLayoutCell(cell);
 
 };
+CellsRender.emptyElement = function (element) {
+    while(element.firstChild){
+        this.removeElementFromDom(element.firstChild);
+    }
+};
 CellsRender._configCell = function _configCell(cell,field) {
 
-    var isHtml = typeof field.html === 'string',
-        isHtmlCell = cell.getAttribute('html_content') === 'true';
+    var isHtml = typeof field.html === 'string';
     cell.setAttribute('html_content',isHtml + '');
     if(isHtml){
         cell.innerHTML = field.html;
+        cell._textSpan = null;
     }else{
         var text = field.name || field.value;
         var span;
-        if(isHtmlCell){
+        if(!cell._textSpan){
             cell.innerHTML = '';
             span = document.createElement('span');
-            span.innerText = text;
             cell.appendChild(span);
+            cell._textSpan = span;
         }else{
-            var children = cell.children;
-            if(children.length > 0){
-                span = children[0];
-            }else{
-                span = document.createElement('span');
-                cell.appendChild(span);
-            }
-            span.innerText = text;
+            span = cell._textSpan;
         }
+        span.innerText = text;
         if(this.config.textTitle){
             cell.setAttribute('title',text);
         }

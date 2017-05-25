@@ -1,30 +1,36 @@
 @import "common.scss";
 
+$scrollTrackColor: #e4f0e2;
+$scrollbarConfig:(hScrollTrackColor:#e4f0e2,vScrollTrackColor:#e4f0e2);
+
 .#{$prefix}{
-  $scrollTrackColor: #e4f0e2;
+
   .#{$prefix}-scrollbar-block{
     position:relative;
     border-radius: 10px;
     cursor:pointer;
   }
-  .#{$prefix}-scrollbar-ver{
+  %scrollbar{
     position: absolute;
+    overflow:hidden;
+    z-index:9999;
+  }
+  .#{$prefix}-scrollbar-ver{
+    @extend %scrollbar;
     top:0;
     right:0;
     bottom:0;
-    overflow:hidden;
-    background-color: $scrollTrackColor;
+    background-color: map-get($scrollbarConfig,vScrollTrackColor);
     .#{$prefix}-scrollbar-block{
       width:100%;
     }
   }
   .#{$prefix}-scrollbar-hor{
-    position: absolute;
+    @extend %scrollbar;
     right:0;
     left:0;
     bottom:0;
-    overflow:hidden;
-    background-color: $scrollTrackColor;
+    background-color: map-get($scrollbarConfig,hScrollTrackColor);
     .#{$prefix}-scrollbar-block{
       height:100%;
     }

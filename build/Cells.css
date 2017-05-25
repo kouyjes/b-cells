@@ -8,21 +8,21 @@
   position: relative;
   border-radius: 10px;
   cursor: pointer; }
-.d1012 .d1012-scrollbar-ver {
+.d1012 .d1012-scrollbar-ver, .d1012 .d1012-scrollbar-hor {
   position: absolute;
+  overflow: hidden;
+  z-index: 9999; }
+.d1012 .d1012-scrollbar-ver {
   top: 0;
   right: 0;
   bottom: 0;
-  overflow: hidden;
   background-color: #e4f0e2; }
   .d1012 .d1012-scrollbar-ver .d1012-scrollbar-block {
     width: 100%; }
 .d1012 .d1012-scrollbar-hor {
-  position: absolute;
   right: 0;
   left: 0;
   bottom: 0;
-  overflow: hidden;
   background-color: #e4f0e2; }
   .d1012 .d1012-scrollbar-hor .d1012-scrollbar-block {
     height: 100%; }
@@ -41,7 +41,7 @@
   .d1012 .d1012-cell {
     position: absolute;
     left: 0;
-    right: 0;
+    z-index: 1;
     border-bottom: 1px solid #000;
     border-right: 1px solid #f0f;
     box-sizing: border-box;
