@@ -32,50 +32,30 @@ ScrollBar.initEventListeners = function () {
     }
 };
 function getWidth(ele){
+    return ele.offsetWidth;
+}
+function getClientWidth(ele){
     return ele.clientWidth;
 }
 function getScrollWidth(element){
-
-    var children = element.children;
-    var length = children.length,width = 0,ele;
-    if(length > 0){
-        for(var i = 0;i < length;i++){
-            ele = children[i];
-            if(ele.vScrollbar || ele.hScrollbar){
-                continue;
-            }
-            width += Math.max(ele.scrollWidth,ele.clientWidth);
-        }
-    }
-    return Math.max(element.scrollWidth,element.clientWidth,width);
-
+    return Math.max(element.scrollWidth,element.clientWidth);
 }
 function getHeight(ele){
+    return ele.offsetHeight;
+}
+function getClientHeight(ele){
     return ele.clientHeight;
 }
 function getScrollHeight(element){
-
-    var children = element.children;
-    var length = children.length,height = 0,ele;
-    if(length > 0){
-        for(var i = 0;i < length;i++){
-            ele = children[i];
-            if(ele.vScrollbar || ele.hScrollbar){
-                continue;
-            }
-            height += Math.max(ele.scrollHeight,ele.clientHeight);
-        }
-    }
-    return Math.max(element.scrollHeight,element.clientHeight,height);
-
+    return Math.max(element.scrollHeight,element.clientHeight);
 }
 ScrollBar.prototype.init = function (ele,config) {
 
     this.element = ele;
     this._scrollWidth = 0;
-    this.clientWidth = 0;
+    this.width = 0;
     this._scrollHeight = 0;
-    this.clientHeight = 0;
+    this.height = 0;
 
 
     this._scrollTop = 0;
@@ -153,11 +133,11 @@ ScrollBar.prototype.syncScrollbarSize = function () {
 
     executeFunctionDelay(this._id + 'syncScrollSize', function () {
 
-        var clientWidth = this.vScrollbar.clientWidth;
-        this.config.width = Math.max(clientWidth,this.config.width);
+        var width = getWidth(this.vScrollbar);
+        this.config.width = Math.max(width,this.config.width);
 
-        var clientHeight = this.hScrollbar.clientHeight;
-        this.config.height = Math.max(clientHeight,this.config.height);
+        var height = getHeight(this.hScrollbar);
+        this.config.height = Math.max(height,this.config.height);
 
     },this);
 
@@ -208,15 +188,15 @@ ScrollBar.prototype.refresh = function () {
 };
 ScrollBar.prototype.updateScrollSize = function () {
 
-    var clientWidth = getWidth(this.element),scrollWidth = getScrollWidth(this.element);
+    var width = getClientWidth(this.element),scrollWidth = getScrollWidth(this.element);
 
-    var clientHeight = getHeight(this.element),scrollHeight = getScrollHeight(this.element);
+    var height = getClientHeight(this.element),scrollHeight = getScrollHeight(this.element);
 
-    this.overflowX = scrollWidth <= clientWidth;
-    this.overflowY = scrollHeight <= clientHeight;
+    this.overflowX = scrollWidth <= width;
+    this.overflowY = scrollHeight <= height;
 
-    this.clientWidth = clientWidth;
-    this.clientHeight = clientHeight;
+    this.width = width;
+    this.height = height;
     this.scrollWidth = scrollWidth;
     this.scrollHeight = scrollHeight;
 
@@ -335,20 +315,20 @@ ScrollBar.prototype._bindHorEvent = function () {
 ScrollBar.prototype.getHScrollRatio = function () {
 
     var barWidth = this.getScrollbarWidth();
-    var scrollRatio = (this.scrollWidth - this.clientWidth)/(this.clientWidth - barWidth);
+    var scrollRatio = (this.scrollWidth - this.width)/(this.width - barWidth);
     return scrollRatio;
 
 };
 ScrollBar.prototype.getVScrollRatio = function () {
 
     var barHeight = this.getScrollbarHeight();
-    var scrollRatio = (this.scrollHeight - this.clientHeight)/(this.clientHeight - barHeight);
+    var scrollRatio = (this.scrollHeight - this.height)/(this.height - barHeight);
     return scrollRatio;
 
 };
 ScrollBar.prototype.scrollLeftTo = function (scrollLeft) {
 
-    var maxScrollLeft = this.scrollWidth - this.clientWidth;
+    var maxScrollLeft = this.scrollWidth - this.width;
     if(arguments.length === 0){
         this._scrollLeft = Math.min(maxScrollLeft,this._scrollLeft);
         this._scrollLeft = Math.max(0,this._scrollLeft);
@@ -390,14 +370,14 @@ ScrollBar.prototype._getContentChildren = function () {
 };
 ScrollBar.prototype.scrollTopTo = function (scrollTop) {
 
-    var maxScrollTop = this.scrollHeight - this.clientHeight;
+    var maxScrollTop = this.scrollHeight - this.height;
     if(arguments.length === 0){
         this._scrollTop = Math.min(maxScrollTop,this._scrollTop);
         this._scrollTop = Math.max(0,this._scrollTop);
         return this._scrollTop;
     }
 
-    var maxScrollTop = this.scrollHeight - this.clientHeight;
+    var maxScrollTop = this.scrollHeight - this.height;
     scrollTop = Math.min(maxScrollTop,scrollTop);
     scrollTop = Math.max(0,scrollTop);
     var scrollRatio = this.getVScrollRatio();
@@ -577,7 +557,7 @@ ScrollBar.prototype._bindTouchScrollEvent = function () {
 };
 ScrollBar.prototype.getScrollbarHeight = function () {
 
-    var height = this.clientHeight,scrollHeight = this.scrollHeight;
+    var height = this.height,scrollHeight = this.scrollHeight;
     var barHeight = height / (scrollHeight / height);
     barHeight = Math.max(50,barHeight);
     return barHeight;
@@ -585,7 +565,7 @@ ScrollBar.prototype.getScrollbarHeight = function () {
 };
 ScrollBar.prototype.getScrollbarWidth = function () {
 
-    var width = this.clientWidth,scrollWidth = this.scrollWidth;
+    var width = this.width,scrollWidth = this.scrollWidth;
     var barWidth = width / (scrollWidth / width);
     barWidth = Math.max(50,barWidth);
     return barWidth;

@@ -117,7 +117,7 @@ Cells.prototype._initPanelSize = function () {
 
     var cellsPanel = this.cellsPanel;
 
-    cellsPanel.currentWidth = cellsPanel.clientWidth - 2;
+    cellsPanel.currentWidth = this.headerPanel.clientWidth;
     cellsPanel.currentHeight = cellsPanel.clientHeight;
 
 

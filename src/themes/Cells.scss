@@ -1,23 +1,28 @@
 @import "Scrollbar";
 
 .#{$prefix}{
-  $rowBorderColor:#000;
-  $colBorderColor: #f0f;
-  $tableBorderColor:#000;
-  $headerBorderColor:#000;
+
+  $headerConfig:(borderLeft:1px solid #000,borderTop:1px solid #000,borderRight:1px solid #000,borderBottom:1px solid #000);
+  $bodyConfig:(borderLeft:1px solid #000,borderTop:none,borderRight:1px solid #000,borderBottom:1px solid #000);
+  $rowConfig:(border:1px solid #000);
+  $colConfig:(border:1px solid #f0f);
+
+
   position: relative;
   display:flex;
   flex-direction: column;
   width:100%;
   height:100%;
-  overflow-x: auto;
+  overflow:hidden;
   @include css(transform,translateZ(0));
   .#{$prefix}-cell{
     position: absolute;
     left:0;
     right:0;
-    border-bottom:1px solid $rowBorderColor;
-    border-right:1px solid $colBorderColor;
+    border:{
+      bottom:map-get($rowConfig,border);
+      right:map-get($colConfig,border);
+    }
     box-sizing:border-box;
     overflow: hidden;
     &[html_content='false']{
@@ -41,7 +46,12 @@
     height:30px;
     width:100%;
     overflow:hidden;
-    border:1px solid $headerBorderColor;
+    border:{
+      left:map-get($headerConfig,borderLeft);
+      top:map-get($headerConfig,borderTop);
+      right:map-get($headerConfig,borderRight);
+      bottom:map-get($headerConfig,borderBottom);
+    }
     .#{$prefix}-cell{
       border-bottom:none;
       height:100% !important;
@@ -60,8 +70,12 @@
     flex:1;
     width:100%;
     overflow:auto;
-    border:1px solid $tableBorderColor;
-    border-top:none;
+    border:{
+      left:map-get($bodyConfig,borderLeft);
+      top:map-get($bodyConfig,borderTop);
+      right:map-get($bodyConfig,borderRight);
+      bottom:map-get($bodyConfig,borderBottom);;
+    }
 
     &[overflowX='true']{
       overflow-x:hidden;
