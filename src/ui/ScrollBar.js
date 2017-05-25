@@ -43,7 +43,18 @@ function getClientWidth(ele){
     return ele.clientWidth;
 }
 function getScrollWidth(element){
-    return Math.max(element.scrollWidth,element.clientWidth);
+    var children = element.children;
+    var length = children.length,width = 0,ele;
+    if(length > 0){
+        for(var i = 0;i < length;i++){
+            ele = children[i];
+            if(ele.vScrollbar || ele.hScrollbar){
+                continue;
+            }
+            width += Math.max(ele.scrollWidth,ele.offsetWidth);
+        }
+    }
+    return Math.max(element.scrollWidth,element.clientWidth,width);
 }
 function getHeight(ele){
     var style = window.getComputedStyle(ele);
@@ -57,7 +68,18 @@ function getClientHeight(ele){
     return ele.clientHeight;
 }
 function getScrollHeight(element){
-    return Math.max(element.scrollHeight,element.clientHeight);
+    var children = element.children;
+    var length = children.length,height = 0,ele;
+    if(length > 0){
+        for(var i = 0;i < length;i++){
+            ele = children[i];
+            if(ele.vScrollbar || ele.hScrollbar){
+                continue;
+            }
+            height += Math.max(ele.scrollHeight,ele.offsetHeight);
+        }
+    }
+    return Math.max(element.scrollHeight,element.clientHeight,height);
 }
 ScrollBar.prototype.init = function (ele,config) {
 
