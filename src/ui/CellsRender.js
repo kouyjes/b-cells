@@ -1,4 +1,4 @@
-import { getFullClassName,getFullClassSelector,getMousePosition,isDomElement,requestAnimationFrame,cancelAnimationFrame,executeFunctionDelay } from './domUtil'
+import { style,getFullClassName,getFullClassSelector,getMousePosition,isDomElement,requestAnimationFrame,cancelAnimationFrame,executeFunctionDelay } from './domUtil'
 import { ScrollBar } from './ScrollBar'
 function CellsRender(){
 
@@ -486,10 +486,12 @@ CellsRender._reLayoutCell = function _reLayoutCell(cell) {
     cell.setAttribute('col-last',colLast);
     cell.setAttribute('row-last',rowLast);
 
-    cell.style.top = this.computeRowTop(row) + 'px';
-    cell.style.left = colsLeft[col] + 'px';
-    cell.style.width = colsWidth[col] + 'px';
-    cell.style.height = rowsHeight[row] + 'px';
+    style(cell,{
+        left:colsLeft[col] + 'px',
+        top:this.computeRowTop(row) + 'px',
+        width:colsWidth[col] + 'px',
+        height:rowsHeight[row] + 'px'
+    });
 
 };
 CellsRender._createCursor = function _createCursor() {
@@ -554,8 +556,11 @@ CellsRender.syncCursor = function syncCursor() {
         colsWidth = domCache.colsWidth;
     var curTop = rowsTop[rowsTop.length - 1] + rowsHeight[rowsHeight.length - 1],
         curWidth = colsLeft[colsLeft.length - 1] + colsWidth[colsWidth.length - 1];
-    cursor.style.top = curTop + 'px';
-    cursor.style.width = curWidth + 'px';
+
+    style(cursor,{
+        width:curWidth + 'px',
+        top:curTop + 'px'
+    });
 
     this.executeFunctionDelay('resizeScrollbar',this.resizeScrollbar);
 
@@ -567,7 +572,7 @@ function _bindScrollEvent(){
     scrollbar.addEventListener('scroll', function () {
 
         var scrollLeft = scrollbar.scrollLeft;
-        headerContentPanel.style.left = -scrollLeft + 'px'
+        style(headerContentPanel,'left',-scrollLeft + 'px');
         this.executeFunctionDelay('repaintRequest',this.repaint);
 
         var event = this.createEvent('scroll',scrollbar,this.cellsModel);

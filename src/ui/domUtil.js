@@ -73,8 +73,20 @@ function getFullClassSelector(selector) {
     return '.' + getFullClassName(selector);
 
 };
+var browseCssPrefixes = ['-webkit-','-moz-','-ms-'];
+Object.freeze(browseCssPrefixes);
+var cssPropNames = ['transform','transition','animate'];
 function style(ele,style){
+    if(arguments.length === 3){
+        ele.style[style] = arguments[2];
+        return;
+    }
     Object.keys(style).forEach(function (key) {
+        if(cssPropNames.indexOf(key) >= 0){
+            browseCssPrefixes.forEach(function (prefix) {
+                ele.style[prefix + key] = style[key];
+            });
+        }
         ele.style[key] = style[key];
     });
 }
@@ -82,4 +94,5 @@ function userSelect(selected,ele){
     ele = ele || document.body;
     ele.setAttribute('user_select',String(selected));
 }
-export { style,userSelect,getFullClassName,getFullClassSelector,isElementInDom,isTouchSupported,getMousePosition,isDomElement,requestAnimationFrame,cancelAnimationFrame,executeFunctionDelay }
+
+export { browseCssPrefixes,style,userSelect,getFullClassName,getFullClassSelector,isElementInDom,isTouchSupported,getMousePosition,isDomElement,requestAnimationFrame,cancelAnimationFrame,executeFunctionDelay }
