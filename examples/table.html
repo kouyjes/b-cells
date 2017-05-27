@@ -27,10 +27,10 @@
         }
         var cellsModel = new CELL.CellsModel();
         var header = [];
-        var colNum = 100;
+        var colNum = 1000;
         for(var i = 0; i< colNum;i++){
             header.push({name:'column' + i,width:'10%',style:{
-                background:randomColor()
+                backgroundColor:randomColor()
             }});
         }
         var rows = [];
@@ -39,7 +39,7 @@
                 var fields = [];
                 for(var col = 0;col < colNum;col++){
                     fields.push({value:'cell-'+ i + '-' + col,style:{
-                        background:randomColor()
+                        'background-color':randomColor()
                     }});
                 }
                 return {

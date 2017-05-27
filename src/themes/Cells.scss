@@ -24,6 +24,9 @@
       right:map-get($colConfig,border);
     }
     box-sizing:border-box;
+    background:{
+      clip:content-box;
+    }
     overflow: hidden;
     &[html_content='false']{
       overflow:hidden;

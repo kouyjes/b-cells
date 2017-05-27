@@ -45,6 +45,7 @@
     border-bottom: 1px solid #000;
     border-right: 1px solid #f0f;
     box-sizing: border-box;
+    background-clip: content-box;
     overflow: hidden; }
     .d1012 .d1012-cell[html_content='false'] {
       overflow: hidden;

@@ -824,7 +824,7 @@ ScrollBar.prototype._renderV = function () {
 
 };
 
-var _cellSupportStyles = ['background'];
+var _cellSupportStyles = ['background','backgroundColor','backgroundImage','backgroundRepeat','backgroundSize'];
 function CellsRender(){
 
     this.cellsPanel = null;
@@ -1298,6 +1298,9 @@ CellsRender._createCell = function _createCell(row,col,field,isHeaderCell) {
     return cell;
 
 };
+function toUpper(match,str){
+    return str ? str.toUpperCase() : '';
+}
 CellsRender._reLayoutCell = function _reLayoutCell(cell) {
 
     var row = parseInt(cell.getAttribute('row')),
@@ -1324,16 +1327,28 @@ CellsRender._reLayoutCell = function _reLayoutCell(cell) {
         height:rowsHeight[row] + 'px'
     });
 
+    if(cell._customStyleKeys){
+       cell. _customStyleKeys.forEach(function (key) {
+            style(cell,key,'');
+        });
+    }
+
     var fields = cell._headerCell ? header.fields : rows[row].fields,
         field = fields[col],
         fieldStyle = field.style;
-    _cellSupportStyles.forEach(function (styleName) {
-        var styleValue = '';
-        if(fieldStyle && fieldStyle[styleName]){
-            styleValue = fieldStyle[styleName];
-        }
-        style(cell,styleName,styleValue);
-    });
+    var customStyleKeys = [];
+    if(fieldStyle){
+        Object.keys(fieldStyle).forEach(function (key) {
+            if(key in cell.style){
+                if(_cellSupportStyles.indexOf(key.replace(/-(\w)/g,toUpper)) === -1){
+                    return;
+                }
+                style(cell,key,fieldStyle[key]);
+                customStyleKeys.push(key);
+            }
+        });
+    }
+    cell._customStyleKeys = customStyleKeys;
 
 };
 CellsRender._createCursor = function _createCursor() {
