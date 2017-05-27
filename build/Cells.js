@@ -72,7 +72,9 @@ CellsModel.prototype.trigger = function (eventName) {
             if(typeof listener === 'function'){
                 listener();
             }
-        }catch(e) {}
+        }catch(e) {
+            console.error(e);
+        }
     });
 };
 CellsModel.prototype.refresh = function () {
@@ -502,7 +504,9 @@ ScrollBar.prototype.triggerEvent = function (eventType) {
     listeners.forEach(function (listener) {
         try{
             listener.call(this);
-        }catch(e){}
+        }catch(e){
+            console.error(e);
+        }
     }.bind(this));
 
 };

@@ -66,7 +66,9 @@ CellsModel.prototype.trigger = function (eventName) {
             if(typeof listener === 'function'){
                 listener();
             }
-        }catch(e) {}
+        }catch(e) {
+            console.error(e);
+        }
     });
 };
 CellsModel.prototype.refresh = function () {
