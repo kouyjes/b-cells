@@ -6,7 +6,8 @@ function CellsEvent(){
         value:{
             click:[], //cells click event
             cellClick:[], //cell click event
-            scroll:[] // scroll event
+            scroll:[], // scroll event
+            cellPainted:[], //triggered after cell has been painted
         }
     });
 
@@ -17,6 +18,18 @@ CellsEvent.extendBindEventExecutor = function (executor) {
 
     if(bindEventExecutors.indexOf(executor) === -1){
         bindEventExecutors.push(executor);
+    }
+
+};
+CellsEvent.extendEventType = function (eventType,listeners) {
+
+    if(!listeners){
+        listeners = [];
+    }else{
+        listeners = [].concat(listeners);
+    }
+    if(!this.eventManager[eventType]){
+        this.eventManager[eventType] = listeners;
     }
 
 };

@@ -1,5 +1,6 @@
 import { style,getFullClassName,getFullClassSelector,getMousePosition,isDomElement,requestAnimationFrame,cancelAnimationFrame,executeFunctionDelay } from './domUtil'
 import { ScrollBar } from './ScrollBar'
+var _cellSupportStyles = ['background'];
 function CellsRender(){
 
     this.cellsPanel = null;
@@ -314,8 +315,7 @@ CellsRender.paintHeader = function paintHeader() {
             field = fields[colIndex];
             cell = cells.pop();
             if(!cell){
-                cell = this._createCell(0,colIndex,field,cellsCache);
-                cell._headerCell = true;
+                cell = this._createHeaderCell(0,colIndex,field);
                 headerContentPanel.appendChild(cell);
             }else{
                 this._paintCell(cell,0,colIndex,field);
@@ -447,11 +447,17 @@ CellsRender._configCell = function _configCell(cell,field) {
     return cell;
 
 };
-CellsRender._createCell = function _createCell(row,col,field,cacheCells) {
+CellsRender._createHeaderCell = function (row,col,field) {
 
-    var cacheCells = cacheCells || this.domCache.cells;
+    return this._createCell(row,col,field,true);
+
+};
+CellsRender._createCell = function _createCell(row,col,field,isHeaderCell) {
+
+    var cacheCells = isHeaderCell ? this.domCache.headerCells : this.domCache.cells;
     var cell = document.createElement('div');
     cell._cell = true;
+    cell._headerCell = isHeaderCell;
 
     cell.setAttribute('row','' + row);
     cell.setAttribute('col','' + col);
@@ -480,7 +486,8 @@ CellsRender._reLayoutCell = function _reLayoutCell(cell) {
     //last column flag
     var cellsModel = this.cellsModel,
         headerFields = cellsModel.header.fields,
-        rows = cellsModel.rows;
+        rows = cellsModel.rows,
+        header = cellsModel.header;
     var colLast = String(headerFields.length - 1 === col),
         rowLast = String(rows.length - 1 === row);
     cell.setAttribute('col-last',colLast);
@@ -491,6 +498,17 @@ CellsRender._reLayoutCell = function _reLayoutCell(cell) {
         top:this.computeRowTop(row) + 'px',
         width:colsWidth[col] + 'px',
         height:rowsHeight[row] + 'px'
+    });
+
+    var fields = cell._headerCell ? header.fields : rows[row].fields,
+        field = fields[col],
+        fieldStyle = field.style;
+    _cellSupportStyles.forEach(function (styleName) {
+        var styleValue = '';
+        if(fieldStyle && fieldStyle[styleName]){
+            styleValue = fieldStyle[styleName];
+        }
+        style(cell,styleName,styleValue);
     });
 
 };

@@ -15,22 +15,32 @@
         }
         #table{
             width:100%;
-            height:200px;
+            height:80%;
         }
     </style>
     <script>
+        function randomColor(){
+            var r = parseInt(255 * Math.random()),
+                g = parseInt(255 * Math.random()),
+                b = parseInt(255 * Math.random());
+            return 'rgb(' + r + ',' + g + ',' + b + ')';
+        }
         var cellsModel = new CELL.CellsModel();
         var header = [];
         var colNum = 100;
         for(var i = 0; i< colNum;i++){
-            header.push({name:'column' + i,width:'10%'});
+            header.push({name:'column' + i,width:'10%',style:{
+                background:randomColor()
+            }});
         }
         var rows = [];
         for(var i = 0;i < 1000;i++){
             rows.push((function(){
                 var fields = [];
                 for(var col = 0;col < colNum;col++){
-                    fields.push({value:'cell-'+ i + '-' + col});
+                    fields.push({value:'cell-'+ i + '-' + col,style:{
+                        background:randomColor()
+                    }});
                 }
                 return {
                     height:'10%',
