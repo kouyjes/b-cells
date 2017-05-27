@@ -4,87 +4,6 @@
     (factory((global.CELL = global.CELL || {})));
 }(this, (function (exports) { 'use strict';
 
-/**
- * Created by koujp on 2016/10/17.
- */
-function CellsModel(cellsModel){
-    this.header = {
-        fields:[] //{name:''}
-    };
-    this.rows = [];//[{fields:[]}]
-
-    this._eventListener = {
-        onAppendRows:[],
-        onRefresh:[]
-    };
-
-    if(arguments.length > 0){
-        this.init(cellsModel);
-    }
-}
-CellsModel.prototype.init = function (cellsModel) {
-    if(cellsModel.header && cellsModel.header.fields instanceof Array){
-        this.header.fields = cellsModel.header.fields;
-    }
-    if(cellsModel.rows instanceof Array){
-        this.rows = cellsModel.rows;
-    }
-    var eventListener = cellsModel._eventListener;
-    if(!eventListener){
-        return;
-    }
-    var context = this;
-    ['appendRows','refresh'].forEach(function (eventName) {
-        var listeners = eventListener[this.getEventKey(eventName)];
-        if(listeners instanceof Array){
-            listeners.forEach(function (listener) {
-                context.bind(eventName,listener);
-            });
-        }
-    });
-};
-CellsModel.prototype.bind = function (eventName,listener) {
-    if(typeof eventName !== 'string' || typeof listener !== 'function'){
-        return;
-    }
-    eventName = this.getEventKey(eventName);
-    if(eventName && this._eventListener[eventName].indexOf(listener) === -1){
-        this._eventListener[eventName].push(listener);
-    }
-};
-CellsModel.prototype.getEventKey = function (eventName) {
-    if(eventName.length > 1){
-        eventName = 'on' + eventName[0].toUpperCase()  + eventName.substring(1);
-        if(this._eventListener[eventName] instanceof Array){
-            return eventName;
-        }
-    }
-    return null;
-};
-CellsModel.prototype.trigger = function (eventName) {
-    eventName = this.getEventKey(eventName);
-    var listeners = this._eventListener[eventName];
-    if(!(listeners instanceof Array)){
-        return;
-    }
-    listeners.forEach(function (listener) {
-        try{
-            if(typeof listener === 'function'){
-                listener();
-            }
-        }catch(e) {
-            console.error(e);
-        }
-    });
-};
-CellsModel.prototype.refresh = function () {
-    this.trigger('refresh');
-};
-CellsModel.prototype.appendRows = function (rows) {
-    this.rows = this.rows.concat(rows);
-    this.trigger('appendRows');
-};
-
 var _config = {
     themesPrefix : 'd1012'
 };
@@ -824,6 +743,460 @@ ScrollBar.prototype._renderV = function () {
 
 };
 
+/**
+ * Created by koujp on 2016/10/17.
+ */
+function CellsModel(cellsModel){
+    this.header = {
+        fields:[] //{name:''}
+    };
+    this.rows = [];//[{fields:[]}]
+
+    this._eventListener = {
+        onAppendRows:[],
+        onRefresh:[]
+    };
+
+    if(arguments.length > 0){
+        this.init(cellsModel);
+    }
+}
+CellsModel.prototype.init = function (cellsModel) {
+    if(cellsModel.header && cellsModel.header.fields instanceof Array){
+        this.header.fields = cellsModel.header.fields;
+    }
+    if(cellsModel.rows instanceof Array){
+        this.rows = cellsModel.rows;
+    }
+    var eventListener = cellsModel._eventListener;
+    if(!eventListener){
+        return;
+    }
+    var context = this;
+    ['appendRows','refresh'].forEach(function (eventName) {
+        var listeners = eventListener[this.getEventKey(eventName)];
+        if(listeners instanceof Array){
+            listeners.forEach(function (listener) {
+                context.bind(eventName,listener);
+            });
+        }
+    });
+};
+CellsModel.prototype.bind = function (eventName,listener) {
+    if(typeof eventName !== 'string' || typeof listener !== 'function'){
+        return;
+    }
+    eventName = this.getEventKey(eventName);
+    if(eventName && this._eventListener[eventName].indexOf(listener) === -1){
+        this._eventListener[eventName].push(listener);
+    }
+};
+CellsModel.prototype.getEventKey = function (eventName) {
+    if(eventName.length > 1){
+        eventName = 'on' + eventName[0].toUpperCase()  + eventName.substring(1);
+        if(this._eventListener[eventName] instanceof Array){
+            return eventName;
+        }
+    }
+    return null;
+};
+CellsModel.prototype.trigger = function (eventName) {
+    eventName = this.getEventKey(eventName);
+    var listeners = this._eventListener[eventName];
+    if(!(listeners instanceof Array)){
+        return;
+    }
+    listeners.forEach(function (listener) {
+        try{
+            if(typeof listener === 'function'){
+                listener();
+            }
+        }catch(e) {
+            console.error(e);
+        }
+    });
+};
+CellsModel.prototype.refresh = function () {
+    this.trigger('refresh');
+};
+CellsModel.prototype.appendRows = function (rows) {
+    this.rows = this.rows.concat(rows);
+    this.trigger('appendRows');
+};
+
+/**
+ * Created by koujp on 2016/10/17.
+ */
+function _setRenderTo(renderTo) {
+
+    if(typeof renderTo === 'string'){
+        renderTo = document.querySelector(renderTo);
+    }
+
+    if(!isDomElement(renderTo)){
+        throw new TypeError('renderTo must be a dom element !');
+    }
+
+    this.renderTo = renderTo;
+
+}
+if(!Object.assign){
+    Object.assign = function (src,target) {
+        if(!target){
+            return src;
+        }
+        Object.keys(target).forEach(function (key) {
+            src[key] = target[key];
+        });
+        return src;
+    };
+}
+function Cells(cellsModel,config){
+
+    init.apply(this,arguments);
+
+}
+
+var _initHooks = [];
+Cells.addInitHooks = function (initHook) {
+
+    var index = _initHooks.indexOf(initHook);
+    if(index === -1){
+        _initHooks.push(initHook);
+    }
+
+};
+Cells.removeInitHooks = function (initHook) {
+
+    var index = _initHooks.indexOf(initHook);
+    if(index >= 0){
+        _initHooks.splice(index,1);
+    }
+
+};
+
+function init(cellsModel,config) {
+
+    if(!(cellsModel instanceof CellsModel)){
+        throw new TypeError('arguments must be instanceof CellsModel !');
+    }
+    Object.defineProperty(this,'cellsModel',{
+        value:cellsModel
+    });
+
+    var renderTo = config.renderTo;
+    delete config.renderTo;
+    _setRenderTo.call(this,renderTo);
+
+
+    this.config = Object.assign({
+        enableCustomScroll:false,
+        textTitle:false,
+        colResize:false,
+        rowResize:false,
+        overflowX:false,
+        overflowY:false
+    },config);
+    Object.freeze(this.config);
+
+
+    var _ = this,initParams = arguments;
+    var initHooks = this.initHooks || _initHooks;
+
+    if(!initHooks){
+        initHooks = _initHooks;
+        this.initHooks = [].concat(initHooks);
+    }
+
+    initHooks.forEach(function (initHook) {
+        try{
+           initHook.apply(_,initParams);
+        }catch(e){
+            console.error(e);
+        }
+    });
+
+    this._bindCellsModelEvent();
+
+
+}
+var _cellPrototype = Cells.prototype;
+_cellPrototype.scrollTo = function (scrollTop,scrollLeft) {
+
+    var scrollbar = this.scrollbar;
+
+    if(arguments.length === 0){
+        return {
+            scrollLeft:scrollbar.scrollLeft,
+            scrollTop:scrollbar.scrollTop
+        };
+    }
+    scrollbar.scrollLeft = scrollLeft;
+    scrollbar.scrollTop = scrollTop;
+
+};
+_cellPrototype._initPanelSize = function () {
+
+    var cellsPanel = this.cellsPanel;
+
+    cellsPanel.currentWidth = this.headerPanel.clientWidth;
+    cellsPanel.currentHeight = cellsPanel.clientHeight;
+
+
+};
+_cellPrototype.getPanelSize = function () {
+
+    return {
+        width:this.cellsPanel.currentWidth,
+        height:this.cellsPanel.currentHeight
+    };
+
+};
+
+_cellPrototype._onAppendRows = function () {
+
+    var rowsHeight = this.domCache.rowsHeight;
+    this._initCellHeightIndex(rowsHeight.length);
+    this.syncCursor();
+    this.executeFunctionDelay('repaintRequest',this.repaint);
+
+};
+_cellPrototype._initCellSizeIndex = function () {
+
+    this._initCellWidthIndex();
+    this._initCellHeightIndex();
+
+};
+_cellPrototype._initCellWidthIndex = function () {
+
+    var colsWidth = this.domCache.colsWidth,
+        colsLeft = this.domCache.colsLeft;
+
+    var maxWidth = 0;
+    cellsModel.header.fields.forEach(function (field,index) {
+        var colWidth = this._parseCellWidth(field.width);
+        colsWidth[index] = colWidth;
+        maxWidth += colWidth;
+        if(index === 0){
+            colsLeft[index] = 0;
+        }else{
+            colsLeft[index] = colsLeft[index - 1] + colsWidth[index - 1];
+        }
+
+    }.bind(this));
+
+};
+_cellPrototype._initCellHeightIndex = function (startIndex) {
+
+    startIndex = startIndex || 0;
+
+    var cellsModel = this.cellsModel;
+    var rows = cellsModel.rows;
+    var rowsTop = this.domCache.rowsTop,
+        rowsHeight = this.domCache.rowsHeight;
+
+    //create page cursor
+    rows.slice(startIndex).forEach(function (row,index) {
+        index += startIndex;
+        var rowHeight = this._parseCellHeight(row.height);
+        rowsHeight[index] = rowHeight;
+        if(index === 0){
+            rowsTop[index] = 0;
+        }else{
+            rowsTop[index] = rowsTop[index - 1] + rowsHeight[index - 1];
+        }
+    }.bind(this));
+
+};
+_cellPrototype._parseCellWidth = function (width) {
+
+    var panelSize = this.getPanelSize();
+    var clientWidth = panelSize.width;
+    if(typeof width === 'string' && width && width.indexOf('%') === width.length - 1){
+        width = Math.floor(parseFloat(width)/100 * clientWidth);
+    }else{
+        width = parseInt(width);
+    }
+    return isNaN(width)?100:width;
+
+};
+_cellPrototype._parseCellHeight = function (height) {
+
+    if(typeof height === 'string' && height && height.indexOf('%') === height.length - 1){
+        var clientHeight = this.getPanelSize().height;
+        height = Math.floor(parseFloat(height)/100 * clientHeight);
+    }else{
+        height = parseInt(height);
+    }
+    return height?height:30;
+
+};
+_cellPrototype._bindCellsModelEvent = function () {
+    this.cellsModel.bind('refresh', function () {
+        if(this.renderTo){
+            this.executeFunctionDelay('refresh',this.repaint);
+        }
+    }.bind(this));
+
+    this.cellsModel.bind('appendRows', function () {
+        if(this.renderTo){
+            this.executeFunctionDelay('appendRows',this._onAppendRows);
+        }
+    }.bind(this));
+};
+_cellPrototype.executeFunctionDelay = function (timeoutId,func,context) {
+
+    return executeFunctionDelay(timeoutId,func,context || this);
+
+};
+Cells.extend = function (methodName,method) {
+    if(arguments.length === 1 && arguments[0]){
+        Object.keys(arguments[0]).forEach(function (key) {
+            _cellPrototype[key] = arguments[0][key];
+        });
+    }
+};
+
+function CellsEvent(){
+
+    Object.defineProperty(this,'eventManager',{
+        value:{
+            click:[], //cells click event
+            cellClick:[], //cell click event
+            scroll:[], // scroll event
+            cellPainted:[], //triggered after cell has been painted
+        }
+    });
+
+}
+var CellsExtend = {};
+var bindEventExecutors = [];
+CellsEvent.extendBindEventExecutor = function (executor) {
+
+    if(bindEventExecutors.indexOf(executor) === -1){
+        bindEventExecutors.push(executor);
+    }
+
+};
+CellsExtend.extendEventType = function (eventType,listeners) {
+
+    if(!listeners){
+        listeners = [];
+    }else{
+        listeners = [].concat(listeners);
+    }
+    if(!this.eventManager[eventType]){
+        this.eventManager[eventType] = listeners;
+    }
+
+};
+CellsExtend.createEvent = function createEvent(eventType,target,data) {
+
+    return {
+        type:eventType,
+        target:target,
+        data:data
+    };
+
+};
+CellsExtend.tiggerCellClickEvent = function tiggerCellClickEvent(cell) {
+
+    var cellsModel = this.cellsModel,col = parseInt(cell.getAttribute('col'));
+    if(cell._headerCell){
+        this.triggerEvent(this.createEvent('cellClick',cell,cellsModel.header.fields[col]));
+        return;
+    }
+    var row = parseInt(cell.getAttribute('row'));
+    var rowData = cellsModel.rows[row];
+    if(rowData){
+        this.triggerEvent(this.createEvent('cellClick',cell,rowData.fields[col]));
+    }
+};
+CellsExtend.addEventListener = function addEventListener(eventType,func) {
+
+    var handlers = this.eventManager[eventType];
+    if(!handlers){
+        handlers = this.eventManager[eventType] = [];
+    }
+    if(handlers.indexOf(func) === -1){
+        handlers.push(func);
+    }
+    return this;
+};
+CellsExtend.removeEventListener = function removeEventListener(eventType,func) {
+
+    var handlers = this.eventManager[eventType];
+    if(!handlers){
+        return;
+    }
+    var index = handlers.indexOf(func);
+    if(index >= 0){
+        handlers.splice(index,1);
+        return func;
+    }
+
+};
+CellsExtend.triggerEvent = function triggerEvent(event) {
+
+    var eventType = event.type;
+    var handlers = this.eventManager[eventType];
+    if(!handlers){
+        return;
+    }
+    handlers.forEach(function (handler) {
+        requestAnimationFrame(function () {
+            handler.call(event.target,event);
+        });
+    }.bind(this));
+
+};
+
+function _bindClickEvent() {
+
+    var _ = this,cellsPanel = this.cellsPanel;
+    cellsPanel.addEventListener('click', function (e) {
+
+        var target = e.target;
+        if(target === cellsPanel){
+            _.triggerEvent(_.createEvent('click',cellsPanel,_.cellsModel));
+            return;
+        }
+        if(_.eventManager.cellClick && _.eventManager.cellClick.length >= 0){
+            if(target._cell){
+                _.tiggerCellClickEvent(target);
+            }else{
+                while(target = target.parentNode){
+                    if(target === cellsPanel){
+                        break;
+                    }
+                    if(target._cell){
+                        _.tiggerCellClickEvent(target);
+                        break;
+                    }
+                }
+            }
+        }
+        _.triggerEvent(_.createEvent('click',cellsPanel,_.cellsModel));
+    });
+
+}
+
+CellsExtend._bindEvent = function _bindEvent() {
+
+    var _ = this;
+    bindEventExecutors.forEach(function (executor) {
+        try{
+            executor.call(_);
+        }catch(e){
+            console.error(e);
+        }
+    });
+
+};
+Cells.extend(CellsExtend);
+CellsEvent.extendBindEventExecutor(_bindClickEvent);
+Cells.addInitHooks(CellsEvent);
+
 var _cellSupportStyles = ['background','backgroundColor','backgroundImage','backgroundRepeat','backgroundSize'];
 function CellsRender(){
 
@@ -833,6 +1206,23 @@ function CellsRender(){
     this.cursor = null;
 
 }
+var CellsExtend$1 = {};
+function transformStyleName(styleName){
+    return styleName.replace(/-(\w)/g, function (match,str) {
+        return str ? str.toUpperCase() : '';
+    });
+}
+Cells.expandSupportStyles = function (styleNames) {
+    if(styleNames){
+        styleNames = [].concat(styleNames);
+    }
+    styleNames.forEach(function (styleName) {
+        styleName = transformStyleName[styleName];
+        if(_cellSupportStyles.indexOf(styleName) === -1){
+            _cellSupportStyles.push(styleName);
+        }
+    });
+};
 function initRenderState() {
 
     this.paintState = {
@@ -905,7 +1295,7 @@ function initRender() {
 
 }
 var headerContentClassName = 'header-content';
-CellsRender.resizeScrollbar = function resizeScrollbar() {
+CellsExtend$1.resizeScrollbar = function resizeScrollbar() {
 
     if(this.config.enableCustomScroll){
         this.scrollbar.resize();
@@ -913,7 +1303,7 @@ CellsRender.resizeScrollbar = function resizeScrollbar() {
     }
 
 };
-CellsRender.getCurrentColArea = function getCurrentColArea() {
+CellsExtend$1.getCurrentColArea = function getCurrentColArea() {
 
     var scrollbar = this.scrollbar;
     var panelSize = this.getPanelSize();
@@ -923,7 +1313,7 @@ CellsRender.getCurrentColArea = function getCurrentColArea() {
 
 };
 
-CellsRender.getThresholdArea = function getThresholdArea(viewSize,positions,cursor) {
+CellsExtend$1.getThresholdArea = function getThresholdArea(viewSize,positions,cursor) {
 
     var from = 0,
         end,i;
@@ -957,7 +1347,7 @@ CellsRender.getThresholdArea = function getThresholdArea(viewSize,positions,curs
     return this.normalizeArea(area,positions);
 
 };
-CellsRender.getCurrentRowArea = function getCurrentRowArea() {
+CellsExtend$1.getCurrentRowArea = function getCurrentRowArea() {
 
     var scrollbar = this.scrollbar;
     var panelSize = this.getPanelSize();
@@ -966,17 +1356,17 @@ CellsRender.getCurrentRowArea = function getCurrentRowArea() {
     return this.getThresholdArea(panelSize.height,rowsTop,top);
 
 };
-CellsRender.getRowPaintAreas = function getRowPaintAreas() {
+CellsExtend$1.getRowPaintAreas = function getRowPaintAreas() {
 
     return this._getPaintAreas('row');
 
 };
-CellsRender.getColPaintAreas = function getColPaintAreas() {
+CellsExtend$1.getColPaintAreas = function getColPaintAreas() {
 
     return this._getPaintAreas('col');
 
 };
-CellsRender.normalizeArea = function (area,positions) {
+CellsExtend$1.normalizeArea = function (area,positions) {
 
     area.from = Math.max(0,area.from);
     area.from = Math.min(positions.length - 1,area.from);
@@ -984,7 +1374,7 @@ CellsRender.normalizeArea = function (area,positions) {
     area.pageSize = Math.min(positions.length - area.from,area.pageSize);
     return area;
 };
-CellsRender._getPaintAreas = function _getPaintAreas(type) {
+CellsExtend$1._getPaintAreas = function _getPaintAreas(type) {
 
     var paintState = this.paintState;
     var lastArea = type === 'row' ? paintState.lastRowArea : paintState.lastColArea,
@@ -1049,7 +1439,7 @@ CellsRender._getPaintAreas = function _getPaintAreas(type) {
     return areas;
 
 };
-CellsRender.render = function render() {
+CellsExtend$1.render = function render() {
 
 
     initRender.apply(this);
@@ -1060,7 +1450,7 @@ CellsRender.render = function render() {
     this.syncCursor();
 
 };
-CellsRender.initPaint = function () {
+CellsExtend$1.initPaint = function () {
 
     var domCache = this.domCache;
     var cells = this.renderTo.querySelectorAll(getFullClassSelector('cell')),
@@ -1073,7 +1463,7 @@ CellsRender.initPaint = function () {
     paintState.reset();
 
 };
-CellsRender.executePaint = function () {
+CellsExtend$1.executePaint = function () {
 
     var paintState = this.paintState;
     paintState.currentRowArea = this.getCurrentRowArea();
@@ -1086,7 +1476,7 @@ CellsRender.executePaint = function () {
     paintState.lastColArea = paintState.currentColArea;
 
 };
-CellsRender.paint = function paint() {
+CellsExtend$1.paint = function paint() {
 
     this.initPaint();
 
@@ -1096,27 +1486,27 @@ CellsRender.paint = function paint() {
     this.syncCursor();
 
 };
-CellsRender.repaint = function repaint() {
+CellsExtend$1.repaint = function repaint() {
 
     this.executePaint();
 
 };
-CellsRender.getHeaderContentPanel = function () {
+CellsExtend$1.getHeaderContentPanel = function () {
 
     var headerContentPanel = this.headerPanel._contentPanel;
     return headerContentPanel;
 };
-CellsRender.getHeaderCells = function () {
+CellsExtend$1.getHeaderCells = function () {
 
     return this.domCache.headerCells;
 
 };
-CellsRender.getBodyCells = function () {
+CellsExtend$1.getBodyCells = function () {
 
     return this.domCache.cells;
 
 };
-CellsRender.paintHeader = function paintHeader() {
+CellsExtend$1.paintHeader = function paintHeader() {
 
     var cellsCache = this.domCache.headerCells,
         headerContentPanel = this.getHeaderContentPanel();
@@ -1150,7 +1540,7 @@ CellsRender.paintHeader = function paintHeader() {
     this.removeCells(cellsCache,cells);
 
 };
-CellsRender.paintBody = function paintBody() {
+CellsExtend$1.paintBody = function paintBody() {
 
     var paintState = this.paintState,
         domCache = this.domCache,
@@ -1208,7 +1598,7 @@ CellsRender.paintBody = function paintBody() {
     this.removeCells(cacheCells,cells);
 
 };
-CellsRender.removeCells = function removeCells(cacheCells,cells) {
+CellsExtend$1.removeCells = function removeCells(cacheCells,cells) {
 
     var _ = this;
     cells.forEach(function (cell) {
@@ -1217,7 +1607,7 @@ CellsRender.removeCells = function removeCells(cacheCells,cells) {
     });
 
 };
-CellsRender.removeElementFromDom = function (cell) {
+CellsExtend$1.removeElementFromDom = function (cell) {
 
     if(cell.remove){
         cell.remove();
@@ -1226,13 +1616,13 @@ CellsRender.removeElementFromDom = function (cell) {
     }
 
 };
-CellsRender.computeRowTop = function computeRowTop(row) {
+CellsExtend$1.computeRowTop = function computeRowTop(row) {
 
     var rowsTop = this.domCache.rowsTop;
     return rowsTop[row];
 
 };
-CellsRender._paintCell = function _paintCell(cell,row,col,field) {
+CellsExtend$1._paintCell = function _paintCell(cell,row,col,field) {
 
     cell.setAttribute('row','' + row);
     cell.setAttribute('col','' + col);
@@ -1240,12 +1630,12 @@ CellsRender._paintCell = function _paintCell(cell,row,col,field) {
     this._reLayoutCell(cell);
 
 };
-CellsRender.emptyElement = function (element) {
+CellsExtend$1.emptyElement = function (element) {
     while(element.firstChild){
         this.removeElementFromDom(element.firstChild);
     }
 };
-CellsRender._configCell = function _configCell(cell,field) {
+CellsExtend$1._configCell = function _configCell(cell,field) {
 
     var isHtml = typeof field.html === 'string';
     cell.setAttribute('html_content',isHtml + '');
@@ -1271,12 +1661,12 @@ CellsRender._configCell = function _configCell(cell,field) {
     return cell;
 
 };
-CellsRender._createHeaderCell = function (row,col,field) {
+CellsExtend$1._createHeaderCell = function (row,col,field) {
 
     return this._createCell(row,col,field,true);
 
 };
-CellsRender._createCell = function _createCell(row,col,field,isHeaderCell) {
+CellsExtend$1._createCell = function _createCell(row,col,field,isHeaderCell) {
 
     var cacheCells = isHeaderCell ? this.domCache.headerCells : this.domCache.cells;
     var cell = document.createElement('div');
@@ -1298,10 +1688,7 @@ CellsRender._createCell = function _createCell(row,col,field,isHeaderCell) {
     return cell;
 
 };
-function toUpper(match,str){
-    return str ? str.toUpperCase() : '';
-}
-CellsRender._reLayoutCell = function _reLayoutCell(cell) {
+CellsExtend$1._reLayoutCell = function _reLayoutCell(cell) {
 
     var row = parseInt(cell.getAttribute('row')),
         col = parseInt(cell.getAttribute('col'));
@@ -1340,7 +1727,7 @@ CellsRender._reLayoutCell = function _reLayoutCell(cell) {
     if(fieldStyle){
         Object.keys(fieldStyle).forEach(function (key) {
             if(key in cell.style){
-                if(_cellSupportStyles.indexOf(key.replace(/-(\w)/g,toUpper)) === -1){
+                if(_cellSupportStyles.indexOf(transformStyleName(key)) === -1){
                     return;
                 }
                 style(cell,key,fieldStyle[key]);
@@ -1351,7 +1738,7 @@ CellsRender._reLayoutCell = function _reLayoutCell(cell) {
     cell._customStyleKeys = customStyleKeys;
 
 };
-CellsRender._createCursor = function _createCursor() {
+CellsExtend$1._createCursor = function _createCursor() {
 
     var cursor = document.createElement('i');
     cursor.className = getFullClassName('row-cursor');
@@ -1362,7 +1749,7 @@ CellsRender._createCursor = function _createCursor() {
     return cursor;
 
 };
-CellsRender._createBodyContainer = function _createBodyContainer() {
+CellsExtend$1._createBodyContainer = function _createBodyContainer() {
 
     var bodyContainer = this.bodyPanel = document.createElement('div');
     bodyContainer.className = getFullClassName('body-container');
@@ -1376,14 +1763,14 @@ CellsRender._createBodyContainer = function _createBodyContainer() {
     bodyContainer._contentPanel = rowContainer;
     return bodyContainer;
 };
-CellsRender._createRowContainer = function _createRowContainer() {
+CellsExtend$1._createRowContainer = function _createRowContainer() {
 
     var rowContainer = document.createElement('div');
     rowContainer.className = getFullClassName('row-container');
     return rowContainer;
 
 };
-CellsRender.headerHeight = function (height) {
+CellsExtend$1.headerHeight = function (height) {
 
     var cellsModel = this.cellsModel;
     if(!height){
@@ -1396,7 +1783,7 @@ CellsRender.headerHeight = function (height) {
     cellsModel.header.height = height;
     this.headerPanel.style.height = height + 'px';
 };
-CellsRender._createHeader = function _createHeader() {
+CellsExtend$1._createHeader = function _createHeader() {
 
     var cellsModel = this.cellsModel;
     var headerContainer = document.createElement('header');
@@ -1413,7 +1800,7 @@ CellsRender._createHeader = function _createHeader() {
     return headerContainer;
 
 };
-CellsRender.syncCursor = function syncCursor() {
+CellsExtend$1.syncCursor = function syncCursor() {
 
     var cursor = this.cursor;
     if(!cursor){
@@ -1450,168 +1837,20 @@ function _bindScrollEvent(){
 
     }.bind(this));
 }
-Object.defineProperty(CellsRender,'init',{
-
-    value: function () {
-        this.extendBindEventExecutor(_bindScrollEvent);
-    }
-
-});
-
-function CellsEvent(){
-
-    Object.defineProperty(this,'eventManager',{
-        value:{
-            click:[], //cells click event
-            cellClick:[], //cell click event
-            scroll:[], // scroll event
-            cellPainted:[], //triggered after cell has been painted
-        }
-    });
-
-}
-
-var bindEventExecutors = [];
-CellsEvent.extendBindEventExecutor = function (executor) {
-
-    if(bindEventExecutors.indexOf(executor) === -1){
-        bindEventExecutors.push(executor);
-    }
-
-};
-CellsEvent.extendEventType = function (eventType,listeners) {
-
-    if(!listeners){
-        listeners = [];
-    }else{
-        listeners = [].concat(listeners);
-    }
-    if(!this.eventManager[eventType]){
-        this.eventManager[eventType] = listeners;
-    }
-
-};
-CellsEvent.createEvent = function createEvent(eventType,target,data) {
-
-    return {
-        type:eventType,
-        target:target,
-        data:data
-    };
-
-};
-CellsEvent.tiggerCellClickEvent = function tiggerCellClickEvent(cell) {
-
-    var cellsModel = this.cellsModel,col = parseInt(cell.getAttribute('col'));
-    if(cell._headerCell){
-        this.triggerEvent(this.createEvent('cellClick',cell,cellsModel.header.fields[col]));
-        return;
-    }
-    var row = parseInt(cell.getAttribute('row'));
-    var rowData = cellsModel.rows[row];
-    if(rowData){
-        this.triggerEvent(this.createEvent('cellClick',cell,rowData.fields[col]));
-    }
-};
-CellsEvent.addEventListener = function addEventListener(eventType,func) {
-
-    var handlers = this.eventManager[eventType];
-    if(!handlers){
-        handlers = this.eventManager[eventType] = [];
-    }
-    if(handlers.indexOf(func) === -1){
-        handlers.push(func);
-    }
-    return this;
-};
-CellsEvent.removeEventListener = function removeEventListener(eventType,func) {
-
-    var handlers = this.eventManager[eventType];
-    if(!handlers){
-        return;
-    }
-    var index = handlers.indexOf(func);
-    if(index >= 0){
-        handlers.splice(index,1);
-        return func;
-    }
-
-};
-CellsEvent.triggerEvent = function triggerEvent(event) {
-
-    var eventType = event.type;
-    var handlers = this.eventManager[eventType];
-    if(!handlers){
-        return;
-    }
-    handlers.forEach(function (handler) {
-        requestAnimationFrame(function () {
-            handler.call(event.target,event);
-        });
-    }.bind(this));
-
-};
-
-function _bindClickEvent() {
-
-    var _ = this,cellsPanel = this.cellsPanel;
-    cellsPanel.addEventListener('click', function (e) {
-
-        var target = e.target;
-        if(target === cellsPanel){
-            _.triggerEvent(_.createEvent('click',cellsPanel,_.cellsModel));
-            return;
-        }
-        if(_.eventManager.cellClick && _.eventManager.cellClick.length >= 0){
-            if(target._cell){
-                _.tiggerCellClickEvent(target);
-            }else{
-                while(target = target.parentNode){
-                    if(target === cellsPanel){
-                        break;
-                    }
-                    if(target._cell){
-                        _.tiggerCellClickEvent(target);
-                        break;
-                    }
-                }
-            }
-        }
-        _.triggerEvent(_.createEvent('click',cellsPanel,_.cellsModel));
-    });
-
-}
-
-CellsEvent._bindEvent = function _bindEvent() {
-
-    var _ = this;
-    bindEventExecutors.forEach(function (executor) {
-        try{
-            executor.call(_);
-        }catch(e){
-            console.error(e);
-        }
-    });
-
-};
-
-Object.defineProperty(CellsEvent,'init',{
-
-    value: function () {
-        this.extendBindEventExecutor(_bindClickEvent);
-    }
-
-});
+Cells.extend(CellsExtend$1);
+CellsEvent.extendBindEventExecutor(_bindScrollEvent);
+Cells.addInitHooks(CellsRender);
 
 function CellsResize(){
 
 }
+var CellsExtend$2 = {};
 function isNumber(value){
 
     return typeof value === 'number';
 
 }
-CellsResize._updateRowDomCache = function (rowIndex,height) {
+CellsExtend$2._updateRowDomCache = function (rowIndex,height) {
 
     if(!isNumber(rowIndex = parseFloat(rowIndex)) || !isNumber(height = parseFloat(height))){
         return;
@@ -1629,7 +1868,7 @@ CellsResize._updateRowDomCache = function (rowIndex,height) {
         rowsTop[i] = rowsTop[i - 1] + rowsHeight[i - 1];
     }
 };
-CellsResize._updateColDomCache = function (colIndex,width) {
+CellsExtend$2._updateColDomCache = function (colIndex,width) {
 
     if(!isNumber(colIndex = parseFloat(colIndex)) || !isNumber(width = parseFloat(width))){
         return;
@@ -1647,24 +1886,24 @@ CellsResize._updateColDomCache = function (colIndex,width) {
     }
 
 };
-CellsResize._updateDomCache = function (rowIndex,colIndex,width,height) {
+CellsExtend$2._updateDomCache = function (rowIndex,colIndex,width,height) {
 
     this._updateRowDomCache(rowIndex,height);
     this._updateColDomCache(colIndex,width);
 
 };
-CellsResize.resizeRowHeight = function resizeRowHeight(rowIndex,height) {
+CellsExtend$2.resizeRowHeight = function resizeRowHeight(rowIndex,height) {
 
     this.resizeCell(rowIndex,null,null,height);
 
 };
-CellsResize.resizeColWidth = function resizeColWidth(colIndex,width) {
+CellsExtend$2.resizeColWidth = function resizeColWidth(colIndex,width) {
 
     this.resizeCell(null,colIndex,width,null);
 
 };
 
-CellsResize._resizeCellDom = function _resizeCellDom(rowIndex,colIndex) {
+CellsExtend$2._resizeCellDom = function _resizeCellDom(rowIndex,colIndex) {
 
     this._updateHeaderCells(colIndex,{
         row:rowIndex === -1,
@@ -1677,7 +1916,7 @@ CellsResize._resizeCellDom = function _resizeCellDom(rowIndex,colIndex) {
     });
 
 };
-CellsResize._updateBodyCells = function (rowIndex,colIndex,option) {
+CellsExtend$2._updateBodyCells = function (rowIndex,colIndex,option) {
 
     var option = option || {
             row:false,
@@ -1717,7 +1956,7 @@ CellsResize._updateBodyCells = function (rowIndex,colIndex,option) {
     }
 
 };
-CellsResize._updateHeaderCells = function (colIndex,option) {
+CellsExtend$2._updateHeaderCells = function (colIndex,option) {
 
     var option = option || {
             row:false,
@@ -1746,7 +1985,7 @@ CellsResize._updateHeaderCells = function (colIndex,option) {
         }
     }
 };
-CellsResize.resizeCell = function resizeCell(rowIndex,colIndex,width,height) {
+CellsExtend$2.resizeCell = function resizeCell(rowIndex,colIndex,width,height) {
 
     this._updateDomCache(rowIndex,colIndex,width,height);
     this._resizeCellDom(rowIndex,colIndex,width,height);
@@ -1903,256 +2142,18 @@ function _bindResizeBodyCellEvent() {
     cellsPanel.addEventListener('mouseleave',mouseup.bind(this));
 
 }
-Object.defineProperty(CellsResize,'init',{
 
-    value: function () {
-        this.extendBindEventExecutor(_bindResizeBodyCellEvent);
-    }
+Cells.extend(CellsExtend$2);
+CellsEvent.extendBindEventExecutor(_bindResizeBodyCellEvent);
+Cells.addInitHooks(CellsResize);
 
-});
-
-/**
- * Created by koujp on 2016/10/17.
- */
-function _setRenderTo(renderTo) {
-
-    if(typeof renderTo === 'string'){
-        renderTo = document.querySelector(renderTo);
-    }
-
-    if(!isDomElement(renderTo)){
-        throw new TypeError('renderTo must be a dom element !');
-    }
-
-    this.renderTo = renderTo;
-
-}
-if(!Object.assign){
-    Object.assign = function (src,target) {
-        if(!target){
-            return src;
-        }
-        Object.keys(target).forEach(function (key) {
-            src[key] = target[key];
-        });
-        return src;
-    };
-}
-function Cells(cellsModel,config){
-
-    init.apply(this,arguments);
-
-}
-
-var _initHooks = [];
-Cells.addInitHooks = function (initHook) {
-
-    var index = _initHooks.indexOf(initHook);
-    if(index === -1){
-        _initHooks.push(initHook);
-    }
-
-};
-Cells.removeInitHooks = function (initHook) {
-
-    var index = _initHooks.indexOf(initHook);
-    if(index >= 0){
-        _initHooks.splice(index,1);
-    }
-
-};
-
-function init(cellsModel,config) {
-
-    if(!(cellsModel instanceof CellsModel)){
-        throw new TypeError('arguments must be instanceof CellsModel !');
-    }
-    Object.defineProperty(this,'cellsModel',{
-        value:cellsModel
-    });
-
-    var renderTo = config.renderTo;
-    delete config.renderTo;
-    _setRenderTo.call(this,renderTo);
-
-
-    this.config = Object.assign({
-        enableCustomScroll:false,
-        textTitle:false,
-        colResize:false,
-        rowResize:false,
-        overflowX:false,
-        overflowY:false
-    },config);
-    Object.freeze(this.config);
-
-
-    var _ = this,initParams = arguments;
-    var initHooks = this.initHooks || _initHooks;
-
-    if(!initHooks){
-        initHooks = _initHooks;
-        this.initHooks = [].concat(initHooks);
-    }
-
-    initHooks.forEach(function (initHook) {
-        try{
-           initHook.apply(_,initParams);
-        }catch(e){
-            console.error(e);
-        }
-    });
-
-    this._bindCellsModelEvent();
-
-
-}
-Cells.prototype.scrollTo = function (scrollTop,scrollLeft) {
-
-    var scrollbar = this.scrollbar;
-
-    if(arguments.length === 0){
-        return {
-            scrollLeft:scrollbar.scrollLeft,
-            scrollTop:scrollbar.scrollTop
-        };
-    }
-    scrollbar.scrollLeft = scrollLeft;
-    scrollbar.scrollTop = scrollTop;
-
-};
-Cells.prototype._initPanelSize = function () {
-
-    var cellsPanel = this.cellsPanel;
-
-    cellsPanel.currentWidth = this.headerPanel.clientWidth;
-    cellsPanel.currentHeight = cellsPanel.clientHeight;
-
-
-};
-Cells.prototype.getPanelSize = function () {
-
-    return {
-        width:this.cellsPanel.currentWidth,
-        height:this.cellsPanel.currentHeight
-    };
-
-};
-
-Cells.prototype._onAppendRows = function () {
-
-    var rowsHeight = this.domCache.rowsHeight;
-    this._initCellHeightIndex(rowsHeight.length);
-    this.syncCursor();
-    this.executeFunctionDelay('repaintRequest',this.repaint);
-
-};
-Cells.prototype._initCellSizeIndex = function () {
-
-    this._initCellWidthIndex();
-    this._initCellHeightIndex();
-
-};
-Cells.prototype._initCellWidthIndex = function () {
-
-    var colsWidth = this.domCache.colsWidth,
-        colsLeft = this.domCache.colsLeft;
-
-    var maxWidth = 0;
-    cellsModel.header.fields.forEach(function (field,index) {
-        var colWidth = this._parseCellWidth(field.width);
-        colsWidth[index] = colWidth;
-        maxWidth += colWidth;
-        if(index === 0){
-            colsLeft[index] = 0;
-        }else{
-            colsLeft[index] = colsLeft[index - 1] + colsWidth[index - 1];
-        }
-
-    }.bind(this));
-
-};
-Cells.prototype._initCellHeightIndex = function (startIndex) {
-
-    startIndex = startIndex || 0;
-
-    var cellsModel = this.cellsModel;
-    var rows = cellsModel.rows;
-    var rowsTop = this.domCache.rowsTop,
-        rowsHeight = this.domCache.rowsHeight;
-
-    //create page cursor
-    rows.slice(startIndex).forEach(function (row,index) {
-        index += startIndex;
-        var rowHeight = this._parseCellHeight(row.height);
-        rowsHeight[index] = rowHeight;
-        if(index === 0){
-            rowsTop[index] = 0;
-        }else{
-            rowsTop[index] = rowsTop[index - 1] + rowsHeight[index - 1];
-        }
-    }.bind(this));
-
-};
-Cells.prototype._parseCellWidth = function (width) {
-
-    var panelSize = this.getPanelSize();
-    var clientWidth = panelSize.width;
-    if(typeof width === 'string' && width && width.indexOf('%') === width.length - 1){
-        width = Math.floor(parseFloat(width)/100 * clientWidth);
-    }else{
-        width = parseInt(width);
-    }
-    return isNaN(width)?100:width;
-
-};
-Cells.prototype._parseCellHeight = function (height) {
-
-    if(typeof height === 'string' && height && height.indexOf('%') === height.length - 1){
-        var clientHeight = this.getPanelSize().height;
-        height = Math.floor(parseFloat(height)/100 * clientHeight);
-    }else{
-        height = parseInt(height);
-    }
-    return height?height:30;
-
-};
-Cells.prototype._bindCellsModelEvent = function () {
-    this.cellsModel.bind('refresh', function () {
-        if(this.renderTo){
-            this.executeFunctionDelay('refresh',this.repaint);
-        }
-    }.bind(this));
-
-    this.cellsModel.bind('appendRows', function () {
-        if(this.renderTo){
-            this.executeFunctionDelay('appendRows',this._onAppendRows);
-        }
-    }.bind(this));
-};
-Cells.prototype.executeFunctionDelay = function (timeoutId,func,context) {
-
-    return executeFunctionDelay(timeoutId,func,context || this);
-
-};
-
-var _prototype = Cells.prototype;
-[CellsRender,CellsEvent,CellsResize].forEach(function (extend) {
-    Object.keys(extend).forEach(function (key) {
-        _prototype[key] = extend[key];
-    });
-});
-[CellsRender,CellsEvent,CellsResize].forEach(function (extend) {
-    if(typeof extend.init === 'function'){
-        extend.init.call(_prototype);
-    }
-    Cells.addInitHooks(extend);
-});
-
+exports.global = global;
+exports.ScrollBar = ScrollBar;
 exports.CellsModel = CellsModel;
 exports.Cells = Cells;
-exports.ScrollBar = ScrollBar;
-exports.global = global;
+exports.CellsEvent = CellsEvent;
+exports.CellsRender = CellsRender;
+exports.CellsResize = CellsResize;
 
 Object.defineProperty(exports, '__esModule', { value: true });
 

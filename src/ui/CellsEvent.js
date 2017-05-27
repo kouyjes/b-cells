@@ -1,7 +1,8 @@
 import { getFullClassName,getFullClassSelector,requestAnimationFrame,cancelAnimationFrame,executeFunctionDelay } from './domUtil'
+import { Cells } from './Cells';
+function CellsEvent(cellsInstance){
 
-function CellsEvent(){
-
+    this.cellsInstance = cellsInstance;
     Object.defineProperty(this,'eventManager',{
         value:{
             click:[], //cells click event
@@ -12,16 +13,8 @@ function CellsEvent(){
     });
 
 }
-
-var bindEventExecutors = [];
-CellsEvent.extendBindEventExecutor = function (executor) {
-
-    if(bindEventExecutors.indexOf(executor) === -1){
-        bindEventExecutors.push(executor);
-    }
-
-};
-CellsEvent.extendEventType = function (eventType,listeners) {
+var _prototype = CellsEvent.prototype;
+_prototype.extendEventType = function (eventType,listeners) {
 
     if(!listeners){
         listeners = [];
@@ -42,20 +35,21 @@ CellsEvent.createEvent = function createEvent(eventType,target,data) {
     };
 
 };
-CellsEvent.tiggerCellClickEvent = function tiggerCellClickEvent(cell) {
+_prototype.tiggerCellClickEvent = function tiggerCellClickEvent(cell) {
 
-    var cellsModel = this.cellsModel,col = parseInt(cell.getAttribute('col'));
+    var cellsInstance = this.cellsInstance;
+    var cellsModel = cellsInstance.cellsModel,col = parseInt(cell.getAttribute('col'));
     if(cell._headerCell){
-        this.triggerEvent(this.createEvent('cellClick',cell,cellsModel.header.fields[col]));
+        this.triggerEvent(CellsEvent.createEvent('cellClick',cell,cellsModel.header.fields[col]));
         return;
     }
     var row = parseInt(cell.getAttribute('row'));
     var rowData = cellsModel.rows[row];
     if(rowData){
-        this.triggerEvent(this.createEvent('cellClick',cell,rowData.fields[col]));
+        this.triggerEvent(CellsEvent.createEvent('cellClick',cell,rowData.fields[col]));
     }
 };
-CellsEvent.addEventListener = function addEventListener(eventType,func) {
+_prototype.addEventListener = function addEventListener(eventType,func) {
 
     var handlers = this.eventManager[eventType];
     if(!handlers){
@@ -66,7 +60,7 @@ CellsEvent.addEventListener = function addEventListener(eventType,func) {
     }
     return this;
 };
-CellsEvent.removeEventListener = function removeEventListener(eventType,func) {
+_prototype.removeEventListener = function removeEventListener(eventType,func) {
 
     var handlers = this.eventManager[eventType];
     if(!handlers){
@@ -79,7 +73,7 @@ CellsEvent.removeEventListener = function removeEventListener(eventType,func) {
     }
 
 };
-CellsEvent.triggerEvent = function triggerEvent(event) {
+_prototype.triggerEvent = function triggerEvent(event) {
 
     var eventType = event.type;
     var handlers = this.eventManager[eventType];
@@ -96,7 +90,8 @@ CellsEvent.triggerEvent = function triggerEvent(event) {
 
 function _bindClickEvent() {
 
-    var _ = this,cellsPanel = this.cellsPanel;
+    var cellsInstance = this.cellsInstance;
+    var _ = this,cellsPanel = cellsInstance.cellsPanel;
     cellsPanel.addEventListener('click', function (e) {
 
         var target = e.target;
@@ -119,32 +114,14 @@ function _bindClickEvent() {
                 }
             }
         }
-        _.triggerEvent(_.createEvent('click',cellsPanel,_.cellsModel));
+        _.triggerEvent(_.createEvent('click',cellsPanel,cellsInstance.cellsModel));
     });
 
 };
-
-CellsEvent._bindEvent = function _bindEvent() {
-
-    var _ = this;
-    bindEventExecutors.forEach(function (executor) {
-        try{
-            executor.call(_);
-        }catch(e){
-            console.error(e);
-        }
-    });
-
-};
-
-Object.defineProperty(CellsEvent,'init',{
-
-    value: function () {
-        this.extendBindEventExecutor(_bindClickEvent);
-    }
-
+_prototype._bindClickEvent = _bindClickEvent;
+Cells.addInitHooks(function () {
+    this.cellsEvent = new CellsEvent(this);
+    this.cellsEvent._bindClickEvent();
 });
-
-
 
 export { CellsEvent }

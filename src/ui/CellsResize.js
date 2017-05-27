@@ -1,24 +1,29 @@
 import { userSelect,getFullClassName,getFullClassSelector,getMousePosition } from './domUtil'
+import { Cells } from './Cells';
+import { CellsEvent } from './CellsEvent';
 
-function CellsResize(){
-
+function CellsResize(cellsInstance){
+    this.cellsInstance = cellsInstance;
 }
+var _prototype = CellsResize.prototype;
 function isNumber(value){
 
     return typeof value === 'number';
 
 }
-CellsResize._updateRowDomCache = function (rowIndex,height) {
+_prototype._updateRowDomCache = function (rowIndex,height) {
 
     if(!isNumber(rowIndex = parseFloat(rowIndex)) || !isNumber(height = parseFloat(height))){
         return;
     }
+    var cellsInstance = this.cellsInstance,
+        cellsRender = cellsInstance.cellsRender;
     height = Math.max(0,height);
     if(rowIndex === -1){
-        this.cellsModel.header.height = height;
+        cellsInstance.cellsModel.header.height = height;
         return;
     }
-    var domCache = this.domCache;
+    var domCache = cellsRender.domCache;
     var rowsHeight = domCache.rowsHeight,
         rowsTop = domCache.rowsTop;
     rowsHeight[rowIndex] = height;
@@ -26,7 +31,7 @@ CellsResize._updateRowDomCache = function (rowIndex,height) {
         rowsTop[i] = rowsTop[i - 1] + rowsHeight[i - 1];
     }
 };
-CellsResize._updateColDomCache = function (colIndex,width) {
+_prototype._updateColDomCache = function (colIndex,width) {
 
     if(!isNumber(colIndex = parseFloat(colIndex)) || !isNumber(width = parseFloat(width))){
         return;
@@ -34,7 +39,9 @@ CellsResize._updateColDomCache = function (colIndex,width) {
     if(colIndex < 0){
         return;
     }
-    var domCache = this.domCache;
+    var cellsInstance = this.cellsInstance,
+        cellsRender = cellsInstance.cellsRender;
+    var domCache = cellsRender.domCache;
     width = Math.max(0,width);
     var colsWidth = domCache.colsWidth,
         colsLeft = domCache.colsLeft;
@@ -44,24 +51,24 @@ CellsResize._updateColDomCache = function (colIndex,width) {
     }
 
 };
-CellsResize._updateDomCache = function (rowIndex,colIndex,width,height) {
+_prototype._updateDomCache = function (rowIndex,colIndex,width,height) {
 
     this._updateRowDomCache(rowIndex,height);
     this._updateColDomCache(colIndex,width);
 
 };
-CellsResize.resizeRowHeight = function resizeRowHeight(rowIndex,height) {
+_prototype.resizeRowHeight = function resizeRowHeight(rowIndex,height) {
 
     this.resizeCell(rowIndex,null,null,height);
 
 };
-CellsResize.resizeColWidth = function resizeColWidth(colIndex,width) {
+_prototype.resizeColWidth = function resizeColWidth(colIndex,width) {
 
     this.resizeCell(null,colIndex,width,null);
 
 };
 
-CellsResize._resizeCellDom = function _resizeCellDom(rowIndex,colIndex) {
+_prototype._resizeCellDom = function _resizeCellDom(rowIndex,colIndex) {
 
     this._updateHeaderCells(colIndex,{
         row:rowIndex === -1,
@@ -74,7 +81,7 @@ CellsResize._resizeCellDom = function _resizeCellDom(rowIndex,colIndex) {
     });
 
 };
-CellsResize._updateBodyCells = function (rowIndex,colIndex,option) {
+_prototype._updateBodyCells = function (rowIndex,colIndex,option) {
 
     var option = option || {
             row:false,
@@ -83,12 +90,14 @@ CellsResize._updateBodyCells = function (rowIndex,colIndex,option) {
     if(!option.col && !option.row){
         return;
     }
-    var domCache = this.domCache,
+    var cellsInstance = this.cellsInstance,
+        cellsRender = cellsInstance.cellsRender;
+    var domCache = cellsRender.domCache,
         rowsHeight = domCache.rowsHeight,
         rowsTop = domCache.rowsTop;
     var colsWidth = domCache.colsWidth,
         colsLeft = domCache.colsLeft;
-    var cells = this.getBodyCells(),
+    var cells = cellsRender.getBodyCells(),
         size = cells.length,
         cell,row,col;
     for(var i = 0;i < size;i++){
@@ -114,21 +123,24 @@ CellsResize._updateBodyCells = function (rowIndex,colIndex,option) {
     }
 
 };
-CellsResize._updateHeaderCells = function (colIndex,option) {
+_prototype._updateHeaderCells = function (colIndex,option) {
 
     var option = option || {
             row:false,
             col:false
         };
+
+    var cellsInstance = this.cellsInstance,
+        cellsRender = cellsInstance.cellsRender;
     if(option.row){
-        this.headerPanel.style.height = this.cellsModel.header.height + 'px';
+        cellsRender.headerPanel.style.height = cellsInstance.cellsModel.header.height + 'px';
     }
     if(option.col){
-        var domCache = this.domCache;
+        var domCache = cellsRender.domCache;
         var colsWidth = domCache.colsWidth,
             colsLeft = domCache.colsLeft;
         //update header col width
-        var cells = this.getHeaderCells(),
+        var cells = cellsRender.getHeaderCells(),
             size = cells.length;
 
         var cell,col;
@@ -143,17 +155,19 @@ CellsResize._updateHeaderCells = function (colIndex,option) {
         }
     }
 };
-CellsResize.resizeCell = function resizeCell(rowIndex,colIndex,width,height) {
+_prototype.resizeCell = function resizeCell(rowIndex,colIndex,width,height) {
 
     this._updateDomCache(rowIndex,colIndex,width,height);
     this._resizeCellDom(rowIndex,colIndex,width,height);
 
 };
 var mouseHit = 3,cursors = ['auto','ns-resize','ew-resize','nwse-resize'];
-function _bindResizeBodyCellEvent() {
+function _bindResizeCellEvent() {
 
-    var domCache = this.domCache,
-        cellsPanel = this.cellsPanel,
+    var cellsInstance = this.cellsInstance,
+        cellsRender = this.cellsRender;
+    var domCache = cellsRender.domCache,
+        cellsPanel = cellsRender.cellsPanel,
         rowsTop = domCache.rowsTop,
         colsLeft = domCache.colsLeft,
         rowsHeight = domCache.rowsHeight,
@@ -162,18 +176,18 @@ function _bindResizeBodyCellEvent() {
     var _ = this;
     function getMouseInfo(e){
 
-        var colResize = _.config.colResize,
-            rowResize = _.config.rowResize;
+        var colResize = cellsInstance.config.colResize,
+            rowResize = cellsInstance.config.rowResize;
         var position = getMousePosition(e,cellsPanel);
 
         var relY,relX;
         var rowHit = 0,colHit = 0,rowIndex = undefined,colIndex = undefined;
 
-        var scrollTo = _.scrollTo();
+        var scrollTo = cellsRender.scrollTo();
         //header area
         if(rowResize){
             relY = position.pageY;
-            var headerHeight = _.headerHeight();
+            var headerHeight = cellsInstance.headerHeight();
             if(Math.abs(relY - headerHeight) < mouseHit){
                 rowHit = 1;
                 rowIndex = -1;
@@ -242,6 +256,8 @@ function _bindResizeBodyCellEvent() {
     }.bind(this));
 
     cellsPanel.addEventListener('mousemove', function (e) {
+
+        var cellsInstance = this.cellsInstance;
         var mouseInfo = getMouseInfo(e);
         //resizeCell
         var rowIndex = resizeManager.rowIndex,
@@ -249,7 +265,7 @@ function _bindResizeBodyCellEvent() {
             width,height,
             resizeFlag = false;
         if(resizeManager.lastPageY  !== undefined){
-            height = mouseInfo.position.pageY - resizeManager.lastPageY + (rowIndex === -1 ? this.headerHeight() : rowsHeight[rowIndex]);
+            height = mouseInfo.position.pageY - resizeManager.lastPageY + (rowIndex === -1 ? cellsInstance.headerHeight() : rowsHeight[rowIndex]);
             resizeManager.lastPageY = mouseInfo.position.pageY;
             resizeFlag = true;
         }
@@ -299,12 +315,11 @@ function _bindResizeBodyCellEvent() {
     cellsPanel.addEventListener('mouseleave',mouseup.bind(this))
 
 };
-Object.defineProperty(CellsResize,'init',{
-
-    value: function () {
-        this.extendBindEventExecutor(_bindResizeBodyCellEvent);
-    }
-
+_prototype._bindResizeCellEvent = _bindResizeCellEvent;
+CellsEvent.extendBindEventExecutor(_bindResizeCellEvent);
+Cells.addInitHooks(function () {
+    this.cellsResize = new CellsResize(this);
+    this.cellsResize._bindResizeCellEvent();
 });
 
 export { CellsResize }

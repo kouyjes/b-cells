@@ -27,14 +27,14 @@
         }
         var cellsModel = new CELL.CellsModel();
         var header = [];
-        var colNum = 1000;
+        var colNum = 100;
         for(var i = 0; i< colNum;i++){
             header.push({name:'column' + i,width:'10%',style:{
                 backgroundColor:randomColor()
             }});
         }
         var rows = [];
-        for(var i = 0;i < 1000;i++){
+        for(var i = 0;i < 100;i++){
             rows.push((function(){
                 var fields = [];
                 for(var col = 0;col < colNum;col++){

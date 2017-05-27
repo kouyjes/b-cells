@@ -1,7 +1,12 @@
 import { style,getFullClassName,getFullClassSelector,getMousePosition,isDomElement,requestAnimationFrame,cancelAnimationFrame,executeFunctionDelay } from './domUtil'
-import { ScrollBar } from './ScrollBar'
+import { Cells } from './Cells';
+import { CellsEvent } from './CellsEvent';
+import { ScrollBar } from './ScrollBar';
 var _cellSupportStyles = ['background','backgroundColor','backgroundImage','backgroundRepeat','backgroundSize'];
-function CellsRender(){
+
+function CellsRender(cellsInstance){
+
+    this.cellsInstance = cellsInstance;
 
     this.cellsPanel = null;
     this.headerPanel = null;
@@ -9,7 +14,25 @@ function CellsRender(){
     this.cursor = null;
 
 }
-function initRenderState() {
+var _cellsPrototype = Cells.prototype,
+    _prototype = CellsRender.prototype;
+function transformStyleName(styleName){
+    return styleName.replace(/-(\w)/g, function (match,str) {
+        return str ? str.toUpperCase() : '';
+    });
+}
+CellsRender.expandSupportStyles = function (styleNames) {
+    if(styleNames){
+        styleNames = [].concat(styleNames);
+    }
+    styleNames.forEach(function (styleName) {
+        styleName = transformStyleName[styleName];
+        if(_cellSupportStyles.indexOf(styleName) === -1){
+            _cellSupportStyles.push(styleName);
+        }
+    });
+};
+_prototype.initRenderState = function() {
 
     this.paintState = {
         lastRowArea:null,
@@ -43,10 +66,8 @@ function initRenderState() {
 };
 function initRender() {
 
-
-    initRenderState.call(this);
-
-    var _ = this;
+    var cellsInstance = this.cellsInstance;
+    this.initRenderState();
     var renderTo = this.renderTo;
     if(!renderTo || renderTo.nodeType !== 1){
         throw new TypeError('parent container is invalid !');
@@ -62,10 +83,10 @@ function initRender() {
     cellsPanel.appendChild(this._createBodyContainer());
     renderTo.appendChild(cellsPanel);
 
-
-    var scrollbar = this.config.enableCustomScroll ? new ScrollBar(this.bodyPanel,{
-        overflowX:_.config.overflowX,
-        overflowY:_.config.overflowY
+    var config = cellsInstance.config;
+    var scrollbar = config.enableCustomScroll ? new ScrollBar(this.bodyPanel,{
+        overflowX:config.overflowX,
+        overflowY:config.overflowY
     }) : this.bodyPanel;
     Object.defineProperty(this,'scrollbar',{
         configurable:true,
@@ -76,30 +97,46 @@ function initRender() {
 
     this._createCursor();
 
-    this._bindEvent();
+};
+var headerContentClassName = 'header-content';
+_prototype._initPanelSize = function () {
+
+    var cellsPanel = this.cellsPanel;
+
+    cellsPanel.currentWidth = this.headerPanel.clientWidth;
+    cellsPanel.currentHeight = cellsPanel.clientHeight;
 
 
 };
-var headerContentClassName = 'header-content';
-CellsRender.resizeScrollbar = function resizeScrollbar() {
+_prototype.getPanelSize = function () {
 
-    if(this.config.enableCustomScroll){
+    return {
+        width:this.cellsPanel.currentWidth,
+        height:this.cellsPanel.currentHeight
+    };
+
+};
+_prototype.resizeScrollbar = function resizeScrollbar() {
+
+    var cellsInstance = this.cellsInstance;
+    if(cellsInstance.config.enableCustomScroll){
         this.scrollbar.resize();
         return;
     }
 
 };
-CellsRender.getCurrentColArea = function getCurrentColArea() {
+_prototype.getCurrentColArea = function getCurrentColArea() {
 
+    var cellsInstance = this.cellsInstance;
     var scrollbar = this.scrollbar;
-    var panelSize = this.getPanelSize();
+    var panelSize = cellsInstance.getPanelSize();
     var colsLeft = this.domCache.colsLeft;
     var left = scrollbar.scrollLeft;
     return this.getThresholdArea(panelSize.width,colsLeft,left);
 
 };
 
-CellsRender.getThresholdArea = function getThresholdArea(viewSize,positions,cursor) {
+_prototype.getThresholdArea = function getThresholdArea(viewSize,positions,cursor) {
 
     var from = 0,
         end,i;
@@ -133,26 +170,27 @@ CellsRender.getThresholdArea = function getThresholdArea(viewSize,positions,curs
     return this.normalizeArea(area,positions);
 
 };
-CellsRender.getCurrentRowArea = function getCurrentRowArea() {
+_prototype.getCurrentRowArea = function getCurrentRowArea() {
 
+    var cellsInstance = this.cellsInstance;
     var scrollbar = this.scrollbar;
-    var panelSize = this.getPanelSize();
+    var panelSize = cellsInstance.getPanelSize();
     var rowsTop = this.domCache.rowsTop;
     var top = scrollbar.scrollTop;
     return this.getThresholdArea(panelSize.height,rowsTop,top);
 
 };
-CellsRender.getRowPaintAreas = function getRowPaintAreas() {
+_prototype.getRowPaintAreas = function getRowPaintAreas() {
 
     return this._getPaintAreas('row');
 
 };
-CellsRender.getColPaintAreas = function getColPaintAreas() {
+_prototype.getColPaintAreas = function getColPaintAreas() {
 
     return this._getPaintAreas('col');
 
 };
-CellsRender.normalizeArea = function (area,positions) {
+_prototype.normalizeArea = function (area,positions) {
 
     area.from = Math.max(0,area.from);
     area.from = Math.min(positions.length - 1,area.from);
@@ -160,7 +198,7 @@ CellsRender.normalizeArea = function (area,positions) {
     area.pageSize = Math.min(positions.length - area.from,area.pageSize);
     return area;
 };
-CellsRender._getPaintAreas = function _getPaintAreas(type) {
+_prototype._getPaintAreas = function _getPaintAreas(type) {
 
     var paintState = this.paintState;
     var lastArea = type === 'row' ? paintState.lastRowArea : paintState.lastColArea,
@@ -225,21 +263,23 @@ CellsRender._getPaintAreas = function _getPaintAreas(type) {
     return areas;
 
 };
-CellsRender.render = function render() {
+_cellsPrototype.render = function render() {
 
+    var cellsRender = this.cellsRender;
 
     initRender.apply(this);
 
-    this._initPanelSize();
-    this._initCellSizeIndex();
-    this.executePaint();
-    this.syncCursor();
+    cellsRender._initPanelSize();
+    cellsRender._initCellSizeIndex();
+    cellsRender.executePaint();
+    cellsRender.syncCursor();
 
 };
-CellsRender.initPaint = function () {
+_prototype.initPaint = function () {
 
+    var cellsInstance = this.cellsInstance;
     var domCache = this.domCache;
-    var cells = this.renderTo.querySelectorAll(getFullClassSelector('cell')),
+    var cells = cellsInstance.renderTo.querySelectorAll(getFullClassSelector('cell')),
         size = cells.length;
     for(var i = 0;i < size;i++){
         this.removeElementFromDom(cells[i]);
@@ -249,7 +289,7 @@ CellsRender.initPaint = function () {
     paintState.reset();
 
 };
-CellsRender.executePaint = function () {
+_prototype.executePaint = function () {
 
     var paintState = this.paintState;
     paintState.currentRowArea = this.getCurrentRowArea();
@@ -262,37 +302,39 @@ CellsRender.executePaint = function () {
     paintState.lastColArea = paintState.currentColArea;
 
 };
-CellsRender.paint = function paint() {
+_cellsPrototype.paint = function paint() {
 
-    this.initPaint();
-
-    this._initPanelSize();
-    this._initCellSizeIndex();
-    this.executePaint();
-    this.syncCursor();
-
-};
-CellsRender.repaint = function repaint() {
-
-    this.executePaint();
+    var cellsInstance = this.cellsInstance,
+        cellsRender = this.cellsRender;
+    cellsRender.initPaint();
+    cellsInstance._initPanelSize();
+    cellsInstance._initCellSizeIndex();
+    cellsRender.executePaint();
+    cellsRender.syncCursor();
 
 };
-CellsRender.getHeaderContentPanel = function () {
+_cellsPrototype.repaint = function repaint() {
+
+    var cellsRender = this.cellsRender;
+    cellsRender.executePaint();
+
+};
+_prototype.getHeaderContentPanel = function () {
 
     var headerContentPanel = this.headerPanel._contentPanel;
     return headerContentPanel;
 };
-CellsRender.getHeaderCells = function () {
+_prototype.getHeaderCells = function () {
 
     return this.domCache.headerCells;
 
 };
-CellsRender.getBodyCells = function () {
+_prototype.getBodyCells = function () {
 
     return this.domCache.cells;
 
 };
-CellsRender.paintHeader = function paintHeader() {
+_prototype.paintHeader = function paintHeader() {
 
     var cellsCache = this.domCache.headerCells,
         headerContentPanel = this.getHeaderContentPanel();
@@ -326,11 +368,12 @@ CellsRender.paintHeader = function paintHeader() {
     this.removeCells(cellsCache,cells);
 
 };
-CellsRender.paintBody = function paintBody() {
+_prototype.paintBody = function paintBody() {
 
+    var cellsInstance = this.cellsInstance;
     var paintState = this.paintState,
         domCache = this.domCache,
-        rows = this.cellsModel.rows;
+        rows = cellsInstance.cellsModel.rows;
     var rowPaintAreas = [].concat(paintState.rowPaintAreas),
         colPaintAreas = [].concat(paintState.colPaintAreas);
 
@@ -384,7 +427,7 @@ CellsRender.paintBody = function paintBody() {
     this.removeCells(cacheCells,cells);
 
 };
-CellsRender.removeCells = function removeCells(cacheCells,cells) {
+_prototype.removeCells = function removeCells(cacheCells,cells) {
 
     var _ = this;
     cells.forEach(function (cell) {
@@ -393,7 +436,7 @@ CellsRender.removeCells = function removeCells(cacheCells,cells) {
     });
 
 };
-CellsRender.removeElementFromDom = function (cell) {
+_prototype.removeElementFromDom = function (cell) {
 
     if(cell.remove){
         cell.remove();
@@ -402,13 +445,13 @@ CellsRender.removeElementFromDom = function (cell) {
     }
 
 };
-CellsRender.computeRowTop = function computeRowTop(row) {
+_prototype.computeRowTop = function computeRowTop(row) {
 
     var rowsTop = this.domCache.rowsTop;
     return rowsTop[row];
 
 };
-CellsRender._paintCell = function _paintCell(cell,row,col,field) {
+_prototype._paintCell = function _paintCell(cell,row,col,field) {
 
     cell.setAttribute('row','' + row);
     cell.setAttribute('col','' + col);
@@ -416,12 +459,12 @@ CellsRender._paintCell = function _paintCell(cell,row,col,field) {
     this._reLayoutCell(cell);
 
 };
-CellsRender.emptyElement = function (element) {
+_prototype.emptyElement = function (element) {
     while(element.firstChild){
         this.removeElementFromDom(element.firstChild);
     }
 };
-CellsRender._configCell = function _configCell(cell,field) {
+_prototype._configCell = function _configCell(cell,field) {
 
     var isHtml = typeof field.html === 'string';
     cell.setAttribute('html_content',isHtml + '');
@@ -447,12 +490,12 @@ CellsRender._configCell = function _configCell(cell,field) {
     return cell;
 
 };
-CellsRender._createHeaderCell = function (row,col,field) {
+_prototype._createHeaderCell = function (row,col,field) {
 
     return this._createCell(row,col,field,true);
 
 };
-CellsRender._createCell = function _createCell(row,col,field,isHeaderCell) {
+_prototype._createCell = function _createCell(row,col,field,isHeaderCell) {
 
     var cacheCells = isHeaderCell ? this.domCache.headerCells : this.domCache.cells;
     var cell = document.createElement('div');
@@ -474,11 +517,9 @@ CellsRender._createCell = function _createCell(row,col,field,isHeaderCell) {
     return cell;
 
 };
-function toUpper(match,str){
-    return str ? str.toUpperCase() : '';
-}
-CellsRender._reLayoutCell = function _reLayoutCell(cell) {
+_prototype._reLayoutCell = function _reLayoutCell(cell) {
 
+    var cellsInstance = this.cellsInstance;
     var row = parseInt(cell.getAttribute('row')),
         col = parseInt(cell.getAttribute('col'));
     var domCache = this.domCache,
@@ -487,7 +528,7 @@ CellsRender._reLayoutCell = function _reLayoutCell(cell) {
         rowsHeight = domCache.rowsHeight;
 
     //last column flag
-    var cellsModel = this.cellsModel,
+    var cellsModel = cellsInstance.cellsModel,
         headerFields = cellsModel.header.fields,
         rows = cellsModel.rows,
         header = cellsModel.header;
@@ -516,7 +557,7 @@ CellsRender._reLayoutCell = function _reLayoutCell(cell) {
     if(fieldStyle){
         Object.keys(fieldStyle).forEach(function (key) {
             if(key in cell.style){
-                if(_cellSupportStyles.indexOf(key.replace(/-(\w)/g,toUpper)) === -1){
+                if(_cellSupportStyles.indexOf(transformStyleName(key)) === -1){
                     return;
                 }
                 style(cell,key,fieldStyle[key]);
@@ -527,7 +568,7 @@ CellsRender._reLayoutCell = function _reLayoutCell(cell) {
     cell._customStyleKeys = customStyleKeys;
 
 };
-CellsRender._createCursor = function _createCursor() {
+_prototype._createCursor = function _createCursor() {
 
     var cursor = document.createElement('i');
     cursor.className = getFullClassName('row-cursor');
@@ -538,7 +579,7 @@ CellsRender._createCursor = function _createCursor() {
     return cursor;
 
 };
-CellsRender._createBodyContainer = function _createBodyContainer() {
+_prototype._createBodyContainer = function _createBodyContainer() {
 
     var bodyContainer = this.bodyPanel = document.createElement('div');
     bodyContainer.className = getFullClassName('body-container');
@@ -552,16 +593,17 @@ CellsRender._createBodyContainer = function _createBodyContainer() {
     bodyContainer._contentPanel = rowContainer;
     return bodyContainer;
 };
-CellsRender._createRowContainer = function _createRowContainer() {
+_prototype._createRowContainer = function _createRowContainer() {
 
     var rowContainer = document.createElement('div');
     rowContainer.className = getFullClassName('row-container');
     return rowContainer;
 
 };
-CellsRender.headerHeight = function (height) {
+_cellsPrototype.headerHeight = function (height) {
 
-    var cellsModel = this.cellsModel;
+    var cellsModel = this.cellsModel,
+        cellsRender = this.cellsRender;
     if(!height){
         return cellsModel.header.height;
     }
@@ -570,11 +612,12 @@ CellsRender.headerHeight = function (height) {
         return;
     }
     cellsModel.header.height = height;
-    this.headerPanel.style.height = height + 'px';
+    cellsRender.headerPanel.style.height = height + 'px';
 };
-CellsRender._createHeader = function _createHeader() {
+_prototype._createHeader = function _createHeader() {
 
-    var cellsModel = this.cellsModel;
+    var cellsInstance = this.cellsInstance;
+    var cellsModel = cellsInstance.cellsModel;
     var headerContainer = document.createElement('header');
     headerContainer.className = getFullClassName('header');
     this.headerPanel = headerContainer;
@@ -589,7 +632,7 @@ CellsRender._createHeader = function _createHeader() {
     return headerContainer;
 
 };
-CellsRender.syncCursor = function syncCursor() {
+_prototype.syncCursor = function syncCursor() {
 
     var cursor = this.cursor;
     if(!cursor){
@@ -608,10 +651,122 @@ CellsRender.syncCursor = function syncCursor() {
         top:curTop + 'px'
     });
 
-    this.executeFunctionDelay('resizeScrollbar',this.resizeScrollbar);
+    executeFunctionDelay('resizeScrollbar',this.resizeScrollbar,this);
 
 };
+_cellsPrototype.scrollTo = function (scrollTop,scrollLeft) {
+
+    var cellsRender = this.cellsRender;
+    var scrollbar = cellsRender.scrollbar;
+
+    if(arguments.length === 0){
+        return {
+            scrollLeft:scrollbar.scrollLeft,
+            scrollTop:scrollbar.scrollTop
+        };
+    }
+    scrollbar.scrollLeft = scrollLeft;
+    scrollbar.scrollTop = scrollTop;
+
+};
+_prototype._initCellSizeIndex = function () {
+
+    this._initCellWidthIndex();
+    this._initCellHeightIndex();
+
+};
+_prototype._initCellWidthIndex = function () {
+
+    var colsWidth = this.domCache.colsWidth,
+        colsLeft = this.domCache.colsLeft;
+
+    var maxWidth = 0;
+    cellsModel.header.fields.forEach(function (field,index) {
+        var colWidth = this._parseCellWidth(field.width);
+        colsWidth[index] = colWidth;
+        maxWidth += colWidth;
+        if(index === 0){
+            colsLeft[index] = 0;
+        }else{
+            colsLeft[index] = colsLeft[index - 1] + colsWidth[index - 1];
+        }
+
+    }.bind(this));
+
+};
+_prototype._initCellHeightIndex = function (startIndex) {
+
+    var cellsInstance = this.cellsInstance;
+    startIndex = startIndex || 0;
+    var cellsModel = cellsInstance.cellsModel;
+    var rows = cellsModel.rows;
+    var rowsTop = this.domCache.rowsTop,
+        rowsHeight = this.domCache.rowsHeight;
+
+    //create page cursor
+    rows.slice(startIndex).forEach(function (row,index) {
+        index += startIndex;
+        var rowHeight = this._parseCellHeight(row.height);
+        rowsHeight[index] = rowHeight;
+        if(index === 0){
+            rowsTop[index] = 0;
+        }else{
+            rowsTop[index] = rowsTop[index - 1] + rowsHeight[index - 1];
+        }
+    }.bind(this));
+
+};
+_prototype._parseCellWidth = function (width) {
+
+    var panelSize = this.getPanelSize();
+    var clientWidth = panelSize.width;
+    if(typeof width === 'string' && width && width.indexOf('%') === width.length - 1){
+        width = Math.floor(parseFloat(width)/100 * clientWidth);
+    }else{
+        width = parseInt(width);
+    }
+    return isNaN(width)?100:width;
+
+};
+_prototype._parseCellHeight = function (height) {
+
+    if(typeof height === 'string' && height && height.indexOf('%') === height.length - 1){
+        var clientHeight = this.getPanelSize().height;
+        height = Math.floor(parseFloat(height)/100 * clientHeight);
+    }else{
+        height = parseInt(height);
+    }
+    return height?height:30;
+
+};
+_prototype._onAppendRows = function () {
+
+    var cellsInstance = this.cellsInstance;
+    var rowsHeight = this.domCache.rowsHeight;
+    this._initCellHeightIndex(rowsHeight.length);
+    this.syncCursor();
+    executeFunctionDelay('repaintRequest',cellsInstance.repaint,cellsInstance);
+
+};
+_prototype._bindCellsModelEvent = function () {
+
+    var cellsInstance = this.cellsInstance;
+    cellsInstance.cellsModel.bind('refresh', function () {
+        if(cellsInstance.renderTo){
+            executeFunctionDelay('refresh',cellsInstance.repaint,cellsInstance);
+        }
+    }.bind(this));
+
+    cellsInstance.cellsModel.bind('appendRows', function () {
+        if(cellsInstance.renderTo){
+            executeFunctionDelay('appendRows',this._onAppendRows,this);
+        }
+    }.bind(this));
+};
 function _bindScrollEvent(){
+
+    var cellsInstance = this.cellsInstance,
+        cellsEvent = cellsInstance.cellsEvent;
     var headerPanel = this.headerPanel,
         scrollbar = this.scrollbar;
     var headerContentPanel = headerPanel._contentPanel;
@@ -619,18 +774,16 @@ function _bindScrollEvent(){
 
         var scrollLeft = scrollbar.scrollLeft;
         style(headerContentPanel,'left',-scrollLeft + 'px');
-        this.executeFunctionDelay('repaintRequest',this.repaint);
+        executeFunctionDelay('repaintRequest',this.repaint,this);
 
-        var event = this.createEvent('scroll',scrollbar,this.cellsModel);
-        this.triggerEvent(event);
+        var event = cellsEvent.createEvent('scroll',scrollbar,cellsInstance.cellsModel);
+        cellsEvent.triggerEvent(event);
 
     }.bind(this));
 }
-Object.defineProperty(CellsRender,'init',{
-
-    value: function () {
-        this.extendBindEventExecutor(_bindScrollEvent);
-    }
-
+_prototype._bindScrollEvent = _bindScrollEvent;
+Cells.addInitHooks(function () {
+    this.cellsRender = new CellsRender(this);
 });
+
 export { CellsRender }
