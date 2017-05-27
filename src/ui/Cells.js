@@ -209,19 +209,6 @@ Cells.prototype._parseCellHeight = function (height) {
     return height?height:30;
 
 };
-Cells.prototype.headerHeight = function (height) {
-
-    var cellsModel = this.cellsModel;
-    if(!height){
-        return cellsModel.header.height;
-    }
-    height = parseInt(height);
-    if(typeof height === 'number'){
-        height = height + 'px';
-    }
-    cellsModel.header.height = height;
-    this.headerPanel.style.height = height;
-};
 Cells.prototype._bindCellsModelEvent = function () {
     this.cellsModel.bind('refresh', function () {
         if(this.renderTo){
@@ -240,28 +227,6 @@ Cells.prototype.executeFunctionDelay = function (timeoutId,func,context) {
     return executeFunctionDelay(timeoutId,func,context || this);
 
 };
-Cells.prototype._updateDomCache = function (rowIndex,colIndex,width,height) {
-
-    if(typeof (height = parseInt(height)) === 'number'){
-        height = Math.max(0,height);
-        var rowsHeight = this.domCache.rowsHeight,
-            rowsTop = this.domCache.rowsTop;
-        rowsHeight[rowIndex] = height;
-        for(var i = rowIndex + 1;i < rowsTop.length;i++){
-            rowsTop[i] = rowsTop[i - 1] + rowsHeight[i - 1];
-        }
-    }
-    if(typeof (width = parseInt(width)) === 'number'){
-        width = Math.max(0,width);
-        var colsWidth = this.domCache.colsWidth,
-            colsLeft = this.domCache.colsLeft;
-        colsWidth[colIndex] = width;
-        for(var i = colIndex + 1;i < colsLeft.length;i++){
-            colsLeft[i] = colsLeft[i - 1] + colsWidth[i - 1];
-        }
-    }
-};
-
 
 var _prototype = Cells.prototype;
 [CellsRender,CellsEvent,CellsResize].forEach(function (extend) {

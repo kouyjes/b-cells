@@ -526,6 +526,19 @@ CellsRender._createRowContainer = function _createRowContainer() {
     return rowContainer;
 
 };
+CellsRender.headerHeight = function (height) {
+
+    var cellsModel = this.cellsModel;
+    if(!height){
+        return cellsModel.header.height;
+    }
+    height = parseInt(height);
+    if(typeof height !== 'number'){
+        return;
+    }
+    cellsModel.header.height = height;
+    this.headerPanel.style.height = height + 'px';
+};
 CellsRender._createHeader = function _createHeader() {
 
     var cellsModel = this.cellsModel;
