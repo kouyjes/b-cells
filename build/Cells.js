@@ -726,6 +726,7 @@ ScrollBar.prototype._getTouchEventListeners = function () {
             if(!listeners.startX || !listeners.startY){
                 return;
             }
+
             var pos = getMousePosition(e);
             var moveRatio = 0.8;
             if(Math.abs(pos.pageY - listeners.lastPageY) >= Math.abs(pos.pageX - listeners.lastPageX)){
@@ -736,6 +737,8 @@ ScrollBar.prototype._getTouchEventListeners = function () {
 
             listeners.lastPageY = pos.pageY;
             listeners.lastPageX = pos.pageX;
+            
+            e.preventDefault();
         };
         listeners.touchend = function () {
 
@@ -1002,7 +1005,7 @@ _prototype$1.addEventListener = function addEventListener(eventType,func) {
 };
 _prototype$1.removeEventListener = function removeEventListener(eventType,func) {
 
-    var handlers = this.eventManager[eventType];
+    var handlers = this.getEventListeners(eventType);
     if(!handlers){
         return;
     }
@@ -1016,7 +1019,7 @@ _prototype$1.removeEventListener = function removeEventListener(eventType,func) 
 _prototype$1.triggerEvent = function triggerEvent(event) {
 
     var eventType = event.type;
-    var handlers = this.eventManager[eventType];
+    var handlers = this.getEventListeners(eventType);
     if(!handlers){
         return;
     }
@@ -1619,9 +1622,6 @@ _prototype$2._createRowContainer = function _createRowContainer() {
 };
 _prototype$2._createHeader = function _createHeader() {
 
-    var cellsInstance = this.cellsInstance,
-        cellsModel = cellsInstance.cellsModel,
-        domCache = this.domCache;
     var headerContainer = document.createElement('header');
     headerContainer.className = getFullClassName('header');
     this.headerPanel = headerContainer;

@@ -567,7 +567,7 @@ ScrollBar.prototype._getTouchEventListeners = function () {
 
             listeners.lastPageY = pos.pageY;
             listeners.lastPageX = pos.pageX;
-            
+
             e.preventDefault();
         };
         listeners.touchend = function () {
