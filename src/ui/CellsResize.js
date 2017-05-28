@@ -1,10 +1,14 @@
-import { userSelect,getFullClassName,getFullClassSelector,getMousePosition } from './domUtil'
+import { userSelect,getFullClassName,getFullClassSelector,getMousePosition,executeFunctionDelay } from './domUtil'
+import { Class } from '../base/Class';
 import { Cells } from './Cells';
 import { CellsEvent } from './CellsEvent';
 
-function CellsResize(cellsInstance){
+
+var CellsResize = Class.create(function (cellsInstance) {
+
     this.cellsInstance = cellsInstance;
-}
+
+});
 var _prototype = CellsResize.prototype;
 function isNumber(value){
 
@@ -165,7 +169,7 @@ var mouseHit = 3,cursors = ['auto','ns-resize','ew-resize','nwse-resize'];
 function _bindResizeCellEvent() {
 
     var cellsInstance = this.cellsInstance,
-        cellsRender = this.cellsRender;
+        cellsRender = cellsInstance.cellsRender;
     var domCache = cellsRender.domCache,
         cellsPanel = cellsRender.cellsPanel,
         rowsTop = domCache.rowsTop,
@@ -248,7 +252,7 @@ function _bindResizeCellEvent() {
         }
     };
     cellsPanel.addEventListener('mousemove', function (e) {
-        this.executeFunctionDelay('rowPanel-mousemove',function () {
+        executeFunctionDelay('rowPanel-mousemove',function () {
             var mouseInfo = getMouseInfo(e);
             cellsPanel.style.cursor = mouseInfo.cursor;
         });
@@ -308,18 +312,21 @@ function _bindResizeCellEvent() {
     function mouseup(){
         userSelect(true,this.cellsPanel);
         if(resizeManager.reset()){
-            this.syncCursor();
+            cellsRender.syncCursor();
         }
     }
     cellsPanel.addEventListener('mouseup',mouseup.bind(this));
     cellsPanel.addEventListener('mouseleave',mouseup.bind(this))
 
 };
-_prototype._bindResizeCellEvent = _bindResizeCellEvent;
-CellsEvent.extendBindEventExecutor(_bindResizeCellEvent);
+_prototype.bindEvent = function () {
+    _bindResizeCellEvent.call(this);
+};
 Cells.addInitHooks(function () {
     this.cellsResize = new CellsResize(this);
-    this.cellsResize._bindResizeCellEvent();
+    this.addEventListener('renderFinished', function () {
+        this.cellsResize.bindEvent();
+    }.bind(this));
 });
 
 export { CellsResize }

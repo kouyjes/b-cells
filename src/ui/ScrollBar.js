@@ -308,7 +308,7 @@ ScrollBar.prototype.triggerEvent = function (eventType) {
         try{
             listener.call(this);
         }catch(e){
-            console.error(e);
+            console.error(e.stack || e);
         }
     }.bind(this));
 

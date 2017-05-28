@@ -1,6 +1,7 @@
 /**
  * Created by koujp on 2016/10/17.
  */
+import { Class } from '../base/Class';
 import { CellsModel } from '../model/CellsModel';
 import { isDomElement,requestAnimationFrame,cancelAnimationFrame,executeFunctionDelay } from './domUtil'
 function _setRenderTo(renderTo) {
@@ -16,40 +17,9 @@ function _setRenderTo(renderTo) {
     this.renderTo = renderTo;
 
 };
-if(!Object.assign){
-    Object.assign = function (src,target) {
-        if(!target){
-            return src;
-        }
-        Object.keys(target).forEach(function (key) {
-            src[key] = target[key];
-        });
-        return src;
-    };
-}
-function Cells(cellsModel,config){
-
+var Cells = Class.create(function (cellsModel,config) {
     init.apply(this,arguments);
-
-}
-
-var _initHooks = [];
-Cells.addInitHooks = function (initHook) {
-
-    var index = _initHooks.indexOf(initHook);
-    if(index === -1){
-        _initHooks.push(initHook);
-    }
-
-};
-Cells.removeInitHooks = function (initHook) {
-
-    var index = _initHooks.indexOf(initHook);
-    if(index >= 0){
-        _initHooks.splice(index,1);
-    }
-
-};
+});
 
 function init(cellsModel,config) {
 
@@ -74,33 +44,31 @@ function init(cellsModel,config) {
     },config);
     Object.freeze(this.config);
 
-    this._bindCellsModelEvent();
-
-    var _ = this,initParams = arguments;
-    var initHooks = this.initHooks || _initHooks;
-
-    if(!initHooks){
-        initHooks = _initHooks;
-        this.initHooks = [].concat(initHooks);
-    }
-
-    initHooks.forEach(function (initHook) {
-        try{
-            initHook.apply(_,initParams);
-        }catch(e){
-            console.error(e);
-        }
-    });
-
 
 };
 var _prototype = Cells.prototype;
-Cells.extend = function (methodName,method) {
-    if(arguments.length === 1 && arguments[0]){
-        Object.keys(arguments[0]).forEach(function (key) {
-            _prototype[key] = arguments[0][key];
-        });
+Cells.extend = function (extend) {
+
+    Object.keys(arguments[0]).forEach(function (key) {
+        _prototype[key] = extend[key];
+    });
+
+};
+Cells.publishMethod = function (methodNames,instanceName) {
+
+    if(!methodNames || !instanceName){
+        return;
     }
+    methodNames = [].concat(methodNames);
+    methodNames.forEach(function (methodName) {
+        _prototype[methodName] = function () {
+            var context = this[instanceName];
+            var method = typeof methodName === 'function' ? methodName : context[methodName];
+            if(typeof method === 'function'){
+                return method.apply(context,arguments);
+            }
+        };
+    });
 };
 
 export { Cells }

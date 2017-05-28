@@ -1,10 +1,12 @@
 import { style,getFullClassName,getFullClassSelector,getMousePosition,isDomElement,requestAnimationFrame,cancelAnimationFrame,executeFunctionDelay } from './domUtil'
+import { Class } from '../base/Class';
 import { Cells } from './Cells';
 import { CellsEvent } from './CellsEvent';
 import { ScrollBar } from './ScrollBar';
 var _cellSupportStyles = ['background','backgroundColor','backgroundImage','backgroundRepeat','backgroundSize'];
 
-function CellsRender(cellsInstance){
+
+var CellsRender = Class.create(function (cellsInstance) {
 
     this.cellsInstance = cellsInstance;
 
@@ -13,9 +15,16 @@ function CellsRender(cellsInstance){
     this.bodyPanel = null;
     this.cursor = null;
 
-}
-var _cellsPrototype = Cells.prototype,
-    _prototype = CellsRender.prototype;
+    var cellsEvent = cellsInstance.cellsEvent;
+    cellsEvent.extendEventType('renderFinished',[]);
+    cellsEvent.extendEventType('click',[]);
+    cellsEvent.extendEventType('cellClick',[]);
+    cellsEvent.extendEventType('scroll',[]);
+    cellsEvent.extendEventType('cellPainted',[]);
+
+});
+
+var _prototype = CellsRender.prototype;
 function transformStyleName(styleName){
     return styleName.replace(/-(\w)/g, function (match,str) {
         return str ? str.toUpperCase() : '';
@@ -68,7 +77,7 @@ function initRender() {
 
     var cellsInstance = this.cellsInstance;
     this.initRenderState();
-    var renderTo = this.renderTo;
+    var renderTo = cellsInstance.renderTo;
     if(!renderTo || renderTo.nodeType !== 1){
         throw new TypeError('parent container is invalid !');
     }
@@ -96,6 +105,8 @@ function initRender() {
     });
 
     this._createCursor();
+
+    this.bindEvent();
 
 };
 var headerContentClassName = 'header-content';
@@ -129,7 +140,7 @@ _prototype.getCurrentColArea = function getCurrentColArea() {
 
     var cellsInstance = this.cellsInstance;
     var scrollbar = this.scrollbar;
-    var panelSize = cellsInstance.getPanelSize();
+    var panelSize = this.getPanelSize();
     var colsLeft = this.domCache.colsLeft;
     var left = scrollbar.scrollLeft;
     return this.getThresholdArea(panelSize.width,colsLeft,left);
@@ -174,7 +185,7 @@ _prototype.getCurrentRowArea = function getCurrentRowArea() {
 
     var cellsInstance = this.cellsInstance;
     var scrollbar = this.scrollbar;
-    var panelSize = cellsInstance.getPanelSize();
+    var panelSize = this.getPanelSize();
     var rowsTop = this.domCache.rowsTop;
     var top = scrollbar.scrollTop;
     return this.getThresholdArea(panelSize.height,rowsTop,top);
@@ -263,18 +274,6 @@ _prototype._getPaintAreas = function _getPaintAreas(type) {
     return areas;
 
 };
-_cellsPrototype.render = function render() {
-
-    var cellsRender = this.cellsRender;
-
-    initRender.apply(this);
-
-    cellsRender._initPanelSize();
-    cellsRender._initCellSizeIndex();
-    cellsRender.executePaint();
-    cellsRender.syncCursor();
-
-};
 _prototype.initPaint = function () {
 
     var cellsInstance = this.cellsInstance;
@@ -300,23 +299,6 @@ _prototype.executePaint = function () {
     this.paintBody();
     paintState.lastRowArea = paintState.currentRowArea;
     paintState.lastColArea = paintState.currentColArea;
-
-};
-_cellsPrototype.paint = function paint() {
-
-    var cellsInstance = this.cellsInstance,
-        cellsRender = this.cellsRender;
-    cellsRender.initPaint();
-    cellsInstance._initPanelSize();
-    cellsInstance._initCellSizeIndex();
-    cellsRender.executePaint();
-    cellsRender.syncCursor();
-
-};
-_cellsPrototype.repaint = function repaint() {
-
-    var cellsRender = this.cellsRender;
-    cellsRender.executePaint();
 
 };
 _prototype.getHeaderContentPanel = function () {
@@ -466,6 +448,7 @@ _prototype.emptyElement = function (element) {
 };
 _prototype._configCell = function _configCell(cell,field) {
 
+    var cellsInstance = this.cellsInstance;
     var isHtml = typeof field.html === 'string';
     cell.setAttribute('html_content',isHtml + '');
     if(isHtml){
@@ -483,7 +466,7 @@ _prototype._configCell = function _configCell(cell,field) {
             span = cell._textSpan;
         }
         span.innerText = text;
-        if(this.config.textTitle){
+        if(cellsInstance.config.textTitle){
             cell.setAttribute('title',text);
         }
     }
@@ -581,11 +564,12 @@ _prototype._createCursor = function _createCursor() {
 };
 _prototype._createBodyContainer = function _createBodyContainer() {
 
+    var cellsInstance = this.cellsInstance;
     var bodyContainer = this.bodyPanel = document.createElement('div');
     bodyContainer.className = getFullClassName('body-container');
 
-    bodyContainer.setAttribute('overflowX',String(this.config.overflowX));
-    bodyContainer.setAttribute('overflowY',String(this.config.overflowY))
+    bodyContainer.setAttribute('overflowX',String(cellsInstance.config.overflowX));
+    bodyContainer.setAttribute('overflowY',String(cellsInstance.config.overflowY))
 
     var rowContainer = this._createRowContainer();
     bodyContainer.appendChild(rowContainer);
@@ -600,20 +584,6 @@ _prototype._createRowContainer = function _createRowContainer() {
     return rowContainer;
 
 };
-_cellsPrototype.headerHeight = function (height) {
-
-    var cellsModel = this.cellsModel,
-        cellsRender = this.cellsRender;
-    if(!height){
-        return cellsModel.header.height;
-    }
-    height = parseInt(height);
-    if(typeof height !== 'number'){
-        return;
-    }
-    cellsModel.header.height = height;
-    cellsRender.headerPanel.style.height = height + 'px';
-};
 _prototype._createHeader = function _createHeader() {
 
     var cellsInstance = this.cellsInstance;
@@ -621,7 +591,7 @@ _prototype._createHeader = function _createHeader() {
     var headerContainer = document.createElement('header');
     headerContainer.className = getFullClassName('header');
     this.headerPanel = headerContainer;
-    this.headerHeight(cellsModel.header.height);
+    cellsInstance.headerHeight(cellsModel.header.height);
 
     var headerContentPanel = document.createElement('div');
     headerContentPanel.className = getFullClassName(headerContentClassName);
@@ -652,21 +622,6 @@ _prototype.syncCursor = function syncCursor() {
     });
 
     executeFunctionDelay('resizeScrollbar',this.resizeScrollbar,this);
-
-};
-_cellsPrototype.scrollTo = function (scrollTop,scrollLeft) {
-
-    var cellsRender = this.cellsRender;
-    var scrollbar = cellsRender.scrollbar;
-
-    if(arguments.length === 0){
-        return {
-            scrollLeft:scrollbar.scrollLeft,
-            scrollTop:scrollbar.scrollTop
-        };
-    }
-    scrollbar.scrollLeft = scrollLeft;
-    scrollbar.scrollTop = scrollTop;
 
 };
 _prototype._initCellSizeIndex = function () {
@@ -745,7 +700,7 @@ _prototype._onAppendRows = function () {
     var rowsHeight = this.domCache.rowsHeight;
     this._initCellHeightIndex(rowsHeight.length);
     this.syncCursor();
-    executeFunctionDelay('repaintRequest',cellsInstance.repaint,cellsInstance);
+    executeFunctionDelay('repaintRequest',this.repaint,this);
 
 };
 _prototype._bindCellsModelEvent = function () {
@@ -753,7 +708,7 @@ _prototype._bindCellsModelEvent = function () {
     var cellsInstance = this.cellsInstance;
     cellsInstance.cellsModel.bind('refresh', function () {
         if(cellsInstance.renderTo){
-            executeFunctionDelay('refresh',cellsInstance.repaint,cellsInstance);
+            executeFunctionDelay('refresh',this.repaint,this);
         }
     }.bind(this));
 
@@ -762,6 +717,23 @@ _prototype._bindCellsModelEvent = function () {
             executeFunctionDelay('appendRows',this._onAppendRows,this);
         }
     }.bind(this));
+};
+
+_prototype.tiggerCellClickEvent = function tiggerCellClickEvent(cell) {
+
+    var cellsInstance = this.cellsInstance;
+    var cellsModel = cellsInstance.cellsModel,
+        cellsEvent = cellsInstance.cellsEvent,
+        col = parseInt(cell.getAttribute('col'));
+    if(cell._headerCell){
+        cellsEvent.triggerEvent(CellsEvent.createEvent('cellClick',cell,cellsModel.header.fields[col]));
+        return;
+    }
+    var row = parseInt(cell.getAttribute('row'));
+    var rowData = cellsModel.rows[row];
+    if(rowData){
+        cellsEvent.triggerEvent(CellsEvent.createEvent('cellClick',cell,rowData.fields[col]));
+    }
 };
 function _bindScrollEvent(){
 
@@ -776,14 +748,105 @@ function _bindScrollEvent(){
         style(headerContentPanel,'left',-scrollLeft + 'px');
         executeFunctionDelay('repaintRequest',this.repaint,this);
 
-        var event = cellsEvent.createEvent('scroll',scrollbar,cellsInstance.cellsModel);
+        var event = CellsEvent.createEvent('scroll',scrollbar,cellsInstance.cellsModel);
         cellsEvent.triggerEvent(event);
 
     }.bind(this));
 }
-_prototype._bindScrollEvent = _bindScrollEvent;
+function _bindClickEvent() {
+
+    var cellsInstance = this.cellsInstance,
+        cellsEvent = cellsInstance.cellsEvent;
+    var _ = this,cellsPanel = this.cellsPanel;
+    cellsPanel.addEventListener('click', function (e) {
+
+        var target = e.target;
+        if(target === cellsPanel){
+            cellsEvent.triggerEvent(CellsEvent.createEvent('click',cellsPanel,cellsInstance.cellsModel));
+            return;
+        }
+        if(cellsEvent.existEventListener('cellClick')){
+            if(target._cell){
+                _.tiggerCellClickEvent(target);
+            }else{
+                while(target = target.parentNode){
+                    if(target === cellsPanel){
+                        break;
+                    }
+                    if(target._cell){
+                        _.tiggerCellClickEvent(target);
+                        break;
+                    }
+                }
+            }
+        }
+        cellsEvent.triggerEvent(CellsEvent.createEvent('click',cellsPanel,cellsInstance.cellsModel));
+    });
+
+}
+_prototype.bindEvent = function () {
+    _bindScrollEvent.call(this);
+    _bindClickEvent.call(this);
+};
+_prototype.render = function render() {
+
+    initRender.apply(this);
+
+    this._initPanelSize();
+    this._initCellSizeIndex();
+    this.executePaint();
+    this.syncCursor();
+
+    this.cellsInstance.triggerEvent(CellsEvent.createEvent('renderFinished',this));
+
+};
+_prototype.paint = function paint() {
+
+    this.initPaint();
+    this._initPanelSize();
+    this._initCellSizeIndex();
+    this.executePaint();
+    this.syncCursor();
+
+};
+_prototype.repaint = function repaint() {
+
+    this.executePaint();
+
+};
+_prototype.headerHeight = function (height) {
+
+    var cellsInstance = this.cellsInstance,
+        cellsModel = cellsInstance.cellsModel;
+    if(!height){
+        return cellsModel.header.height;
+    }
+    height = parseInt(height);
+    if(typeof height !== 'number'){
+        return;
+    }
+    cellsModel.header.height = height;
+    this.headerPanel.style.height = height + 'px';
+};
+_prototype.scrollTo = function (scrollTop,scrollLeft) {
+
+    var scrollbar = this.scrollbar;
+
+    if(arguments.length === 0){
+        return {
+            scrollLeft:scrollbar.scrollLeft,
+            scrollTop:scrollbar.scrollTop
+        };
+    }
+    scrollbar.scrollLeft = scrollLeft;
+    scrollbar.scrollTop = scrollTop;
+
+};
+CellsRender.addInitHooks(function () {
+    this._bindCellsModelEvent();
+});
+Cells.publishMethod(['render','paint','repaint','scrollTo','headerHeight'],'cellsRender');
 Cells.addInitHooks(function () {
     this.cellsRender = new CellsRender(this);
 });
-
 export { CellsRender }

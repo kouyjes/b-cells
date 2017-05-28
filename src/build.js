@@ -1,4 +1,5 @@
-export { global } from './config/Config'
+export { global } from './config/Config';
+export { Class } from './base/Class';
 export { ScrollBar } from './ui/ScrollBar';
 export { CellsModel } from './model/CellsModel';
 export { Cells } from './ui/Cells';

@@ -1,18 +1,15 @@
 import { getFullClassName,getFullClassSelector,requestAnimationFrame,cancelAnimationFrame,executeFunctionDelay } from './domUtil'
+import { Class } from '../base/Class';
 import { Cells } from './Cells';
-function CellsEvent(cellsInstance){
+
+var CellsEvent = Class.create(function (cellsInstance) {
 
     this.cellsInstance = cellsInstance;
     Object.defineProperty(this,'eventManager',{
-        value:{
-            click:[], //cells click event
-            cellClick:[], //cell click event
-            scroll:[], // scroll event
-            cellPainted:[], //triggered after cell has been painted
-        }
+        value:{}
     });
 
-}
+});
 var _prototype = CellsEvent.prototype;
 _prototype.extendEventType = function (eventType,listeners) {
 
@@ -26,6 +23,17 @@ _prototype.extendEventType = function (eventType,listeners) {
     }
 
 };
+_prototype.getEventListeners = function (eventType) {
+
+    return this.eventManager[eventType] || [];
+
+};
+_prototype.existEventListener = function (eventType) {
+
+    var listeners = this.eventManager[eventType];
+    return listeners && listeners.length > 0;
+
+};
 CellsEvent.createEvent = function createEvent(eventType,target,data) {
 
     return {
@@ -34,20 +42,6 @@ CellsEvent.createEvent = function createEvent(eventType,target,data) {
         data:data
     };
 
-};
-_prototype.tiggerCellClickEvent = function tiggerCellClickEvent(cell) {
-
-    var cellsInstance = this.cellsInstance;
-    var cellsModel = cellsInstance.cellsModel,col = parseInt(cell.getAttribute('col'));
-    if(cell._headerCell){
-        this.triggerEvent(CellsEvent.createEvent('cellClick',cell,cellsModel.header.fields[col]));
-        return;
-    }
-    var row = parseInt(cell.getAttribute('row'));
-    var rowData = cellsModel.rows[row];
-    if(rowData){
-        this.triggerEvent(CellsEvent.createEvent('cellClick',cell,rowData.fields[col]));
-    }
 };
 _prototype.addEventListener = function addEventListener(eventType,func) {
 
@@ -87,41 +81,9 @@ _prototype.triggerEvent = function triggerEvent(event) {
     }.bind(this));
 
 };
-
-function _bindClickEvent() {
-
-    var cellsInstance = this.cellsInstance;
-    var _ = this,cellsPanel = cellsInstance.cellsPanel;
-    cellsPanel.addEventListener('click', function (e) {
-
-        var target = e.target;
-        if(target === cellsPanel){
-            _.triggerEvent(_.createEvent('click',cellsPanel,_.cellsModel));
-            return;
-        }
-        if(_.eventManager.cellClick && _.eventManager.cellClick.length >= 0){
-            if(target._cell){
-                _.tiggerCellClickEvent(target);
-            }else{
-                while(target = target.parentNode){
-                    if(target === cellsPanel){
-                        break;
-                    }
-                    if(target._cell){
-                        _.tiggerCellClickEvent(target);
-                        break;
-                    }
-                }
-            }
-        }
-        _.triggerEvent(_.createEvent('click',cellsPanel,cellsInstance.cellsModel));
-    });
-
-};
-_prototype._bindClickEvent = _bindClickEvent;
+Cells.publishMethod(['addEventListener','removeEventListener','triggerEvent'],'cellsEvent');
 Cells.addInitHooks(function () {
     this.cellsEvent = new CellsEvent(this);
-    this.cellsEvent._bindClickEvent();
 });
 
 export { CellsEvent }
