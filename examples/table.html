@@ -15,12 +15,12 @@
         }
         #table{
             float:left;
-            width:40%;
+            width:80%;
             height:80%;
         }
         #table1{
-            float:right;
-            width:40%;
+            float:left;
+            width:80%;
             height:80%;
         }
     </style>
@@ -36,7 +36,7 @@
             var cellsModel = new CELL.CellsModel();
             var header = [];
             for(var i = 0; i< colNum;i++){
-                header.push({name:'column' + i,width:'10%',style:{
+                header.push({name:'column' + i,width:'20%',style:{
                     backgroundColor:randomColor()
                 }});
             }
@@ -64,8 +64,8 @@
             return cellsModel;
         }
 
-        var _cellsModel = createCellsModel(100,5),
-                _cellsModel1 = createCellsModel(20,3);
+        var _cellsModel = createCellsModel(100,50),
+                _cellsModel1 = createCellsModel(20,30);
 
 
         function appendData(){

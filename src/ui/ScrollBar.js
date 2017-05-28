@@ -556,6 +556,7 @@ ScrollBar.prototype._getTouchEventListeners = function () {
             if(!listeners.startX || !listeners.startY){
                 return;
             }
+
             var pos = getMousePosition(e);
             var moveRatio = 0.8;
             if(Math.abs(pos.pageY - listeners.lastPageY) >= Math.abs(pos.pageX - listeners.lastPageX)){
@@ -566,6 +567,8 @@ ScrollBar.prototype._getTouchEventListeners = function () {
 
             listeners.lastPageY = pos.pageY;
             listeners.lastPageX = pos.pageX;
+            
+            e.preventDefault();
         };
         listeners.touchend = function () {
 

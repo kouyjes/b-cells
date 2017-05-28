@@ -56,7 +56,7 @@ _prototype.addEventListener = function addEventListener(eventType,func) {
 };
 _prototype.removeEventListener = function removeEventListener(eventType,func) {
 
-    var handlers = this.eventManager[eventType];
+    var handlers = this.getEventListeners(eventType);
     if(!handlers){
         return;
     }
@@ -70,7 +70,7 @@ _prototype.removeEventListener = function removeEventListener(eventType,func) {
 _prototype.triggerEvent = function triggerEvent(event) {
 
     var eventType = event.type;
-    var handlers = this.eventManager[eventType];
+    var handlers = this.getEventListeners(eventType);
     if(!handlers){
         return;
     }

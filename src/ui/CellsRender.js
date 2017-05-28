@@ -590,9 +590,6 @@ _prototype._createRowContainer = function _createRowContainer() {
 };
 _prototype._createHeader = function _createHeader() {
 
-    var cellsInstance = this.cellsInstance,
-        cellsModel = cellsInstance.cellsModel,
-        domCache = this.domCache;
     var headerContainer = document.createElement('header');
     headerContainer.className = getFullClassName('header');
     this.headerPanel = headerContainer;
