@@ -69,7 +69,8 @@ _prototype.initRenderState = function() {
         colsWidth:[],
         colsLeft:[],
         rowsTop:[],
-        rowsHeight:[]
+        rowsHeight:[],
+        headerHeight:0,
     };
 
 };
@@ -318,7 +319,9 @@ _prototype.getBodyCells = function () {
 };
 _prototype.paintHeader = function paintHeader() {
 
-    var cellsCache = this.domCache.headerCells,
+    var cellsInstance = this.cellsInstance,
+        cellsModel = cellsInstance.cellsModel,
+        cellsCache = this.domCache.headerCells,
         headerContentPanel = this.getHeaderContentPanel();
 
     var paintState = this.paintState;
@@ -534,8 +537,9 @@ _prototype._reLayoutCell = function _reLayoutCell(cell) {
     }
 
     var fields = cell._headerCell ? header.fields : rows[row].fields,
-        field = fields[col],
-        fieldStyle = field.style;
+        field = fields[col];
+
+    var fieldStyle = field.style;
     var customStyleKeys = [];
     if(fieldStyle){
         Object.keys(fieldStyle).forEach(function (key) {
@@ -586,12 +590,12 @@ _prototype._createRowContainer = function _createRowContainer() {
 };
 _prototype._createHeader = function _createHeader() {
 
-    var cellsInstance = this.cellsInstance;
-    var cellsModel = cellsInstance.cellsModel;
+    var cellsInstance = this.cellsInstance,
+        cellsModel = cellsInstance.cellsModel,
+        domCache = this.domCache;
     var headerContainer = document.createElement('header');
     headerContainer.className = getFullClassName('header');
     this.headerPanel = headerContainer;
-    cellsInstance.headerHeight(cellsModel.header.height);
 
     var headerContentPanel = document.createElement('div');
     headerContentPanel.className = getFullClassName(headerContentClassName);
@@ -632,7 +636,8 @@ _prototype._initCellSizeIndex = function () {
 };
 _prototype._initCellWidthIndex = function () {
 
-    var colsWidth = this.domCache.colsWidth,
+    var cellsModel = this.cellsInstance.cellsModel,
+        colsWidth = this.domCache.colsWidth,
         colsLeft = this.domCache.colsLeft;
 
     var maxWidth = 0;
@@ -651,12 +656,16 @@ _prototype._initCellWidthIndex = function () {
 };
 _prototype._initCellHeightIndex = function (startIndex) {
 
-    var cellsInstance = this.cellsInstance;
+    var domCache = this.domCache,
+        cellsInstance = this.cellsInstance,
+        cellsModel = cellsInstance.cellsModel;
     startIndex = startIndex || 0;
     var cellsModel = cellsInstance.cellsModel;
     var rows = cellsModel.rows;
-    var rowsTop = this.domCache.rowsTop,
-        rowsHeight = this.domCache.rowsHeight;
+    var rowsTop = domCache.rowsTop,
+        rowsHeight = domCache.rowsHeight;
+
+    domCache.headerHeight = this._parseCellHeight(cellsModel.header.height);
 
     //create page cursor
     rows.slice(startIndex).forEach(function (row,index) {
@@ -794,6 +803,7 @@ _prototype.render = function render() {
 
     this._initPanelSize();
     this._initCellSizeIndex();
+    this.headerHeight(this.domCache.headerHeight);
     this.executePaint();
     this.syncCursor();
 
@@ -802,9 +812,11 @@ _prototype.render = function render() {
 };
 _prototype.paint = function paint() {
 
+    var domCache = this.domCache;
     this.initPaint();
     this._initPanelSize();
     this._initCellSizeIndex();
+    this.headerHeight(domCache.headerHeight);
     this.executePaint();
     this.syncCursor();
 
@@ -816,16 +828,16 @@ _prototype.repaint = function repaint() {
 };
 _prototype.headerHeight = function (height) {
 
-    var cellsInstance = this.cellsInstance,
-        cellsModel = cellsInstance.cellsModel;
+    var domCache = this.domCache;
+
     if(!height){
-        return cellsModel.header.height;
+        return domCache.headerHeight;
     }
     height = parseInt(height);
     if(typeof height !== 'number'){
         return;
     }
-    cellsModel.header.height = height;
+    domCache.headerHeight = height;
     this.headerPanel.style.height = height + 'px';
 };
 _prototype.scrollTo = function (scrollTop,scrollLeft) {

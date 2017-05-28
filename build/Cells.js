@@ -1098,7 +1098,8 @@ _prototype$2.initRenderState = function() {
         colsWidth:[],
         colsLeft:[],
         rowsTop:[],
-        rowsHeight:[]
+        rowsHeight:[],
+        headerHeight:0,
     };
 
 };
@@ -1347,7 +1348,9 @@ _prototype$2.getBodyCells = function () {
 };
 _prototype$2.paintHeader = function paintHeader() {
 
-    var cellsCache = this.domCache.headerCells,
+    var cellsInstance = this.cellsInstance,
+        cellsModel = cellsInstance.cellsModel,
+        cellsCache = this.domCache.headerCells,
         headerContentPanel = this.getHeaderContentPanel();
 
     var paintState = this.paintState;
@@ -1563,8 +1566,9 @@ _prototype$2._reLayoutCell = function _reLayoutCell(cell) {
     }
 
     var fields = cell._headerCell ? header.fields : rows[row].fields,
-        field = fields[col],
-        fieldStyle = field.style;
+        field = fields[col];
+
+    var fieldStyle = field.style;
     var customStyleKeys = [];
     if(fieldStyle){
         Object.keys(fieldStyle).forEach(function (key) {
@@ -1615,12 +1619,12 @@ _prototype$2._createRowContainer = function _createRowContainer() {
 };
 _prototype$2._createHeader = function _createHeader() {
 
-    var cellsInstance = this.cellsInstance;
-    var cellsModel = cellsInstance.cellsModel;
+    var cellsInstance = this.cellsInstance,
+        cellsModel = cellsInstance.cellsModel,
+        domCache = this.domCache;
     var headerContainer = document.createElement('header');
     headerContainer.className = getFullClassName('header');
     this.headerPanel = headerContainer;
-    cellsInstance.headerHeight(cellsModel.header.height);
 
     var headerContentPanel = document.createElement('div');
     headerContentPanel.className = getFullClassName(headerContentClassName);
@@ -1661,7 +1665,8 @@ _prototype$2._initCellSizeIndex = function () {
 };
 _prototype$2._initCellWidthIndex = function () {
 
-    var colsWidth = this.domCache.colsWidth,
+    var cellsModel = this.cellsInstance.cellsModel,
+        colsWidth = this.domCache.colsWidth,
         colsLeft = this.domCache.colsLeft;
 
     var maxWidth = 0;
@@ -1680,12 +1685,16 @@ _prototype$2._initCellWidthIndex = function () {
 };
 _prototype$2._initCellHeightIndex = function (startIndex) {
 
-    var cellsInstance = this.cellsInstance;
+    var domCache = this.domCache,
+        cellsInstance = this.cellsInstance,
+        cellsModel = cellsInstance.cellsModel;
     startIndex = startIndex || 0;
     var cellsModel = cellsInstance.cellsModel;
     var rows = cellsModel.rows;
-    var rowsTop = this.domCache.rowsTop,
-        rowsHeight = this.domCache.rowsHeight;
+    var rowsTop = domCache.rowsTop,
+        rowsHeight = domCache.rowsHeight;
+
+    domCache.headerHeight = this._parseCellHeight(cellsModel.header.height);
 
     //create page cursor
     rows.slice(startIndex).forEach(function (row,index) {
@@ -1823,6 +1832,7 @@ _prototype$2.render = function render() {
 
     this._initPanelSize();
     this._initCellSizeIndex();
+    this.headerHeight(this.domCache.headerHeight);
     this.executePaint();
     this.syncCursor();
 
@@ -1831,9 +1841,11 @@ _prototype$2.render = function render() {
 };
 _prototype$2.paint = function paint() {
 
+    var domCache = this.domCache;
     this.initPaint();
     this._initPanelSize();
     this._initCellSizeIndex();
+    this.headerHeight(domCache.headerHeight);
     this.executePaint();
     this.syncCursor();
 
@@ -1845,16 +1857,16 @@ _prototype$2.repaint = function repaint() {
 };
 _prototype$2.headerHeight = function (height) {
 
-    var cellsInstance = this.cellsInstance,
-        cellsModel = cellsInstance.cellsModel;
+    var domCache = this.domCache;
+
     if(!height){
-        return cellsModel.header.height;
+        return domCache.headerHeight;
     }
     height = parseInt(height);
     if(typeof height !== 'number'){
         return;
     }
-    cellsModel.header.height = height;
+    domCache.headerHeight = height;
     this.headerPanel.style.height = height + 'px';
 };
 _prototype$2.scrollTo = function (scrollTop,scrollLeft) {
@@ -1896,13 +1908,14 @@ _prototype$3._updateRowDomCache = function (rowIndex,height) {
         return;
     }
     var cellsInstance = this.cellsInstance,
-        cellsRender = cellsInstance.cellsRender;
+        cellsRender = cellsInstance.cellsRender,
+        domCache = cellsRender.domCache;
     height = Math.max(0,height);
     if(rowIndex === -1){
-        cellsInstance.cellsModel.header.height = height;
+        domCache.headerHeight = height;
         return;
     }
-    var domCache = cellsRender.domCache;
+
     var rowsHeight = domCache.rowsHeight,
         rowsTop = domCache.rowsTop;
     rowsHeight[rowIndex] = height;
@@ -2010,12 +2023,12 @@ _prototype$3._updateHeaderCells = function (colIndex,option) {
         };
 
     var cellsInstance = this.cellsInstance,
-        cellsRender = cellsInstance.cellsRender;
+        cellsRender = cellsInstance.cellsRender,
+        domCache = cellsRender.domCache;
     if(option.row){
-        cellsRender.headerPanel.style.height = cellsInstance.cellsModel.header.height + 'px';
+        cellsRender.headerPanel.style.height = domCache.headerHeight + 'px';
     }
     if(option.col){
-        var domCache = cellsRender.domCache;
         var colsWidth = domCache.colsWidth,
             colsLeft = domCache.colsLeft;
         //update header col width

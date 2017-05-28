@@ -21,13 +21,14 @@ _prototype._updateRowDomCache = function (rowIndex,height) {
         return;
     }
     var cellsInstance = this.cellsInstance,
-        cellsRender = cellsInstance.cellsRender;
+        cellsRender = cellsInstance.cellsRender,
+        domCache = cellsRender.domCache;
     height = Math.max(0,height);
     if(rowIndex === -1){
-        cellsInstance.cellsModel.header.height = height;
+        domCache.headerHeight = height;
         return;
     }
-    var domCache = cellsRender.domCache;
+
     var rowsHeight = domCache.rowsHeight,
         rowsTop = domCache.rowsTop;
     rowsHeight[rowIndex] = height;
@@ -135,12 +136,12 @@ _prototype._updateHeaderCells = function (colIndex,option) {
         };
 
     var cellsInstance = this.cellsInstance,
-        cellsRender = cellsInstance.cellsRender;
+        cellsRender = cellsInstance.cellsRender,
+        domCache = cellsRender.domCache;
     if(option.row){
-        cellsRender.headerPanel.style.height = cellsInstance.cellsModel.header.height + 'px';
+        cellsRender.headerPanel.style.height = domCache.headerHeight + 'px';
     }
     if(option.col){
-        var domCache = cellsRender.domCache;
         var colsWidth = domCache.colsWidth,
             colsLeft = domCache.colsLeft;
         //update header col width

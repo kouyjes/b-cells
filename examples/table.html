@@ -14,7 +14,13 @@
             overflow:hidden;
         }
         #table{
-            width:100%;
+            float:left;
+            width:40%;
+            height:80%;
+        }
+        #table1{
+            float:right;
+            width:40%;
             height:80%;
         }
     </style>
@@ -25,78 +31,46 @@
                 b = parseInt(255 * Math.random());
             return 'rgb(' + r + ',' + g + ',' + b + ')';
         }
-        var cellsModel = new CELL.CellsModel();
-        var header = [];
-        var colNum = 100;
-        for(var i = 0; i< colNum;i++){
-            header.push({name:'column' + i,width:'10%',style:{
-                backgroundColor:randomColor()
-            }});
+
+        function createCellsModel(rowNum,colNum){
+            var cellsModel = new CELL.CellsModel();
+            var header = [];
+            for(var i = 0; i< colNum;i++){
+                header.push({name:'column' + i,width:'10%',style:{
+                    backgroundColor:randomColor()
+                }});
+            }
+            var rows = [];
+            for(var i = 0;i < rowNum;i++){
+                rows.push((function(){
+                    var fields = [];
+                    for(var col = 0;col < colNum;col++){
+                        fields.push({value:'cell-'+ i + '-' + col,style:{
+                            'background-color':randomColor()
+                        }});
+                    }
+                    return {
+                        height:'10%',
+                        fields:fields
+                    };
+                })());
+            }
+
+            cellsModel.header = {
+                height:50,
+                fields:header
+            };
+            cellsModel.rows = rows;
+            return cellsModel;
         }
-        var rows = [];
-        for(var i = 0;i < 100;i++){
-            rows.push((function(){
-                var fields = [];
-                for(var col = 0;col < colNum;col++){
-                    fields.push({value:'cell-'+ i + '-' + col,style:{
-                        'background-color':randomColor()
-                    }});
-                }
-                return {
-                    height:'10%',
-                    fields:fields
-                };
-            })());
-        }
-        var maxRowIndex = i;
-        cellsModel.header = {
-            height:50,
-            fields:header
-        };
-        cellsModel.rows = rows;
-        var tableCell;
-        function init(){
-            tableCell = new CELL.Cells(cellsModel,{
-                renderTo:'#table',
-                rowResize:true,
-                colResize:true,
-                overflowY:false,
-                enableCustomScroll:true
-            });
+
+        var _cellsModel = createCellsModel(100,5),
+                _cellsModel1 = createCellsModel(20,3);
 
 
-            /*window.addEventListener('resize', function () {
-                tableCell.executeFunctionDelay('windowResize',tableCell.paint)
-            });*/
-
-        }
-        function render(){
-            console.time('start-render');
-            tableCell.render();
-            console.timeEnd('start-render');
-
-            tableCell.addEventListener('click', function (e) {
-                console.log('click start');
-                console.log(e);
-                console.log('click end');
-            })
-
-            tableCell.addEventListener('cellClick', function (e) {
-                console.log('cell click start');
-                console.log(e);
-                console.log('cell click end');
-            });
-
-            /*tableCell.addEventListener('scroll', function (e) {
-                console.log(e.target);
-            });*/
-
-        }
-        function refresh(){
-            //cellsModel.refresh();
-            tableCell.paint();
-        }
         function appendData(){
+            var colNum = _cellsModel.header.fields.length;
+            var maxRowIndex = _cellsModel.rows.length;
             var rows = [];
             for(var i = maxRowIndex;i < maxRowIndex + 3;i++){
                 rows.push((function(){
@@ -110,10 +84,99 @@
                     };
                 })());
             }
-            maxRowIndex = i;
-            cellsModel.appendRows(rows);
+            _cellsModel.appendRows(rows);
+        }
+        function appendData1(){
+            var colNum = _cellsModel1.header.fields.length;
+            var maxRowIndex = _cellsModel1.rows.length;
+            var rows = [];
+            for(var i = maxRowIndex;i < maxRowIndex + 3;i++){
+                rows.push((function(){
+                    var fields = [];
+                    for(var col = 0;col < colNum;col++){
+                        fields.push({value:'cell-'+ i + '-' + col});
+                    }
+                    return {
+                        height:300,
+                        fields:fields
+                    };
+                })());
+            }
+            _cellsModel1.appendRows(rows);
+        }
+
+        function createTableCell(){
+            var tableCell = new CELL.Cells(_cellsModel,{
+                renderTo:'#table',
+                rowResize:true,
+                colResize:true,
+                overflowY:false,
+                enableCustomScroll:true
+            });
+            return tableCell;
+
+        }
+        function createTableCell1(){
+            var tableCell = new CELL.Cells(_cellsModel1,{
+                renderTo:'#table1',
+                rowResize:true,
+                colResize:true,
+                overflowY:false,
+                enableCustomScroll:false
+            });
+            return tableCell;
+
+        }
+
+        var tableCell,tableCell1;
+        function init(){
+            tableCell = createTableCell();
+            tableCell1 = createTableCell1();
+
+            tableCell.addEventListener('click', function (e) {
+                console.log('tableCell click start');
+                console.log(e);
+                console.log('tableCell click end');
+            })
+
+            tableCell.addEventListener('cellClick', function (e) {
+                console.log('tableCell cell click start');
+                console.log(e);
+                console.log('tableCell cell click end');
+            });
+
+           /* tableCell.addEventListener('scroll', function (e) {
+                console.log(e.target);
+            });*/
+
+        }
+
+
+
+
+
+
+        function render(){
+            console.time('start-render tableCell');
+            tableCell.render();
+            console.timeEnd('start-render tableCell');
+
+        }
+        function render1(){
+            console.time('start-render tableCell1');
+            tableCell1.render();
+            console.timeEnd('start-render tableCell1');
+
+        }
+        function refresh(){
+            tableCell.paint();
+        }
+        function refresh1(){
+            tableCell1.refresh();
         }
         function appendHtmlData(){
+            var maxRowIndex = _cellsModel.rows.length,
+                    colNum = _cellsModel.header.fields.length;
             var rows = [];
             console.time('---appendrow')
             for(var i = maxRowIndex;i < maxRowIndex + 1000;i++){
@@ -134,18 +197,27 @@
 
             }
             console.timeEnd('---appendrow')
-            maxRowIndex = i;
-            cellsModel.appendRows(rows);
+            _cellsModel.appendRows(rows);
         }
 
     </script>
 </head>
 <body onload="init()">
-    <button onclick="render()">render</button>
-    <button onclick="refresh()">refresh</button>
-    <button onclick="appendData()">appendData</button>
-    <button onclick="appendHtmlData()">appendHtmlData</button>
+    <div>
+        <button onclick="render()">render</button>
+        <button onclick="refresh()">refresh</button>
+        <button onclick="appendData()">appendData</button>
+        <button onclick="appendHtmlData()">appendHtmlData</button>
+    </div>
+    <div>
+        <button onclick="render1()">render1</button>
+        <button onclick="refresh1()">refresh1</button>
+        <button onclick="appendData1()">appendData1</button>
+    </div>
     <div id="table">
+
+    </div>
+    <div id="table1">
 
     </div>
 </body>
