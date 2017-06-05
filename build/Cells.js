@@ -673,11 +673,11 @@ ScrollBar.prototype._bindMouseWheelEvent = function () {
 
         if(Math.abs(lengthX) > Math.abs(lengthY)){
             if(lengthX){
-                _.scrollLeft += -lengthX * 10;
+                _.scrollLeft += -lengthX * 10 / _.getScrollbarWidth();
             }
         }else{
             if(lengthY){
-                _.scrollTop += -lengthY * 10;
+                _.scrollTop += -lengthY * 10 / _.getScrollbarHeight();
             }
         }
     }
