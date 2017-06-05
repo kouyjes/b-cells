@@ -654,7 +654,7 @@ function getWheelData (e,type) {
         return value;
     }
     if(isDefined(value = e['wheelDelta'])){
-        return value / 40;
+        return value;
     }
     if(isDefined(value = e.detail)){
         return value;
