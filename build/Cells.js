@@ -737,7 +737,7 @@ ScrollBar.prototype._getTouchEventListeners = function () {
 
             listeners.lastPageY = pos.pageY;
             listeners.lastPageX = pos.pageX;
-            
+
             e.preventDefault();
         };
         listeners.touchend = function () {
@@ -1689,7 +1689,6 @@ _prototype$2._initCellHeightIndex = function (startIndex) {
         cellsInstance = this.cellsInstance,
         cellsModel = cellsInstance.cellsModel;
     startIndex = startIndex || 0;
-    var cellsModel = cellsInstance.cellsModel;
     var rows = cellsModel.rows;
     var rowsTop = domCache.rowsTop,
         rowsHeight = domCache.rowsHeight;
@@ -1734,7 +1733,6 @@ _prototype$2._parseCellHeight = function (height) {
 };
 _prototype$2._onAppendRows = function () {
 
-    var cellsInstance = this.cellsInstance;
     var rowsHeight = this.domCache.rowsHeight;
     this._initCellHeightIndex(rowsHeight.length);
     this.syncCursor();
