@@ -1683,8 +1683,18 @@ _prototype$2._initCellWidthIndex = function () {
     }.bind(this));
 
 };
-_prototype$2._initCellHeightIndex = function (startIndex) {
+_prototype$2._initCellHeightIndex = function () {
 
+    var domCache = this.domCache,
+        cellsInstance = this.cellsInstance,
+        cellsModel = cellsInstance.cellsModel;
+
+    domCache.headerHeight = this._parseCellHeight(cellsModel.header.height);
+
+    this._initBodyCellHeightIndex();
+
+};
+_prototype$2._initBodyCellHeightIndex = function (startIndex) {
     var domCache = this.domCache,
         cellsInstance = this.cellsInstance,
         cellsModel = cellsInstance.cellsModel;
@@ -1692,8 +1702,6 @@ _prototype$2._initCellHeightIndex = function (startIndex) {
     var rows = cellsModel.rows;
     var rowsTop = domCache.rowsTop,
         rowsHeight = domCache.rowsHeight;
-
-    domCache.headerHeight = this._parseCellHeight(cellsModel.header.height);
 
     //create page cursor
     rows.slice(startIndex).forEach(function (row,index) {
@@ -1706,7 +1714,6 @@ _prototype$2._initCellHeightIndex = function (startIndex) {
             rowsTop[index] = rowsTop[index - 1] + rowsHeight[index - 1];
         }
     }.bind(this));
-
 };
 _prototype$2._parseCellWidth = function (width) {
 
@@ -1734,7 +1741,7 @@ _prototype$2._parseCellHeight = function (height) {
 _prototype$2._onAppendRows = function () {
 
     var rowsHeight = this.domCache.rowsHeight;
-    this._initCellHeightIndex(rowsHeight.length);
+    this._initBodyCellHeightIndex(rowsHeight.length);
     this.syncCursor();
     executeFunctionDelay('repaintRequest',this.repaint,this);
 
