@@ -9,25 +9,25 @@
         html,body{
             width:100%;
             height:100%;
-            padding:0;
+            padding:10px;
             margin:0;
-            overflow:hidden;
+            overflow:auto;
+        }
+        button{
+            padding:4px;
         }
         #table{
-            float:left;
             width:50%;
             height:80%;
+            margin:auto;
         }
         #table1{
-            float:right;
             width:40%;
             height:80%;
+            margin:auto;
         }
-        .float-right{
-            float:right;
-        }
-        .float-left{
-            float:left;
+        .option{
+            width:100%;
         }
     </style>
     <script>
@@ -212,19 +212,20 @@
     </script>
 </head>
 <body onload="init()">
-    <div class="float-left">
+    <div class="option">
         <button onclick="render()">render</button>
         <button onclick="refresh()">refresh</button>
         <button onclick="appendData()">appendData</button>
         <button onclick="appendHtmlData()">appendHtmlData</button>
     </div>
-    <div class="float-right">
+    <div id="table">
+
+    </div>
+
+    <div class="option">
         <button onclick="render1()">render1</button>
         <button onclick="refresh1()">refresh1</button>
         <button onclick="appendData1()">appendData1</button>
-    </div>
-    <div id="table">
-
     </div>
     <div id="table1">
 

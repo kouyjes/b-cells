@@ -503,13 +503,22 @@ ScrollBar.prototype._bindMouseWheelEvent = function () {
 
         if(Math.abs(lengthX) > Math.abs(lengthY)){
             if(lengthX){
-                _.scrollLeft += -lengthX * 10 / _.getScrollbarWidth();
+                var lastScrollLeft = _.scrollLeft;
+                _.scrollLeft = lastScrollLeft + (-lengthX * 10 / _.getScrollbarWidth());
+                if( _.scrollLeft !== lastScrollLeft){
+                    e.preventDefault();
+                }
             }
         }else{
             if(lengthY){
-                _.scrollTop += -lengthY * 10 / _.getScrollbarHeight();
+                var lastScrollTop = _.scrollTop;
+                _.scrollTop = lastScrollTop + (-lengthY * 10 / _.getScrollbarHeight());
+                if( _.scrollTop !== lastScrollTop){
+                    e.preventDefault();
+                }
             }
         }
+
     }
     var support = ['wheel','mousewheel'].some(function (evtType) {
         if(document['on' + evtType] !== undefined){
