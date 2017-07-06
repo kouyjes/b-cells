@@ -484,7 +484,7 @@ function getWheelData (e,type) {
     }
 
     if(isDefined(value)){
-        value = value > 0 ? Math.max(100,value) : Math.min(-100,value);
+        value = value > 0 ? Math.max(200,value) : Math.min(-200,value);
     }
     return value;
 
