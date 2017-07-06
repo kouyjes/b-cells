@@ -11,23 +11,52 @@
             height:100%;
             padding:10px;
             margin:0;
-            overflow:auto;
+            overflow:hidden;
+            background-color:#5d98a5;
         }
         button{
-            padding:4px;
+            -webkit-appearance: initial;
+            background: #9cf9b5;
+            border: none;
+            border-radius: .25em;
+            padding: 5px 10px;
+            cursor:pointer;
+            outline:none;
+        }
+        button:active{
+            background-color:#88d89e;
+        }
+        .flex{
+            display:flex;
+            flex-direction: row;
+            justify-content: center;
+            margin:auto;
+        }
+        .flex-item{
+            flex:1;
+        }
+        .flex-item:nth-child(1){
+            background-color: #9ab3af;
+        }
+        .flex-item:nth-child(2){
+            background-color: #ccb3af;
         }
         #table{
-            width:50%;
-            height:80%;
+            width:80%;
+            height:90vh;
             margin:auto;
+            background-color:#ccc;
         }
         #table1{
-            width:40%;
-            height:80%;
+            width:80%;
+            height:90vh;
             margin:auto;
+            background-color:#cec;
         }
         .option{
             width:100%;
+            padding:10px;
+            text-align: center;
         }
     </style>
     <script>
@@ -212,23 +241,29 @@
     </script>
 </head>
 <body onload="init()">
-    <div class="option">
-        <button onclick="render()">render</button>
-        <button onclick="refresh()">refresh</button>
-        <button onclick="appendData()">appendData</button>
-        <button onclick="appendHtmlData()">appendHtmlData</button>
-    </div>
-    <div id="table">
+    <div class="flex">
+        <div class="flex-item">
+            <div class="option">
+                <button onclick="render()">render</button>
+                <button onclick="refresh()">refresh</button>
+                <button onclick="appendData()">appendData</button>
+                <button onclick="appendHtmlData()">appendHtmlData</button>
+            </div>
+            <div id="table">
 
+            </div>
+        </div>
+        <div class="flex-item">
+            <div class="option">
+                <button onclick="render1()">render1</button>
+                <button onclick="refresh1()">refresh1</button>
+                <button onclick="appendData1()">appendData1</button>
+            </div>
+            <div id="table1">
+
+            </div>
+        </div>
     </div>
 
-    <div class="option">
-        <button onclick="render1()">render1</button>
-        <button onclick="refresh1()">refresh1</button>
-        <button onclick="appendData1()">appendData1</button>
-    </div>
-    <div id="table1">
-
-    </div>
 </body>
 </html>
