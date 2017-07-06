@@ -625,6 +625,37 @@ _prototype.syncCursor = function syncCursor() {
     executeFunctionDelay('resizeScrollbar',this.resizeScrollbar,this);
 
 };
+_prototype.getGlobalMinWidth = function () {
+
+    var cellsInstance = this.cellsInstance;
+    return parseInt(cellsInstance.config.minCellWidth);
+
+};
+_prototype.getGlobalMinHeight = function () {
+
+    var cellsInstance = this.cellsInstance;
+    return parseInt(cellsInstance.config.minCellHeight);
+
+};
+_prototype.getMinCellWidth = function (col) {
+
+    var cellsInstance = this.cellsInstance,
+        cellsModel = cellsInstance.cellsModel;
+    var field = cellsModel.header.fields[col];
+    return field && field.minWidth || this.getGlobalMinWidth();
+
+};
+_prototype.getMinCellHeight = function (rowIndex) {
+
+    var cellsInstance = this.cellsInstance,
+        cellsModel = cellsInstance.cellsModel;
+    if(rowIndex === -1){
+        return cellsModel.header.minHeight || this.getGlobalMinHeight();
+    }
+    var row = cellsModel.rows[rowIndex]
+    return row && row.minHeight || this.getGlobalMinHeight();
+
+};
 _prototype._initCellSizeIndex = function () {
 
     this._initCellWidthIndex();
@@ -640,6 +671,7 @@ _prototype._initCellWidthIndex = function () {
     var maxWidth = 0;
     cellsModel.header.fields.forEach(function (field,index) {
         var colWidth = this._parseCellWidth(field.width);
+        colWidth = Math.max(colWidth,this.getMinCellWidth(index));
         colsWidth[index] = colWidth;
         maxWidth += colWidth;
         if(index === 0){
@@ -657,7 +689,9 @@ _prototype._initCellHeightIndex = function () {
         cellsInstance = this.cellsInstance,
         cellsModel = cellsInstance.cellsModel;
 
-    domCache.headerHeight = this._parseCellHeight(cellsModel.header.height);
+    var headerHeight = this._parseCellHeight(cellsModel.header.height);
+    headerHeight = Math.max(headerHeight,this.getMinCellHeight(-1));
+    domCache.headerHeight = headerHeight;
 
     this._initBodyCellHeightIndex();
 
@@ -675,6 +709,7 @@ _prototype._initBodyCellHeightIndex = function (startIndex) {
     rows.slice(startIndex).forEach(function (row,index) {
         index += startIndex;
         var rowHeight = this._parseCellHeight(row.height);
+        rowHeight = Math.max(rowHeight,this.getMinCellHeight(index))
         rowsHeight[index] = rowHeight;
         if(index === 0){
             rowsTop[index] = 0;

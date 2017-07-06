@@ -881,6 +881,23 @@ CellsModel.prototype.appendRows = function (rows) {
     this.trigger('appendRows');
 };
 
+function Config(config){
+    this.enableCustomScroll = false;
+    this.textTitle = false;
+    this.colResize = false;
+    this.rowResize = false;
+    this.overflowX = false;
+    this.overflowY = false;
+    this.minCellWidth = 50;
+    this.minCellHeight = 50;
+    if(config){
+        Object.assign(this,config);
+    }
+}
+Config.defaultConfig = function () {
+    return new Config()
+};
+
 /**
  * Created by koujp on 2016/10/17.
  */
@@ -914,14 +931,7 @@ function init(cellsModel,config) {
     delete config.renderTo;
     _setRenderTo.call(this,renderTo);
 
-    this.config = Object.assign({
-        enableCustomScroll:false,
-        textTitle:false,
-        colResize:false,
-        rowResize:false,
-        overflowX:false,
-        overflowY:false
-    },config);
+    this.config = Object.assign(Config.defaultConfig(),config);
     Object.freeze(this.config);
 
 
@@ -1657,6 +1667,37 @@ _prototype$2.syncCursor = function syncCursor() {
     executeFunctionDelay('resizeScrollbar',this.resizeScrollbar,this);
 
 };
+_prototype$2.getGlobalMinWidth = function () {
+
+    var cellsInstance = this.cellsInstance;
+    return parseInt(cellsInstance.config.minCellWidth);
+
+};
+_prototype$2.getGlobalMinHeight = function () {
+
+    var cellsInstance = this.cellsInstance;
+    return parseInt(cellsInstance.config.minCellHeight);
+
+};
+_prototype$2.getMinCellWidth = function (col) {
+
+    var cellsInstance = this.cellsInstance,
+        cellsModel = cellsInstance.cellsModel;
+    var field = cellsModel.header.fields[col];
+    return field && field.minWidth || this.getGlobalMinWidth();
+
+};
+_prototype$2.getMinCellHeight = function (rowIndex) {
+
+    var cellsInstance = this.cellsInstance,
+        cellsModel = cellsInstance.cellsModel;
+    if(rowIndex === -1){
+        return cellsModel.header.minHeight || this.getGlobalMinHeight();
+    }
+    var row = cellsModel.rows[rowIndex];
+    return row && row.minHeight || this.getGlobalMinHeight();
+
+};
 _prototype$2._initCellSizeIndex = function () {
 
     this._initCellWidthIndex();
@@ -1672,6 +1713,7 @@ _prototype$2._initCellWidthIndex = function () {
     var maxWidth = 0;
     cellsModel.header.fields.forEach(function (field,index) {
         var colWidth = this._parseCellWidth(field.width);
+        colWidth = Math.max(colWidth,this.getMinCellWidth(index));
         colsWidth[index] = colWidth;
         maxWidth += colWidth;
         if(index === 0){
@@ -1689,7 +1731,9 @@ _prototype$2._initCellHeightIndex = function () {
         cellsInstance = this.cellsInstance,
         cellsModel = cellsInstance.cellsModel;
 
-    domCache.headerHeight = this._parseCellHeight(cellsModel.header.height);
+    var headerHeight = this._parseCellHeight(cellsModel.header.height);
+    headerHeight = Math.max(headerHeight,this.getMinCellHeight(-1));
+    domCache.headerHeight = headerHeight;
 
     this._initBodyCellHeightIndex();
 
@@ -1707,6 +1751,7 @@ _prototype$2._initBodyCellHeightIndex = function (startIndex) {
     rows.slice(startIndex).forEach(function (row,index) {
         index += startIndex;
         var rowHeight = this._parseCellHeight(row.height);
+        rowHeight = Math.max(rowHeight,this.getMinCellHeight(index));
         rowsHeight[index] = rowHeight;
         if(index === 0){
             rowsTop[index] = 0;
@@ -1915,7 +1960,7 @@ _prototype$3._updateRowDomCache = function (rowIndex,height) {
     var cellsInstance = this.cellsInstance,
         cellsRender = cellsInstance.cellsRender,
         domCache = cellsRender.domCache;
-    height = Math.max(0,height);
+    height = Math.max(cellsRender.getMinCellHeight(rowIndex),height);
     if(rowIndex === -1){
         domCache.headerHeight = height;
         return;
@@ -1939,7 +1984,9 @@ _prototype$3._updateColDomCache = function (colIndex,width) {
     var cellsInstance = this.cellsInstance,
         cellsRender = cellsInstance.cellsRender;
     var domCache = cellsRender.domCache;
-    width = Math.max(0,width);
+
+
+    width = Math.max(cellsRender.getMinCellWidth(colIndex),width);
     var colsWidth = domCache.colsWidth,
         colsLeft = domCache.colsLeft;
     colsWidth[colIndex] = width;

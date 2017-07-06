@@ -3,6 +3,7 @@
  */
 import { Class } from '../base/Class';
 import { CellsModel } from '../model/CellsModel';
+import { Config } from './Config';
 import { isDomElement,requestAnimationFrame,cancelAnimationFrame,executeFunctionDelay } from './domUtil'
 function _setRenderTo(renderTo) {
 
@@ -34,14 +35,7 @@ function init(cellsModel,config) {
     delete config.renderTo;
     _setRenderTo.call(this,renderTo);
 
-    this.config = Object.assign({
-        enableCustomScroll:false,
-        textTitle:false,
-        colResize:false,
-        rowResize:false,
-        overflowX:false,
-        overflowY:false
-    },config);
+    this.config = Object.assign(Config.defaultConfig(),config);
     Object.freeze(this.config);
 
 

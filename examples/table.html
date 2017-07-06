@@ -46,6 +46,7 @@
                     backgroundColor:randomColor()
                 }});
             }
+            header[2].minWidth = 100;
             var rows = [];
             for(var i = 0;i < rowNum;i++){
                 rows.push((function(){
@@ -64,13 +65,15 @@
 
             cellsModel.header = {
                 height:50,
+                minHeight:100,
                 fields:header
             };
             cellsModel.rows = rows;
+            rows[2].minHeight = 200;
             return cellsModel;
         }
 
-        var _cellsModel = createCellsModel(100,50),
+        var _cellsModel = createCellsModel(5000,50),
                 _cellsModel1 = createCellsModel(20,30);
 
 

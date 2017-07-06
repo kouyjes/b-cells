@@ -23,7 +23,7 @@ _prototype._updateRowDomCache = function (rowIndex,height) {
     var cellsInstance = this.cellsInstance,
         cellsRender = cellsInstance.cellsRender,
         domCache = cellsRender.domCache;
-    height = Math.max(0,height);
+    height = Math.max(cellsRender.getMinCellHeight(rowIndex),height);
     if(rowIndex === -1){
         domCache.headerHeight = height;
         return;
@@ -47,7 +47,9 @@ _prototype._updateColDomCache = function (colIndex,width) {
     var cellsInstance = this.cellsInstance,
         cellsRender = cellsInstance.cellsRender;
     var domCache = cellsRender.domCache;
-    width = Math.max(0,width);
+
+
+    width = Math.max(cellsRender.getMinCellWidth(colIndex),width);
     var colsWidth = domCache.colsWidth,
         colsLeft = domCache.colsLeft;
     colsWidth[colIndex] = width;
