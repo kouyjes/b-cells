@@ -648,16 +648,13 @@ function getWheelData (e,type) {
 
     var value;
     if(isDefined(value = e['delta' + type])){
-        return value;
+    }else if(isDefined(value = e['wheelDelta' + type])){
+    }else if(isDefined(value = e['wheelDelta'])){
+    }else if(isDefined(value = e.detail)){
     }
-    if(isDefined(value = e['wheelDelta' + type])){
-        return value;
-    }
-    if(isDefined(value = e['wheelDelta'])){
-        return value;
-    }
-    if(isDefined(value = e.detail)){
-        return value;
+
+    if(isDefined(value)){
+        value = value > 0 ? Math.max(100,value) : Math.min(-100,value);
     }
     return value;
 
@@ -669,8 +666,7 @@ ScrollBar.prototype._bindMouseWheelEvent = function () {
 
         var lengthX = _.overflowX ? 0 : getWheelData(e,'X'),
             lengthY = _.overflowY ? 0 : getWheelData(e,'Y');
-
-
+        
         if(Math.abs(lengthX) > Math.abs(lengthY)){
             if(lengthX){
                 var lastScrollLeft = _.scrollLeft;
