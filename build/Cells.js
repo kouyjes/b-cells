@@ -652,10 +652,7 @@ function getWheelData (e,type) {
     }else if(isDefined(value = e['wheelDelta'])){
     }else if(isDefined(value = e.detail)){
     }
-
-    if(isDefined(value)){
-        value = value > 0 ? Math.max(200,value) : Math.min(-200,value);
-    }
+    
     return value;
 
 }
@@ -668,7 +665,9 @@ ScrollBar.prototype._bindMouseWheelEvent = function () {
             lengthY = _.overflowY ? 0 : getWheelData(e,'Y');
         
         if(Math.abs(lengthX) > Math.abs(lengthY)){
+
             if(lengthX){
+                lengthX = lengthX > 0 ? Math.max(200,lengthX) : Math.min(-200,lengthX);
                 var lastScrollLeft = _.scrollLeft;
                 _.scrollLeft = lastScrollLeft + (-lengthX * 10 / _.getScrollbarWidth());
                 if( _.scrollLeft !== lastScrollLeft){
@@ -677,6 +676,7 @@ ScrollBar.prototype._bindMouseWheelEvent = function () {
             }
         }else{
             if(lengthY){
+                lengthY = lengthY > 0 ? Math.max(200,lengthY) : Math.min(-200,lengthY);
                 var lastScrollTop = _.scrollTop;
                 _.scrollTop = lastScrollTop + (-lengthY * 10 / _.getScrollbarHeight());
                 if( _.scrollTop !== lastScrollTop){
