@@ -55,7 +55,7 @@ B-cells is a component for rendering big data
 ```
 4.Init Cells
 ```javascript
-    var tableCell = new CELL.Cells(_cellsModel1,{
+    var tableCell = new CELL.Cells(cellsModel1,{
         renderTo:'#table1',// dom selector
         rowResize:true, // if row resizable
         colResize:true, // if column resizable
