@@ -1,7 +1,7 @@
 (function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
     typeof define === 'function' && define.amd ? define(['exports'], factory) :
-    (factory((global.CELL = global.CELL || {})));
+    (factory((global.HERE = global.HERE || {}, global.HERE.UI = global.HERE.UI || {}, global.HERE.UI.CELL = global.HERE.UI.CELL || {})));
 }(this, (function (exports) { 'use strict';
 
 var _config = {
@@ -652,7 +652,7 @@ function getWheelData (e,type) {
     }else if(isDefined(value = e['wheelDelta'])){
     }else if(isDefined(value = e.detail)){
     }
-    
+
     return value;
 
 }

@@ -68,7 +68,7 @@
         }
 
         function createCellsModel(rowNum,colNum){
-            var cellsModel = new CELL.CellsModel();
+            var cellsModel = new HERE.UI.CELL.CellsModel();
             var header = [];
             for(var i = 0; i< colNum;i++){
                 header.push({name:'column' + i,width:'20%',style:{
@@ -144,7 +144,7 @@
         }
 
         function createTableCell(){
-            var tableCell = new CELL.Cells(_cellsModel,{
+            var tableCell = new HERE.UI.CELL.Cells(_cellsModel,{
                 renderTo:'#table',
                 rowResize:true,
                 colResize:true,
@@ -155,7 +155,7 @@
 
         }
         function createTableCell1(){
-            var tableCell = new CELL.Cells(_cellsModel1,{
+            var tableCell = new HERE.UI.CELL.Cells(_cellsModel1,{
                 renderTo:'#table1',
                 rowResize:true,
                 colResize:true,
