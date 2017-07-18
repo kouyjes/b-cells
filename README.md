@@ -26,7 +26,7 @@ B-cells is a component for rendering big data
             backgroundColor:'' // define background color
         }
     };
-    header.header.push(field);
+    header.fields.push(field);
 ```
 2.Init Rows
 ```javascript
