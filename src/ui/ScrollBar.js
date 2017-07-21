@@ -131,12 +131,14 @@ ScrollBar.prototype.init = function (ele,config) {
         overflowX:false,
         overflowY:false,
         width:12,
-        hTrackColor:'#e4f0e2',
-        hScrollColor:'#ddd',
-        vTrackColor:'#e4f0e2',
-        vScrollColor:'#ddd',
-        height:12
+        height:12,
+        hTrackColor:'',
+        hScrollColor:'',
+        vTrackColor:'',
+        vScrollColor:''
     },config);
+
+   this.initScrollSize(['width','height'])
 
     this.eventListeners = {};
 
@@ -146,6 +148,24 @@ ScrollBar.prototype.init = function (ele,config) {
     ScrollBar.initEventListeners();
 
     this.initUI();
+
+};
+ScrollBar.prototype.initScrollSize = function (types) {
+    if(!(types instanceof Array)){
+        types = [].concat(types);
+    }
+    types.forEach(function (type) {
+        var size = this.config[type];
+        if(!size){
+            return;
+        }
+        size = parseFloat(size);
+        if(isNaN(size)){
+            delete this.config[type];
+            console.error(new Error('scroll ' + type + ' is invalid !'));
+        }
+        this.config[type] = size;
+    }.bind(this));
 
 };
 ScrollBar.prototype.initUI = function () {

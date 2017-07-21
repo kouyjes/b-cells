@@ -1,7 +1,7 @@
 (function (global, factory) {
-    typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
-    typeof define === 'function' && define.amd ? define(['exports'], factory) :
-    (factory((global.HERE = global.HERE || {}, global.HERE.UI = global.HERE.UI || {}, global.HERE.UI.CELL = global.HERE.UI.CELL || {})));
+   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
+   typeof define === 'function' && define.amd ? define(['exports'], factory) :
+   (factory((global.HERE = global.HERE || {}, global.HERE.UI = global.HERE.UI || {}, global.HERE.UI.CELL = global.HERE.UI.CELL || {})));
 }(this, (function (exports) { 'use strict';
 
 var _config = {
@@ -301,12 +301,14 @@ ScrollBar.prototype.init = function (ele,config) {
         overflowX:false,
         overflowY:false,
         width:12,
-        hTrackColor:'#e4f0e2',
-        hScrollColor:'#ddd',
-        vTrackColor:'#e4f0e2',
-        vScrollColor:'#ddd',
-        height:12
+        height:12,
+        hTrackColor:'',
+        hScrollColor:'',
+        vTrackColor:'',
+        vScrollColor:''
     },config);
+
+   this.initScrollSize(['width','height']);
 
     this.eventListeners = {};
 
@@ -316,6 +318,24 @@ ScrollBar.prototype.init = function (ele,config) {
     ScrollBar.initEventListeners();
 
     this.initUI();
+
+};
+ScrollBar.prototype.initScrollSize = function (types) {
+    if(!(types instanceof Array)){
+        types = [].concat(types);
+    }
+    types.forEach(function (type) {
+        var size = this.config[type];
+        if(!size){
+            return;
+        }
+        size = parseFloat(size);
+        if(isNaN(size)){
+            delete this.config[type];
+            console.error(new Error('scroll ' + type + ' is invalid !'));
+        }
+        this.config[type] = size;
+    }.bind(this));
 
 };
 ScrollBar.prototype.initUI = function () {
@@ -1141,10 +1161,16 @@ function initRender() {
     renderTo.appendChild(cellsPanel);
 
     var config = cellsInstance.config;
-    var scrollbar = config.enableCustomScroll ? new ScrollBar(this.bodyPanel,{
-        overflowX:config.overflowX,
-        overflowY:config.overflowY
-    }) : this.bodyPanel;
+    var customScroll = config.customScroll;
+    var scrollbar;
+    if(customScroll){
+        var scrollOption = Object.assign({},customScroll);
+        scrollOption.overflowX = config.overflowX;
+        scrollOption.overflowY = config.overflowY;
+        scrollbar = new ScrollBar(this.bodyPanel,scrollOption);
+    }else{
+        scrollbar = this.bodyPanel;
+    }
     Object.defineProperty(this,'scrollbar',{
         configurable:true,
         get: function () {
@@ -1178,7 +1204,7 @@ _prototype$2.getPanelSize = function () {
 _prototype$2.resizeScrollbar = function resizeScrollbar() {
 
     var cellsInstance = this.cellsInstance;
-    if(cellsInstance.config.enableCustomScroll){
+    if(cellsInstance.config.customScroll){
         this.scrollbar.resize();
         return;
     }

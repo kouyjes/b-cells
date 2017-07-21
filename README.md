@@ -61,7 +61,15 @@ B-cells is a component for rendering big data
         colResize:true, // if column resizable
         overflowY:false, // if overflow Y
         overflowX:false, // if overflow X
-        enableCustomScroll:false // if use custom scrollbar
+        customScroll:null // use default scrollbar if null
+        /*
+         {
+             width:12,height:13,hTrackColor:'',
+             hScrollColor:'',
+             vTrackColor:'',
+             vScrollColor:''
+         }
+         */
     });
 ```
 5.Render cells
