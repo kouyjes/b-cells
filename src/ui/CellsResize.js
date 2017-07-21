@@ -198,6 +198,7 @@ function _bindResizeCellEvent() {
             if(Math.abs(relY - headerHeight) < mouseHit){
                 rowHit = 1;
                 rowIndex = -1;
+            }else if(headerHeight > relY){
             }else{
 
                 relY -= headerHeight;
