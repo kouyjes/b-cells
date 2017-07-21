@@ -3,7 +3,7 @@ import { Class } from '../base/Class';
 import { Cells } from './Cells';
 import { CellsEvent } from './CellsEvent';
 import { ScrollBar } from './ScrollBar';
-var _cellSupportStyles = ['background','backgroundColor','backgroundImage','backgroundRepeat','backgroundSize'];
+var _cellSupportStyles = ['background', 'backgroundColor', 'backgroundImage', 'backgroundRepeat', 'backgroundSize'];
 
 
 var CellsRender = Class.create(function (cellsInstance) {
@@ -16,40 +16,40 @@ var CellsRender = Class.create(function (cellsInstance) {
     this.cursor = null;
 
     var cellsEvent = cellsInstance.cellsEvent;
-    cellsEvent.extendEventType('renderFinished',[]);
-    cellsEvent.extendEventType('click',[]);
-    cellsEvent.extendEventType('cellClick',[]);
-    cellsEvent.extendEventType('scroll',[]);
-    cellsEvent.extendEventType('cellPainted',[]);
+    cellsEvent.extendEventType('renderFinished', []);
+    cellsEvent.extendEventType('click', []);
+    cellsEvent.extendEventType('cellClick', []);
+    cellsEvent.extendEventType('scroll', []);
+    cellsEvent.extendEventType('cellPainted', []);
 
 });
 
 var _prototype = CellsRender.prototype;
-function transformStyleName(styleName){
-    return styleName.replace(/-(\w)/g, function (match,str) {
+function transformStyleName(styleName) {
+    return styleName.replace(/-(\w)/g, function (match, str) {
         return str ? str.toUpperCase() : '';
     });
 }
 CellsRender.expandSupportStyles = function (styleNames) {
-    if(styleNames){
+    if (styleNames) {
         styleNames = [].concat(styleNames);
     }
     styleNames.forEach(function (styleName) {
         styleName = transformStyleName[styleName];
-        if(_cellSupportStyles.indexOf(styleName) === -1){
+        if (_cellSupportStyles.indexOf(styleName) === -1) {
             _cellSupportStyles.push(styleName);
         }
     });
 };
-_prototype.initRenderState = function() {
+_prototype.initRenderState = function () {
 
     this.paintState = {
-        lastRowArea:null,
-        currentRowArea:null,
-        lastColArea:null,
-        currentColArea:null,
-        rowPaintAreas:null,
-        colPaintAreas:null,
+        lastRowArea: null,
+        currentRowArea: null,
+        lastColArea: null,
+        currentColArea: null,
+        rowPaintAreas: null,
+        colPaintAreas: null,
         reset: function () {
             this.lastRowArea = null;
             this.currentRowArea = null;
@@ -64,13 +64,13 @@ _prototype.initRenderState = function() {
             this.headerCells.length = 0;
             this.cells.length = 0;
         },
-        headerCells:[],
-        cells:[],
-        colsWidth:[],
-        colsLeft:[],
-        rowsTop:[],
-        rowsHeight:[],
-        headerHeight:0,
+        headerCells: [],
+        cells: [],
+        colsWidth: [],
+        colsLeft: [],
+        rowsTop: [],
+        rowsHeight: [],
+        headerHeight: 0,
     };
 
 };
@@ -79,7 +79,7 @@ function initRender() {
     var cellsInstance = this.cellsInstance;
     this.initRenderState();
     var renderTo = cellsInstance.renderTo;
-    if(!renderTo || renderTo.nodeType !== 1){
+    if (!renderTo || renderTo.nodeType !== 1) {
         throw new TypeError('parent container is invalid !');
     }
 
@@ -96,16 +96,16 @@ function initRender() {
     var config = cellsInstance.config;
     var customScroll = config.customScroll;
     var scrollbar;
-    if(customScroll){
-        var scrollOption = Object.assign({},customScroll);
+    if (customScroll) {
+        var scrollOption = Object.assign({}, customScroll);
         scrollOption.overflowX = config.overflowX;
         scrollOption.overflowY = config.overflowY;
-        scrollbar = new ScrollBar(this.bodyPanel,scrollOption);
-    }else{
+        scrollbar = new ScrollBar(this.bodyPanel, scrollOption);
+    } else {
         scrollbar = this.bodyPanel;
     }
-    Object.defineProperty(this,'scrollbar',{
-        configurable:true,
+    Object.defineProperty(this, 'scrollbar', {
+        configurable: true,
         get: function () {
             return scrollbar;
         }
@@ -129,15 +129,15 @@ _prototype._initPanelSize = function () {
 _prototype.getPanelSize = function () {
 
     return {
-        width:this.cellsPanel.currentWidth,
-        height:this.cellsPanel.currentHeight
+        width: this.cellsPanel.currentWidth,
+        height: this.cellsPanel.currentHeight
     };
 
 };
 _prototype.resizeScrollbar = function resizeScrollbar() {
 
     var cellsInstance = this.cellsInstance;
-    if(cellsInstance.config.customScroll){
+    if (cellsInstance.config.customScroll) {
         this.scrollbar.resize();
         return;
     }
@@ -150,42 +150,42 @@ _prototype.getCurrentColArea = function getCurrentColArea() {
     var panelSize = this.getPanelSize();
     var colsLeft = this.domCache.colsLeft;
     var left = scrollbar.scrollLeft;
-    return this.getThresholdArea(panelSize.width,colsLeft,left);
+    return this.getThresholdArea(panelSize.width, colsLeft, left);
 
 };
 
-_prototype.getThresholdArea = function getThresholdArea(viewSize,positions,cursor) {
+_prototype.getThresholdArea = function getThresholdArea(viewSize, positions, cursor) {
 
     var from = 0,
-        end,i;
+        end, i;
 
-    if(!positions.some(function (position,index) {
-            if(position >= cursor){
+    if (!positions.some(function (position, index) {
+            if (position >= cursor) {
                 from = index;
                 return true;
             }
-        })){
+        })) {
         from = positions.length - 1;
     }
     var mid = from;
-    for(i = mid;i >= 0;i--){
-        if(positions[mid] - positions[i] >= viewSize){
+    for (i = mid; i >= 0; i--) {
+        if (positions[mid] - positions[i] >= viewSize) {
             break;
         }
     }
-    from = Math.max(0,i);
-    for(i = mid;i < positions.length;i++){
-        if(positions[i] - positions[mid] > viewSize){
+    from = Math.max(0, i);
+    for (i = mid; i < positions.length; i++) {
+        if (positions[i] - positions[mid] > viewSize) {
             break;
         }
     }
-    end = Math.min(positions.length,i);
+    end = Math.min(positions.length, i);
 
     var area = {
-        from:from,
-        pageSize:end - from
+        from: from,
+        pageSize: end - from
     };
-    return this.normalizeArea(area,positions);
+    return this.normalizeArea(area, positions);
 
 };
 _prototype.getCurrentRowArea = function getCurrentRowArea() {
@@ -195,7 +195,7 @@ _prototype.getCurrentRowArea = function getCurrentRowArea() {
     var panelSize = this.getPanelSize();
     var rowsTop = this.domCache.rowsTop;
     var top = scrollbar.scrollTop;
-    return this.getThresholdArea(panelSize.height,rowsTop,top);
+    return this.getThresholdArea(panelSize.height, rowsTop, top);
 
 };
 _prototype.getRowPaintAreas = function getRowPaintAreas() {
@@ -208,12 +208,12 @@ _prototype.getColPaintAreas = function getColPaintAreas() {
     return this._getPaintAreas('col');
 
 };
-_prototype.normalizeArea = function (area,positions) {
+_prototype.normalizeArea = function (area, positions) {
 
-    area.from = Math.max(0,area.from);
-    area.from = Math.min(positions.length - 1,area.from);
-    area.pageSize = Math.max(0,area.pageSize);
-    area.pageSize = Math.min(positions.length - area.from,area.pageSize);
+    area.from = Math.max(0, area.from);
+    area.from = Math.min(positions.length - 1, area.from);
+    area.pageSize = Math.max(0, area.pageSize);
+    area.pageSize = Math.min(positions.length - area.from, area.pageSize);
     return area;
 };
 _prototype._getPaintAreas = function _getPaintAreas(type) {
@@ -227,50 +227,50 @@ _prototype._getPaintAreas = function _getPaintAreas(type) {
     var positions = type === 'row' ? domCache.rowsTop : domCache.colsLeft;
 
     var areas = [];
-    if(lastArea == null){
+    if (lastArea == null) {
         areas.push(curArea);
         return areas;
     }
 
-    if(lastArea.from === curArea.from && lastArea.pageSize === curArea.pageSize){
+    if (lastArea.from === curArea.from && lastArea.pageSize === curArea.pageSize) {
         return areas;
     }
     var area;
-    if(curArea.from >= lastArea.from){
+    if (curArea.from >= lastArea.from) {
 
-        if(lastArea.from + lastArea.pageSize <= curArea.from){
+        if (lastArea.from + lastArea.pageSize <= curArea.from) {
             areas.push(curArea);
-        }else{
+        } else {
             area = this.normalizeArea({
-                from:lastArea.from + lastArea.pageSize,
-                pageSize:curArea.from + curArea.pageSize - (lastArea.from + lastArea.pageSize)
-            },positions);
-            if(area.pageSize > 0){
+                from: lastArea.from + lastArea.pageSize,
+                pageSize: curArea.from + curArea.pageSize - (lastArea.from + lastArea.pageSize)
+            }, positions);
+            if (area.pageSize > 0) {
                 areas.push(area);
             }
 
         }
 
-    }else{
+    } else {
 
-        if(curArea.from + curArea.pageSize <= lastArea.from){
+        if (curArea.from + curArea.pageSize <= lastArea.from) {
             areas.push(curArea);
-        }else{
+        } else {
             area = this.normalizeArea({
-                from:curArea.from,
-                pageSize:lastArea.from - curArea.from
-            },positions);
-            if(area.pageSize > 0){
+                from: curArea.from,
+                pageSize: lastArea.from - curArea.from
+            }, positions);
+            if (area.pageSize > 0) {
                 areas.push(area);
             }
             var bottomDis = curArea.from + curArea.pageSize - (lastArea.from + lastArea.pageSize);
-            if(bottomDis > 0){
+            if (bottomDis > 0) {
 
                 area = this.normalizeArea({
-                    from:lastArea.from + lastArea.pageSize,
-                    pageSize:bottomDis
-                },positions);
-                if(area.pageSize > 0){
+                    from: lastArea.from + lastArea.pageSize,
+                    pageSize: bottomDis
+                }, positions);
+                if (area.pageSize > 0) {
                     areas.push(area);
                 }
 
@@ -287,7 +287,7 @@ _prototype.initPaint = function () {
     var domCache = this.domCache;
     var cells = cellsInstance.renderTo.querySelectorAll(getFullClassSelector('cell')),
         size = cells.length;
-    for(var i = 0;i < size;i++){
+    for (var i = 0; i < size; i++) {
         this.removeElementFromDom(cells[i]);
     }
     domCache.clearCells();
@@ -343,20 +343,60 @@ _prototype.paintHeader = function paintHeader() {
 
     var fields = cellsModel.header.fields;
     colPaintAreas.forEach(function (colArea) {
-        var cell,field;
-        for(var colIndex = colArea.from;colIndex < colArea.from + colArea.pageSize;colIndex++){
+        var cell, field;
+        for (var colIndex = colArea.from; colIndex < colArea.from + colArea.pageSize; colIndex++) {
             field = fields[colIndex];
             cell = cells.pop();
-            if(!cell){
-                cell = this._createHeaderCell(0,colIndex,field);
+            if (!cell) {
+                cell = this._createHeaderCell(0, colIndex, field);
                 headerContentPanel.appendChild(cell);
-            }else{
-                this._paintCell(cell,0,colIndex,field);
+            } else {
+                this._paintCell(cell, 0, colIndex, field);
             }
         }
     }.bind(this));
 
-    this.removeCells(cellsCache,cells);
+    this.removeCells(cellsCache, cells);
+
+};
+_prototype.getBodyPaintRectAreas = function () {
+    var paintState = this.paintState;
+    var rowPaintAreas = [].concat(paintState.rowPaintAreas),
+        colPaintAreas = [].concat(paintState.colPaintAreas);
+    var rowClientArea = paintState.currentRowArea,
+        colClientArea = paintState.currentColArea;
+    var areas = [];
+    rowPaintAreas.forEach(function (rowArea) {
+        colPaintAreas.forEach(function (colArea) {
+            var area = {
+                top: rowArea.from,
+                bottom: rowArea.from + rowArea.pageSize,
+                left: colArea.from,
+                right: colArea.from + colArea.pageSize
+            };
+            areas.push(area);
+        });
+    });
+    rowPaintAreas.forEach(function (rowArea) {
+        var area = {
+            top: rowArea.from,
+            bottom: rowArea.from + rowArea.pageSize,
+            left: colClientArea.from,
+            right: colClientArea.from + colClientArea.pageSize
+        };
+        areas.push(area);
+    });
+    colPaintAreas.forEach(function (colArea) {
+        var area = {
+            top: rowClientArea.from,
+            bottom: rowClientArea.from + rowClientArea.pageSize,
+            left: colArea.from,
+            right: colArea.from + colArea.pageSize
+        };
+        areas.push(area);
+    });
+
+    return areas;
 
 };
 _prototype.paintBody = function paintBody() {
@@ -365,8 +405,6 @@ _prototype.paintBody = function paintBody() {
     var paintState = this.paintState,
         domCache = this.domCache,
         rows = cellsInstance.cellsModel.rows;
-    var rowPaintAreas = [].concat(paintState.rowPaintAreas),
-        colPaintAreas = [].concat(paintState.colPaintAreas);
 
     var rowClientArea = paintState.currentRowArea,
         colClientArea = paintState.currentColArea;
@@ -380,58 +418,44 @@ _prototype.paintBody = function paintBody() {
         return !inRow || !inCol;
     });
 
-    if(rowPaintAreas.length === 0 && colPaintAreas.length === 0){
-        this.removeCells(cacheCells,cells);
-        return;
-    }
-
-    if(rowPaintAreas.length === 0){
-        rowPaintAreas.push(rowClientArea);
-    }
-
-    if(colPaintAreas.length === 0){
-        colPaintAreas.push(colClientArea);
-    }
 
     var contentPanel = this.bodyPanel._contentPanel;
-    rowPaintAreas.forEach(function (area) {
-        var row;
-        for(var rowIndex = area.from;rowIndex < area.from + area.pageSize;rowIndex++){
 
+    var areas = this.getBodyPaintRectAreas();
+    areas.forEach(function (area) {
+        var row, cell, field;
+        for (var rowIndex = area.top; rowIndex < area.bottom; rowIndex++) {
             row = rows[rowIndex];
-            colPaintAreas.forEach(function (colArea) {
-                var cell,field;
-                for(var colIndex = colArea.from;colIndex < colArea.from + colArea.pageSize;colIndex++){
-                    field = row.fields[colIndex];
-                    cell = cells.pop();
-                    if(!cell){
-                        cell = this._createCell(rowIndex,colIndex,field);
-                        contentPanel.appendChild(cell);
-                    }else{
-                        this._paintCell(cell,rowIndex,colIndex,field);
-                    }
+            for (var colIndex = area.left; colIndex < area.right; colIndex++) {
+                field = row.fields[colIndex];
+                cell = cells.pop();
+                if (!cell) {
+                    cell = this._createCell(rowIndex, colIndex, field);
+                    contentPanel.appendChild(cell);
+                } else {
+                    this._paintCell(cell, rowIndex, colIndex, field);
                 }
-            }.bind(this));
+            }
         }
     }.bind(this));
 
-    this.removeCells(cacheCells,cells);
+    this.removeCells(cacheCells, cells);
 
 };
-_prototype.removeCells = function removeCells(cacheCells,cells) {
+_prototype.removeCells = function removeCells(cacheCells, cells) {
 
     var _ = this;
     cells.forEach(function (cell) {
-        cacheCells.splice(cacheCells.indexOf(cell),1);
+        cacheCells.splice(cacheCells.indexOf(cell), 1);
         _.removeElementFromDom(cell);
     });
 
 };
 _prototype.removeElementFromDom = function (cell) {
 
-    if(cell.remove){
+    if (cell.remove) {
         cell.remove();
-    }else if(cell.parentNode){
+    } else if (cell.parentNode) {
         cell.parentNode.removeChild(cell);
     }
 
@@ -442,64 +466,64 @@ _prototype.computeRowTop = function computeRowTop(row) {
     return rowsTop[row];
 
 };
-_prototype._paintCell = function _paintCell(cell,row,col,field) {
+_prototype._paintCell = function _paintCell(cell, row, col, field) {
 
-    cell.setAttribute('row','' + row);
-    cell.setAttribute('col','' + col);
-    this._configCell(cell,field);
+    cell.setAttribute('row', '' + row);
+    cell.setAttribute('col', '' + col);
+    this._configCell(cell, field);
     this._reLayoutCell(cell);
 
 };
 _prototype.emptyElement = function (element) {
-    while(element.firstChild){
+    while (element.firstChild) {
         this.removeElementFromDom(element.firstChild);
     }
 };
-_prototype._configCell = function _configCell(cell,field) {
+_prototype._configCell = function _configCell(cell, field) {
 
     var cellsInstance = this.cellsInstance;
     var isHtml = typeof field.html === 'string';
-    cell.setAttribute('html_content',isHtml + '');
-    if(isHtml){
+    cell.setAttribute('html_content', isHtml + '');
+    if (isHtml) {
         cell.innerHTML = field.html;
         cell._textSpan = null;
-    }else{
+    } else {
         var text = field.name || field.value;
         var span;
-        if(!cell._textSpan){
+        if (!cell._textSpan) {
             cell.innerHTML = '';
             span = document.createElement('span');
             cell.appendChild(span);
             cell._textSpan = span;
-        }else{
+        } else {
             span = cell._textSpan;
         }
         span.innerText = text;
-        if(cellsInstance.config.textTitle){
-            cell.setAttribute('title',text);
+        if (cellsInstance.config.textTitle) {
+            cell.setAttribute('title', text);
         }
     }
     return cell;
 
 };
-_prototype._createHeaderCell = function (row,col,field) {
+_prototype._createHeaderCell = function (row, col, field) {
 
-    return this._createCell(row,col,field,true);
+    return this._createCell(row, col, field, true);
 
 };
-_prototype._createCell = function _createCell(row,col,field,isHeaderCell) {
+_prototype._createCell = function _createCell(row, col, field, isHeaderCell) {
 
     var cacheCells = isHeaderCell ? this.domCache.headerCells : this.domCache.cells;
     var cell = document.createElement('div');
     cell._cell = true;
     cell._headerCell = isHeaderCell;
 
-    cell.setAttribute('row','' + row);
-    cell.setAttribute('col','' + col);
+    cell.setAttribute('row', '' + row);
+    cell.setAttribute('col', '' + col);
     var classNames = [getFullClassName('cell')];
     cell.className = classNames.join(' ');
 
-    this._configCell(cell,field);
+    this._configCell(cell, field);
 
     this._reLayoutCell(cell);
 
@@ -526,19 +550,19 @@ _prototype._reLayoutCell = function _reLayoutCell(cell) {
         header = cellsModel.header;
     var colLast = String(headerFields.length - 1 === col),
         rowLast = String(rows.length - 1 === row);
-    cell.setAttribute('col-last',colLast);
-    cell.setAttribute('row-last',rowLast);
+    cell.setAttribute('col-last', colLast);
+    cell.setAttribute('row-last', rowLast);
 
-    style(cell,{
-        left:colsLeft[col] + 'px',
-        top:this.computeRowTop(row) + 'px',
-        width:colsWidth[col] + 'px',
-        height:rowsHeight[row] + 'px'
+    style(cell, {
+        left: colsLeft[col] + 'px',
+        top: this.computeRowTop(row) + 'px',
+        width: colsWidth[col] + 'px',
+        height: rowsHeight[row] + 'px'
     });
 
-    if(cell._customStyleKeys){
-       cell. _customStyleKeys.forEach(function (key) {
-            style(cell,key,'');
+    if (cell._customStyleKeys) {
+        cell._customStyleKeys.forEach(function (key) {
+            style(cell, key, '');
         });
     }
 
@@ -547,13 +571,13 @@ _prototype._reLayoutCell = function _reLayoutCell(cell) {
 
     var fieldStyle = field.style;
     var customStyleKeys = [];
-    if(fieldStyle){
+    if (fieldStyle) {
         Object.keys(fieldStyle).forEach(function (key) {
-            if(key in cell.style){
-                if(_cellSupportStyles.indexOf(transformStyleName(key)) === -1){
+            if (key in cell.style) {
+                if (_cellSupportStyles.indexOf(transformStyleName(key)) === -1) {
                     return;
                 }
-                style(cell,key,fieldStyle[key]);
+                style(cell, key, fieldStyle[key]);
                 customStyleKeys.push(key);
             }
         });
@@ -578,8 +602,8 @@ _prototype._createBodyContainer = function _createBodyContainer() {
     var bodyContainer = this.bodyPanel = document.createElement('div');
     bodyContainer.className = getFullClassName('body-container');
 
-    bodyContainer.setAttribute('overflowX',String(cellsInstance.config.overflowX));
-    bodyContainer.setAttribute('overflowY',String(cellsInstance.config.overflowY))
+    bodyContainer.setAttribute('overflowX', String(cellsInstance.config.overflowX));
+    bodyContainer.setAttribute('overflowY', String(cellsInstance.config.overflowY))
 
     var rowContainer = this._createRowContainer();
     bodyContainer.appendChild(rowContainer);
@@ -612,7 +636,7 @@ _prototype._createHeader = function _createHeader() {
 _prototype.syncCursor = function syncCursor() {
 
     var cursor = this.cursor;
-    if(!cursor){
+    if (!cursor) {
         return;
     }
     var domCache = this.domCache;
@@ -623,12 +647,12 @@ _prototype.syncCursor = function syncCursor() {
     var curTop = rowsTop[rowsTop.length - 1] + rowsHeight[rowsHeight.length - 1],
         curWidth = colsLeft[colsLeft.length - 1] + colsWidth[colsWidth.length - 1];
 
-    style(cursor,{
-        width:curWidth + 'px',
-        top:curTop + 'px'
+    style(cursor, {
+        width: curWidth + 'px',
+        top: curTop + 'px'
     });
 
-    executeFunctionDelay('resizeScrollbar',this.resizeScrollbar,this);
+    executeFunctionDelay('resizeScrollbar', this.resizeScrollbar, this);
 
 };
 _prototype.getGlobalMinWidth = function () {
@@ -655,7 +679,7 @@ _prototype.getMinCellHeight = function (rowIndex) {
 
     var cellsInstance = this.cellsInstance,
         cellsModel = cellsInstance.cellsModel;
-    if(rowIndex === -1){
+    if (rowIndex === -1) {
         return cellsModel.header.minHeight || this.getGlobalMinHeight();
     }
     var row = cellsModel.rows[rowIndex]
@@ -675,14 +699,14 @@ _prototype._initCellWidthIndex = function () {
         colsLeft = this.domCache.colsLeft;
 
     var maxWidth = 0;
-    cellsModel.header.fields.forEach(function (field,index) {
+    cellsModel.header.fields.forEach(function (field, index) {
         var colWidth = this._parseCellWidth(field.width);
-        colWidth = Math.max(colWidth,this.getMinCellWidth(index));
+        colWidth = Math.max(colWidth, this.getMinCellWidth(index));
         colsWidth[index] = colWidth;
         maxWidth += colWidth;
-        if(index === 0){
+        if (index === 0) {
             colsLeft[index] = 0;
-        }else{
+        } else {
             colsLeft[index] = colsLeft[index - 1] + colsWidth[index - 1];
         }
 
@@ -696,7 +720,7 @@ _prototype._initCellHeightIndex = function () {
         cellsModel = cellsInstance.cellsModel;
 
     var headerHeight = this._parseCellHeight(cellsModel.header.height);
-    headerHeight = Math.max(headerHeight,this.getMinCellHeight(-1));
+    headerHeight = Math.max(headerHeight, this.getMinCellHeight(-1));
     domCache.headerHeight = headerHeight;
 
     this._initBodyCellHeightIndex();
@@ -712,14 +736,14 @@ _prototype._initBodyCellHeightIndex = function (startIndex) {
         rowsHeight = domCache.rowsHeight;
 
     //create page cursor
-    rows.slice(startIndex).forEach(function (row,index) {
+    rows.slice(startIndex).forEach(function (row, index) {
         index += startIndex;
         var rowHeight = this._parseCellHeight(row.height);
-        rowHeight = Math.max(rowHeight,this.getMinCellHeight(index))
+        rowHeight = Math.max(rowHeight, this.getMinCellHeight(index))
         rowsHeight[index] = rowHeight;
-        if(index === 0){
+        if (index === 0) {
             rowsTop[index] = 0;
-        }else{
+        } else {
             rowsTop[index] = rowsTop[index - 1] + rowsHeight[index - 1];
         }
     }.bind(this));
@@ -728,23 +752,23 @@ _prototype._parseCellWidth = function (width) {
 
     var panelSize = this.getPanelSize();
     var clientWidth = panelSize.width;
-    if(typeof width === 'string' && width && width.indexOf('%') === width.length - 1){
-        width = Math.floor(parseFloat(width)/100 * clientWidth);
-    }else{
+    if (typeof width === 'string' && width && width.indexOf('%') === width.length - 1) {
+        width = Math.floor(parseFloat(width) / 100 * clientWidth);
+    } else {
         width = parseInt(width);
     }
-    return isNaN(width)?100:width;
+    return isNaN(width) ? 100 : width;
 
 };
 _prototype._parseCellHeight = function (height) {
 
-    if(typeof height === 'string' && height && height.indexOf('%') === height.length - 1){
+    if (typeof height === 'string' && height && height.indexOf('%') === height.length - 1) {
         var clientHeight = this.getPanelSize().height;
-        height = Math.floor(parseFloat(height)/100 * clientHeight);
-    }else{
+        height = Math.floor(parseFloat(height) / 100 * clientHeight);
+    } else {
         height = parseInt(height);
     }
-    return height?height:30;
+    return height ? height : 30;
 
 };
 _prototype._onAppendRows = function () {
@@ -752,21 +776,21 @@ _prototype._onAppendRows = function () {
     var rowsHeight = this.domCache.rowsHeight;
     this._initBodyCellHeightIndex(rowsHeight.length);
     this.syncCursor();
-    executeFunctionDelay('repaintRequest',this.repaint,this);
+    executeFunctionDelay('repaintRequest', this.repaint, this);
 
 };
 _prototype._bindCellsModelEvent = function () {
 
     var cellsInstance = this.cellsInstance;
     cellsInstance.cellsModel.bind('refresh', function () {
-        if(cellsInstance.renderTo){
-            executeFunctionDelay('refresh',this.repaint,this);
+        if (cellsInstance.renderTo) {
+            executeFunctionDelay('refresh', this.repaint, this);
         }
     }.bind(this));
 
     cellsInstance.cellsModel.bind('appendRows', function () {
-        if(cellsInstance.renderTo){
-            executeFunctionDelay('appendRows',this._onAppendRows,this);
+        if (cellsInstance.renderTo) {
+            executeFunctionDelay('appendRows', this._onAppendRows, this);
         }
     }.bind(this));
 };
@@ -777,17 +801,17 @@ _prototype.tiggerCellClickEvent = function tiggerCellClickEvent(cell) {
     var cellsModel = cellsInstance.cellsModel,
         cellsEvent = cellsInstance.cellsEvent,
         col = parseInt(cell.getAttribute('col'));
-    if(cell._headerCell){
-        cellsEvent.triggerEvent(CellsEvent.createEvent('cellClick',cell,cellsModel.header.fields[col]));
+    if (cell._headerCell) {
+        cellsEvent.triggerEvent(CellsEvent.createEvent('cellClick', cell, cellsModel.header.fields[col]));
         return;
     }
     var row = parseInt(cell.getAttribute('row'));
     var rowData = cellsModel.rows[row];
-    if(rowData){
-        cellsEvent.triggerEvent(CellsEvent.createEvent('cellClick',cell,rowData.fields[col]));
+    if (rowData) {
+        cellsEvent.triggerEvent(CellsEvent.createEvent('cellClick', cell, rowData.fields[col]));
     }
 };
-function _bindScrollEvent(){
+function _bindScrollEvent() {
 
     var cellsInstance = this.cellsInstance,
         cellsEvent = cellsInstance.cellsEvent;
@@ -797,10 +821,10 @@ function _bindScrollEvent(){
     scrollbar.addEventListener('scroll', function () {
 
         var scrollLeft = scrollbar.scrollLeft;
-        style(headerContentPanel,'left',-scrollLeft + 'px');
-        executeFunctionDelay('repaintRequest',this.repaint,this);
+        style(headerContentPanel, 'left', -scrollLeft + 'px');
+        executeFunctionDelay('repaintRequest', this.repaint, this);
 
-        var event = CellsEvent.createEvent('scroll',scrollbar,cellsInstance.cellsModel);
+        var event = CellsEvent.createEvent('scroll', scrollbar, cellsInstance.cellsModel);
         cellsEvent.triggerEvent(event);
 
     }.bind(this));
@@ -809,30 +833,30 @@ function _bindClickEvent() {
 
     var cellsInstance = this.cellsInstance,
         cellsEvent = cellsInstance.cellsEvent;
-    var _ = this,cellsPanel = this.cellsPanel;
+    var _ = this, cellsPanel = this.cellsPanel;
     cellsPanel.addEventListener('click', function (e) {
 
         var target = e.target;
-        if(target === cellsPanel){
-            cellsEvent.triggerEvent(CellsEvent.createEvent('click',cellsPanel,cellsInstance.cellsModel));
+        if (target === cellsPanel) {
+            cellsEvent.triggerEvent(CellsEvent.createEvent('click', cellsPanel, cellsInstance.cellsModel));
             return;
         }
-        if(cellsEvent.existEventListener('cellClick')){
-            if(target._cell){
+        if (cellsEvent.existEventListener('cellClick')) {
+            if (target._cell) {
                 _.tiggerCellClickEvent(target);
-            }else{
-                while(target = target.parentNode){
-                    if(target === cellsPanel){
+            } else {
+                while (target = target.parentNode) {
+                    if (target === cellsPanel) {
                         break;
                     }
-                    if(target._cell){
+                    if (target._cell) {
                         _.tiggerCellClickEvent(target);
                         break;
                     }
                 }
             }
         }
-        cellsEvent.triggerEvent(CellsEvent.createEvent('click',cellsPanel,cellsInstance.cellsModel));
+        cellsEvent.triggerEvent(CellsEvent.createEvent('click', cellsPanel, cellsInstance.cellsModel));
     });
 
 }
@@ -850,7 +874,7 @@ _prototype.render = function render() {
     this.executePaint();
     this.syncCursor();
 
-    this.cellsInstance.triggerEvent(CellsEvent.createEvent('renderFinished',this));
+    this.cellsInstance.triggerEvent(CellsEvent.createEvent('renderFinished', this));
 
 };
 _prototype.paint = function paint() {
@@ -873,24 +897,24 @@ _prototype.headerHeight = function (height) {
 
     var domCache = this.domCache;
 
-    if(!height){
+    if (!height) {
         return domCache.headerHeight;
     }
     height = parseInt(height);
-    if(typeof height !== 'number'){
+    if (typeof height !== 'number') {
         return;
     }
     domCache.headerHeight = height;
     this.headerPanel.style.height = height + 'px';
 };
-_prototype.scrollTo = function (scrollTop,scrollLeft) {
+_prototype.scrollTo = function (scrollTop, scrollLeft) {
 
     var scrollbar = this.scrollbar;
 
-    if(arguments.length === 0){
+    if (arguments.length === 0) {
         return {
-            scrollLeft:scrollbar.scrollLeft,
-            scrollTop:scrollbar.scrollTop
+            scrollLeft: scrollbar.scrollLeft,
+            scrollTop: scrollbar.scrollTop
         };
     }
     scrollbar.scrollLeft = scrollLeft;
@@ -900,7 +924,7 @@ _prototype.scrollTo = function (scrollTop,scrollLeft) {
 CellsRender.addInitHooks(function () {
     this._bindCellsModelEvent();
 });
-Cells.publishMethod(['render','paint','repaint','scrollTo','headerHeight'],'cellsRender');
+Cells.publishMethod(['render', 'paint', 'repaint', 'scrollTo', 'headerHeight'], 'cellsRender');
 Cells.addInitHooks(function () {
     this.cellsRender = new CellsRender(this);
 });
