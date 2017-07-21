@@ -6,7 +6,7 @@
 
 .d1012 .d1012-scrollbar-block {
   position: relative;
-  border-radius: 10px;
+  border-radius: .5em;
   cursor: pointer; }
 .d1012 .d1012-scrollbar-ver, .d1012 .d1012-scrollbar-hor {
   position: absolute;
@@ -16,15 +16,17 @@
   top: 0;
   right: 0;
   bottom: 0;
-  background-color: #e4f0e2; }
+  background-color: #fff; }
   .d1012 .d1012-scrollbar-ver .d1012-scrollbar-block {
+    background-color: #4b8a78;
     width: 100%; }
 .d1012 .d1012-scrollbar-hor {
   right: 0;
   left: 0;
   bottom: 0;
-  background-color: #e4f0e2; }
+  background-color: #fff; }
   .d1012 .d1012-scrollbar-hor .d1012-scrollbar-block {
+    background-color: #65a067;
     height: 100%; }
 
 .d1012 {

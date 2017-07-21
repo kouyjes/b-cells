@@ -1,13 +1,12 @@
 @import "common.scss";
 
-$scrollTrackColor: #e4f0e2;
-$scrollbarConfig:(hScrollTrackColor:#e4f0e2,vScrollTrackColor:#e4f0e2);
+$scrollConfig:(hScrollTrackColor:#fff,vScrollTrackColor:#fff,hBarColor:rgb(101, 160, 103),vBarColor:rgb(75, 138, 120));
 
 .#{$prefix}{
 
   .#{$prefix}-scrollbar-block{
     position:relative;
-    border-radius: 10px;
+    border-radius: .5em;
     cursor:pointer;
   }
   %scrollbar{
@@ -20,8 +19,9 @@ $scrollbarConfig:(hScrollTrackColor:#e4f0e2,vScrollTrackColor:#e4f0e2);
     top:0;
     right:0;
     bottom:0;
-    background-color: map-get($scrollbarConfig,vScrollTrackColor);
+    background-color: map-get($scrollConfig,vScrollTrackColor);
     .#{$prefix}-scrollbar-block{
+      background-color: map-get($scrollConfig,vBarColor);
       width:100%;
     }
   }
@@ -30,8 +30,9 @@ $scrollbarConfig:(hScrollTrackColor:#e4f0e2,vScrollTrackColor:#e4f0e2);
     right:0;
     left:0;
     bottom:0;
-    background-color: map-get($scrollbarConfig,hScrollTrackColor);
+    background-color: map-get($scrollConfig,hScrollTrackColor);
     .#{$prefix}-scrollbar-block{
+      background-color: map-get($scrollConfig,hBarColor);
       height:100%;
     }
   }

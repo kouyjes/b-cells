@@ -94,10 +94,16 @@ function initRender() {
     renderTo.appendChild(cellsPanel);
 
     var config = cellsInstance.config;
-    var scrollbar = config.enableCustomScroll ? new ScrollBar(this.bodyPanel,{
-        overflowX:config.overflowX,
-        overflowY:config.overflowY
-    }) : this.bodyPanel;
+    var customScroll = config.customScroll;
+    var scrollbar;
+    if(customScroll){
+        var scrollOption = Object.assign({},customScroll);
+        scrollOption.overflowX = config.overflowX;
+        scrollOption.overflowY = config.overflowY;
+        scrollbar = new ScrollBar(this.bodyPanel,scrollOption);
+    }else{
+        scrollbar = this.bodyPanel;
+    }
     Object.defineProperty(this,'scrollbar',{
         configurable:true,
         get: function () {
@@ -131,7 +137,7 @@ _prototype.getPanelSize = function () {
 _prototype.resizeScrollbar = function resizeScrollbar() {
 
     var cellsInstance = this.cellsInstance;
-    if(cellsInstance.config.enableCustomScroll){
+    if(cellsInstance.config.customScroll){
         this.scrollbar.resize();
         return;
     }

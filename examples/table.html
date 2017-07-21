@@ -149,7 +149,10 @@
                 rowResize:true,
                 colResize:true,
                 overflowY:false,
-                enableCustomScroll:true
+                customScroll:{
+                   // height:'30px',
+                   // width:'25'
+                }
             });
             return tableCell;
 
@@ -160,7 +163,7 @@
                 rowResize:true,
                 colResize:true,
                 overflowY:false,
-                enableCustomScroll:false
+                customScroll:null
             });
             return tableCell;
 
