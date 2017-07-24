@@ -519,7 +519,7 @@ ScrollBar.prototype._bindMouseWheelEvent = function () {
             if(lengthX){
                 lengthX = lengthX > 0 ? Math.max(200,lengthX) : Math.min(-200,lengthX);
                 var lastScrollLeft = _.scrollLeft;
-                _.scrollLeft = lastScrollLeft + (-lengthX * 10 / _.getScrollbarWidth());
+                _.scrollLeft = lastScrollLeft + (lengthX * 10 / _.getScrollbarWidth());
                 if( _.scrollLeft !== lastScrollLeft){
                     e.preventDefault();
                 }
@@ -528,7 +528,7 @@ ScrollBar.prototype._bindMouseWheelEvent = function () {
             if(lengthY){
                 lengthY = lengthY > 0 ? Math.max(200,lengthY) : Math.min(-200,lengthY);
                 var lastScrollTop = _.scrollTop;
-                _.scrollTop = lastScrollTop + (-lengthY * 10 / _.getScrollbarHeight());
+                _.scrollTop = lastScrollTop + (lengthY * 10 / _.getScrollbarHeight());
                 if( _.scrollTop !== lastScrollTop){
                     e.preventDefault();
                 }
