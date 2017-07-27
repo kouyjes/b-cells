@@ -3,8 +3,8 @@ function Config(config){
     this.textTitle = false;
     this.colResize = false;
     this.rowResize = false;
-    this.overflowX = false;
-    this.overflowY = false;
+    this.scrollX = true;
+    this.scrollY = true;
     this.minCellWidth = 50;
     this.minCellHeight = 50;
     if(config){

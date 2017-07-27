@@ -59,8 +59,8 @@ B-cells is a component for rendering big data
         renderTo:'#table1',// dom selector
         rowResize:true, // if row resizable
         colResize:true, // if column resizable
-        overflowY:false, // if overflow Y
-        overflowX:false, // if overflow X
+        scrollY:true, // if scroll Y
+        scrollX:false, // if scroll X
         customScroll:null // use default scrollbar if null
         /*
          {

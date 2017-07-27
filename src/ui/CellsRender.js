@@ -98,8 +98,8 @@ function initRender() {
     var scrollbar;
     if (customScroll) {
         var scrollOption = Object.assign({}, customScroll);
-        scrollOption.overflowX = config.overflowX;
-        scrollOption.overflowY = config.overflowY;
+        scrollOption.scrollX = config.scrollX;
+        scrollOption.scrollY = config.scrollY;
         scrollbar = new ScrollBar(this.bodyPanel, scrollOption);
     } else {
         scrollbar = this.bodyPanel;
@@ -602,8 +602,8 @@ _prototype._createBodyContainer = function _createBodyContainer() {
     var bodyContainer = this.bodyPanel = document.createElement('div');
     bodyContainer.className = getFullClassName('body-container');
 
-    bodyContainer.setAttribute('overflowX', String(cellsInstance.config.overflowX));
-    bodyContainer.setAttribute('overflowY', String(cellsInstance.config.overflowY))
+    bodyContainer.setAttribute('scroll-x', String(cellsInstance.config.scrollX));
+    bodyContainer.setAttribute('scroll-y', String(cellsInstance.config.scrollY))
 
     var rowContainer = this._createRowContainer();
     bodyContainer.appendChild(rowContainer);

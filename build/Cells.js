@@ -1,7 +1,7 @@
 (function (global, factory) {
-   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
-   typeof define === 'function' && define.amd ? define(['exports'], factory) :
-   (factory((global.HERE = global.HERE || {}, global.HERE.UI = global.HERE.UI || {}, global.HERE.UI.CELL = global.HERE.UI.CELL || {})));
+    typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
+    typeof define === 'function' && define.amd ? define(['exports'], factory) :
+    (factory((global.HERE = global.HERE || {}, global.HERE.UI = global.HERE.UI || {}, global.HERE.UI.CELL = global.HERE.UI.CELL || {})));
 }(this, (function (exports) { 'use strict';
 
 var _config = {
@@ -169,6 +169,23 @@ function userSelect(selected,ele){
     ele.setAttribute('user_select',String(selected));
 }
 
+function ScrollConfig(config){
+    this.scrollX = true;
+    this.scrollY = true;
+    this.width = 12;
+    this.height = 12;
+    this.hTrackColor = '';
+    this.hScrollColor = '';
+    this.vTrackColor = '';
+    this.vScrollColor = '';
+    if(config){
+        Object.assign(this,config);
+    }
+}
+ScrollConfig.defaultConfig = function () {
+    return new ScrollConfig()
+};
+
 var scrollbarId = 1;
 function ScrollBar(ele,config){
     this._id = '_id' + scrollbarId++;
@@ -295,20 +312,11 @@ ScrollBar.prototype.init = function (ele,config) {
             return _._getScrollHeight();
         }
     });
-    this.overflowX = true;
-    this.overflowY = true;
-    this.config = Object.assign({
-        overflowX:false,
-        overflowY:false,
-        width:12,
-        height:12,
-        hTrackColor:'',
-        hScrollColor:'',
-        vTrackColor:'',
-        vScrollColor:''
-    },config);
+    this.overflowX = false;
+    this.overflowY = false;
+    this.config = Object.assign(ScrollConfig.defaultConfig(),config);
 
-   this.initScrollSize(['width','height']);
+    this.initScrollSize(['width','height']);
 
     this.eventListeners = {};
 
@@ -384,7 +392,7 @@ ScrollBar.prototype.resize = function () {
         });
 
         style(this.hScrollbar,{
-            display:this.config.overflowX || this.overflowX ? 'none' : 'block'
+            display:this.isScrollX() ? 'block' : 'none'
         });
     }
 
@@ -396,7 +404,7 @@ ScrollBar.prototype.resize = function () {
         });
 
         style(this.vScrollbar,{
-            display:this.config.overflowY || this.overflowY ? 'none' : 'block'
+            display:this.isScrollY() ? 'block' : 'none'
         });
     }
 
@@ -414,8 +422,8 @@ ScrollBar.prototype.updateScrollSize = function () {
 
     var clientHeight = getClientHeight(this.element),scrollHeight = getScrollHeight(this.element);
 
-    this.overflowX = scrollWidth <= clientWidth;
-    this.overflowY = scrollHeight <= clientHeight;
+    this.overflowX = scrollWidth > clientWidth;
+    this.overflowY = scrollHeight > clientHeight;
 
     this.clientWidth = clientWidth;
     this.clientHeight = clientHeight;
@@ -428,10 +436,16 @@ ScrollBar.prototype._setScrollWidth = function (scrollWidth) {
     this._scrollWidth = scrollWidth;
 
 };
+ScrollBar.prototype.isScrollY = function () {
+    return this.config.scrollY && this.overflowY;
+};
+ScrollBar.prototype.isScrollX = function () {
+    return this.config.scrollX && this.overflowX;
+};
 ScrollBar.prototype._getScrollWidth = function () {
 
     var scrollWidth = this._scrollWidth;
-    if(!this.overflowY){
+    if(this.isScrollY()){
         scrollWidth += this.config.width;
     }
     return scrollWidth;
@@ -445,7 +459,7 @@ ScrollBar.prototype._setScrollHeight = function (scrollHeight) {
 ScrollBar.prototype._getScrollHeight = function () {
 
     var scrollHeight = this._scrollHeight;
-    if(!this.overflowX){
+    if(this.isScrollX()){
         scrollHeight += this.config.height;
     }
     return scrollHeight;
@@ -681,8 +695,8 @@ ScrollBar.prototype._bindMouseWheelEvent = function () {
     var _ = this;
     function wheelEvent(e){
 
-        var lengthX = _.overflowX ? 0 : getWheelData(e,'X'),
-            lengthY = _.overflowY ? 0 : getWheelData(e,'Y');
+        var lengthX = _.isScrollX() ? getWheelData(e,'X') : 0,
+            lengthY = _.isScrollY() ? getWheelData(e,'Y') : 0;
         
         if(Math.abs(lengthX) > Math.abs(lengthY)){
 
@@ -911,8 +925,8 @@ function Config(config){
     this.textTitle = false;
     this.colResize = false;
     this.rowResize = false;
-    this.overflowX = false;
-    this.overflowY = false;
+    this.scrollX = true;
+    this.scrollY = true;
     this.minCellWidth = 50;
     this.minCellHeight = 50;
     if(config){
@@ -1165,8 +1179,8 @@ function initRender() {
     var scrollbar;
     if (customScroll) {
         var scrollOption = Object.assign({}, customScroll);
-        scrollOption.overflowX = config.overflowX;
-        scrollOption.overflowY = config.overflowY;
+        scrollOption.scrollX = config.scrollX;
+        scrollOption.scrollY = config.scrollY;
         scrollbar = new ScrollBar(this.bodyPanel, scrollOption);
     } else {
         scrollbar = this.bodyPanel;
@@ -1669,8 +1683,8 @@ _prototype$2._createBodyContainer = function _createBodyContainer() {
     var bodyContainer = this.bodyPanel = document.createElement('div');
     bodyContainer.className = getFullClassName('body-container');
 
-    bodyContainer.setAttribute('overflowX', String(cellsInstance.config.overflowX));
-    bodyContainer.setAttribute('overflowY', String(cellsInstance.config.overflowY));
+    bodyContainer.setAttribute('scroll-x', String(cellsInstance.config.scrollX));
+    bodyContainer.setAttribute('scroll-y', String(cellsInstance.config.scrollY));
 
     var rowContainer = this._createRowContainer();
     bodyContainer.appendChild(rowContainer);

@@ -87,9 +87,9 @@
     border-top: none;
     border-right: 1px solid #000;
     border-bottom: 1px solid #000; }
-    .d1012 .d1012-body-container[overflowX='true'] {
+    .d1012 .d1012-body-container[scroll-x='false'] {
       overflow-x: hidden; }
-    .d1012 .d1012-body-container[overflowY='true'] {
+    .d1012 .d1012-body-container[scroll-y='false'] {
       overflow-y: hidden; }
   .d1012 .d1012-row-container {
     position: relative; }
