@@ -80,10 +80,10 @@
       bottom:map-get($bodyConfig,borderBottom);;
     }
 
-    &[overflowX='true']{
+    &[scroll-x='false']{
       overflow-x:hidden;
     }
-    &[overflowY='true']{
+    &[scroll-y='false']{
       overflow-y:hidden;
     }
   }

@@ -1,4 +1,5 @@
 import { style,userSelect,getFullClassName,getFullClassSelector,isElementInDom,isTouchSupported,getMousePosition,isDomElement,requestAnimationFrame,cancelAnimationFrame,executeFunctionDelay } from './domUtil'
+import { ScrollConfig } from './ScrollConfig.js';
 var scrollbarId = 1;
 function ScrollBar(ele,config){
     this._id = '_id' + scrollbarId++;
@@ -125,20 +126,11 @@ ScrollBar.prototype.init = function (ele,config) {
             return _._getScrollHeight();
         }
     });
-    this.overflowX = true;
-    this.overflowY = true;
-    this.config = Object.assign({
-        overflowX:false,
-        overflowY:false,
-        width:12,
-        height:12,
-        hTrackColor:'',
-        hScrollColor:'',
-        vTrackColor:'',
-        vScrollColor:''
-    },config);
+    this.overflowX = false;
+    this.overflowY = false;
+    this.config = Object.assign(ScrollConfig.defaultConfig(),config);
 
-   this.initScrollSize(['width','height'])
+    this.initScrollSize(['width','height'])
 
     this.eventListeners = {};
 
@@ -214,7 +206,7 @@ ScrollBar.prototype.resize = function () {
         });
 
         style(this.hScrollbar,{
-            display:this.config.overflowX || this.overflowX ? 'none' : 'block'
+            display:this.isScrollX() ? 'block' : 'none'
         });
     }
 
@@ -226,7 +218,7 @@ ScrollBar.prototype.resize = function () {
         });
 
         style(this.vScrollbar,{
-            display:this.config.overflowY || this.overflowY ? 'none' : 'block'
+            display:this.isScrollY() ? 'block' : 'none'
         });
     }
 
@@ -244,8 +236,8 @@ ScrollBar.prototype.updateScrollSize = function () {
 
     var clientHeight = getClientHeight(this.element),scrollHeight = getScrollHeight(this.element);
 
-    this.overflowX = scrollWidth <= clientWidth;
-    this.overflowY = scrollHeight <= clientHeight;
+    this.overflowX = scrollWidth > clientWidth;
+    this.overflowY = scrollHeight > clientHeight;
 
     this.clientWidth = clientWidth;
     this.clientHeight = clientHeight;
@@ -258,10 +250,16 @@ ScrollBar.prototype._setScrollWidth = function (scrollWidth) {
     this._scrollWidth = scrollWidth;
 
 };
+ScrollBar.prototype.isScrollY = function () {
+    return this.config.scrollY && this.overflowY;
+};
+ScrollBar.prototype.isScrollX = function () {
+    return this.config.scrollX && this.overflowX;
+};
 ScrollBar.prototype._getScrollWidth = function () {
 
     var scrollWidth = this._scrollWidth;
-    if(!this.overflowY){
+    if(this.isScrollY()){
         scrollWidth += this.config.width;
     }
     return scrollWidth;
@@ -275,7 +273,7 @@ ScrollBar.prototype._setScrollHeight = function (scrollHeight) {
 ScrollBar.prototype._getScrollHeight = function () {
 
     var scrollHeight = this._scrollHeight;
-    if(!this.overflowX){
+    if(this.isScrollX()){
         scrollHeight += this.config.height;
     }
     return scrollHeight;
@@ -511,8 +509,8 @@ ScrollBar.prototype._bindMouseWheelEvent = function () {
     var _ = this;
     function wheelEvent(e){
 
-        var lengthX = _.overflowX ? 0 : getWheelData(e,'X'),
-            lengthY = _.overflowY ? 0 : getWheelData(e,'Y');
+        var lengthX = _.isScrollX() ? getWheelData(e,'X') : 0,
+            lengthY = _.isScrollY() ? getWheelData(e,'Y') : 0;
         
         if(Math.abs(lengthX) > Math.abs(lengthY)){
 
