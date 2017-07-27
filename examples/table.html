@@ -102,8 +102,8 @@
             return cellsModel;
         }
 
-        var _cellsModel = createCellsModel(20,50),
-                _cellsModel1 = createCellsModel(20,30);
+        var _cellsModel = createCellsModel(30,50),
+                _cellsModel1 = createCellsModel(30,30);
 
 
         function appendData(){
@@ -148,7 +148,8 @@
                 renderTo:'#table',
                 rowResize:true,
                 colResize:true,
-                overflowY:false,
+                scrollY:true,
+                scrollX:true,
                 customScroll:{
                    // height:'30px',
                    // width:'25'
@@ -162,7 +163,8 @@
                 renderTo:'#table1',
                 rowResize:true,
                 colResize:true,
-                overflowY:false,
+                scrollY:true,
+                scrollX:true,
                 customScroll:null
             });
             return tableCell;
