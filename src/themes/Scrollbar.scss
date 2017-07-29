@@ -14,6 +14,12 @@ $scrollConfig:(hScrollTrackColor:#fff,vScrollTrackColor:#fff,hBarColor:rgb(101, 
     overflow:hidden;
     z-index:9999;
   }
+  .#{$prefix}-scroll-cross{
+    @extend %scrollbar;
+    bottom:0;
+    right:0;
+    background-color: #5c9a73;
+  }
   .#{$prefix}-scrollbar-ver{
     @extend %scrollbar;
     top:0;

@@ -49,7 +49,7 @@ function getScrollWidth(element){
     if(length > 0){
         for(var i = 0;i < length;i++){
             ele = children[i];
-            if(ele.vScrollbar || ele.hScrollbar){
+            if(ele.vScrollbar || ele.hScrollbar || ele.scrollCross){
                 continue;
             }
             width += Math.max(ele.scrollWidth,ele.offsetWidth);
@@ -74,7 +74,7 @@ function getScrollHeight(element){
     if(length > 0){
         for(var i = 0;i < length;i++){
             ele = children[i];
-            if(ele.vScrollbar || ele.hScrollbar){
+            if(ele.vScrollbar || ele.hScrollbar || ele.scrollCross){
                 continue;
             }
             height += Math.max(ele.scrollHeight,ele.offsetHeight);
@@ -136,6 +136,7 @@ ScrollBar.prototype.init = function (ele,config) {
 
     this.vScrollbar = null;
     this.hScrollbar = null;
+    this.scrollCross = null;
 
     ScrollBar.initEventListeners();
 
@@ -168,6 +169,7 @@ ScrollBar.prototype.initUI = function () {
 
     this._renderV();
     this._renderH();
+    this._renderCross();
     this.syncScrollbarSize();
 
     this._bindScrollEvent();
@@ -221,6 +223,10 @@ ScrollBar.prototype.resize = function () {
             display:this.isScrollY() ? 'block' : 'none'
         });
     }
+
+    style(this.scrollCross,{
+        display:!this.isScrollX() && !this.isScrollY() ? 'none' : 'block'
+    });
 
     this.refresh();
 };
@@ -294,6 +300,7 @@ ScrollBar.prototype._renderH = function () {
     dom.className = getFullClassName('scrollbar-hor');
     style(dom,{
         height:this.config.height + 'px',
+        right:this.config.width + 'px',
         display:'none',
         'background-color':this.config.hTrackColor
     });
@@ -367,14 +374,18 @@ ScrollBar.prototype._bindHorEvent = function () {
 ScrollBar.prototype.getHScrollRatio = function () {
 
     var barWidth = this.getScrollbarWidth();
-    var scrollRatio = (this.scrollWidth - this.clientWidth)/(this.clientWidth - barWidth);
+    var scrollContentWidth = this.clientWidth;
+    scrollContentWidth -= this.config.width;
+    var scrollRatio = (this.scrollWidth - this.clientWidth)/(scrollContentWidth - barWidth);
     return scrollRatio;
 
 };
 ScrollBar.prototype.getVScrollRatio = function () {
 
     var barHeight = this.getScrollbarHeight();
-    var scrollRatio = (this.scrollHeight - this.clientHeight)/(this.clientHeight - barHeight);
+    var scrollContentHeight = this.clientHeight;
+    scrollContentHeight -= this.config.height;
+    var scrollRatio = (this.scrollHeight - this.clientHeight)/(scrollContentHeight - barHeight);
     return scrollRatio;
 
 };
@@ -412,7 +423,7 @@ ScrollBar.prototype._getContentChildren = function () {
     var elements = [],ele;
     for(var i = 0;i < length;i++){
         ele = children[i];
-        if(ele.vScrollbar || ele.hScrollbar){
+        if(ele.vScrollbar || ele.hScrollbar || ele.scrollCross){
             continue;
         }
         elements.push(ele);
@@ -631,6 +642,19 @@ ScrollBar.prototype.getScrollbarWidth = function () {
     return barWidth;
 
 };
+ScrollBar.prototype._renderCross = function () {
+    var dom = document.createElement('div');
+    dom.scrollCross = true;
+    dom.className = getFullClassName('scroll-cross');
+    style(dom,{
+        display:'none',
+        width:this.config.width + 'px',
+        height:this.config.height + 'px'
+    });
+    this.element.appendChild(dom);
+
+    this.scrollCross = dom;
+};
 ScrollBar.prototype._renderV = function () {
 
     var dom = document.createElement('div');
@@ -639,6 +663,7 @@ ScrollBar.prototype._renderV = function () {
     dom.className = getFullClassName('scrollbar-ver');
     style(dom,{
         width:this.config.width + 'px',
+        bottom:this.config.height + 'px',
         display:'none',
         'background-color':this.config.vTrackColor
     });

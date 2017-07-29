@@ -8,10 +8,14 @@
   position: relative;
   border-radius: .5em;
   cursor: pointer; }
-.d1012 .d1012-scrollbar-ver, .d1012 .d1012-scrollbar-hor {
+.d1012 .d1012-scroll-cross, .d1012 .d1012-scrollbar-ver, .d1012 .d1012-scrollbar-hor {
   position: absolute;
   overflow: hidden;
   z-index: 9999; }
+.d1012 .d1012-scroll-cross {
+  bottom: 0;
+  right: 0;
+  background-color: #5c9a73; }
 .d1012 .d1012-scrollbar-ver {
   top: 0;
   right: 0;
