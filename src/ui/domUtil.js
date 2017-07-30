@@ -56,6 +56,16 @@ function executeFunctionDelay(timeoutId,func,context) {
     return _timeoutCache[timeoutId] = requestAnimationFrame(func.bind(context));
 
 };
+function executeFunctionTimeout(timeoutId,func,timeout,context) {
+
+    if(typeof func !== 'function'){
+        return;
+    }
+    context = context || this;
+    clearTimeout(_timeoutCache[timeoutId]);
+    return _timeoutCache[timeoutId] = setTimeout.call(window,func.bind(context),timeout);
+
+};
 function isElementInDom(element){
     return document.contains(element);
 }
@@ -95,4 +105,4 @@ function userSelect(selected,ele){
     ele.setAttribute('user_select',String(selected));
 }
 
-export { browseCssPrefixes,style,userSelect,getFullClassName,getFullClassSelector,isElementInDom,isTouchSupported,getMousePosition,isDomElement,requestAnimationFrame,cancelAnimationFrame,executeFunctionDelay }
+export { browseCssPrefixes,style,userSelect,getFullClassName,getFullClassSelector,isElementInDom,isTouchSupported,getMousePosition,isDomElement,requestAnimationFrame,cancelAnimationFrame,executeFunctionDelay,executeFunctionTimeout }

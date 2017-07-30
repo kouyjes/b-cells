@@ -20,18 +20,40 @@
   top: 0;
   right: 0;
   bottom: 0;
-  background-color: #fff; }
+  background-color: transparent;
+  border-radius: .5em;
+  transition: width 0.1s;
+  -webkit-transition: width 0.1s;
+  -moz-transition: width 0.1s;
+  -ms-transition: width 0.1s; }
   .d1012 .d1012-scrollbar-ver .d1012-scrollbar-block {
     background-color: #4b8a78;
     width: 100%; }
+  .d1012 .d1012-scrollbar-ver[hidden-scroll] {
+    width: 0 !important;
+    transition: width 0.5s;
+    -webkit-transition: width 0.5s;
+    -moz-transition: width 0.5s;
+    -ms-transition: width 0.5s; }
 .d1012 .d1012-scrollbar-hor {
   right: 0;
   left: 0;
   bottom: 0;
-  background-color: #fff; }
+  background-color: transparent;
+  border-radius: .5em;
+  transition: height 0.1s;
+  -webkit-transition: height 0.1s;
+  -moz-transition: height 0.1s;
+  -ms-transition: height 0.1s; }
   .d1012 .d1012-scrollbar-hor .d1012-scrollbar-block {
     background-color: #65a067;
     height: 100%; }
+  .d1012 .d1012-scrollbar-hor[hidden-scroll] {
+    transition: height 0.5s;
+    -webkit-transition: height 0.5s;
+    -moz-transition: height 0.5s;
+    -ms-transition: height 0.5s;
+    height: 0 !important; }
 
 .d1012 {
   position: relative;

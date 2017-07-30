@@ -1,4 +1,4 @@
-import { style,userSelect,getFullClassName,getFullClassSelector,isElementInDom,isTouchSupported,getMousePosition,isDomElement,requestAnimationFrame,cancelAnimationFrame,executeFunctionDelay } from './domUtil'
+import { style,userSelect,getFullClassName,getFullClassSelector,isElementInDom,isTouchSupported,getMousePosition,isDomElement,requestAnimationFrame,cancelAnimationFrame,executeFunctionDelay,executeFunctionTimeout } from './domUtil'
 import { ScrollConfig } from './ScrollConfig.js';
 var scrollbarId = 1;
 function ScrollBar(ele,config){
@@ -49,7 +49,7 @@ function getScrollWidth(element){
     if(length > 0){
         for(var i = 0;i < length;i++){
             ele = children[i];
-            if(ele.vScrollbar || ele.hScrollbar || ele.scrollCross){
+            if(ele.vScrollbar || ele.hScrollbar){
                 continue;
             }
             width += Math.max(ele.scrollWidth,ele.offsetWidth);
@@ -74,7 +74,7 @@ function getScrollHeight(element){
     if(length > 0){
         for(var i = 0;i < length;i++){
             ele = children[i];
-            if(ele.vScrollbar || ele.hScrollbar || ele.scrollCross){
+            if(ele.vScrollbar || ele.hScrollbar){
                 continue;
             }
             height += Math.max(ele.scrollHeight,ele.offsetHeight);
@@ -136,7 +136,6 @@ ScrollBar.prototype.init = function (ele,config) {
 
     this.vScrollbar = null;
     this.hScrollbar = null;
-    this.scrollCross = null;
 
     ScrollBar.initEventListeners();
 
@@ -169,7 +168,6 @@ ScrollBar.prototype.initUI = function () {
 
     this._renderV();
     this._renderH();
-    this._renderCross();
     this.syncScrollbarSize();
 
     this._bindScrollEvent();
@@ -224,9 +222,6 @@ ScrollBar.prototype.resize = function () {
         });
     }
 
-    style(this.scrollCross,{
-        display:!this.isScrollX() && !this.isScrollY() ? 'none' : 'block'
-    });
 
     this.refresh();
 };
@@ -265,9 +260,6 @@ ScrollBar.prototype.isScrollX = function () {
 ScrollBar.prototype._getScrollWidth = function () {
 
     var scrollWidth = this._scrollWidth;
-    if(this.isScrollY()){
-        scrollWidth += this.config.width;
-    }
     return scrollWidth;
 
 };
@@ -279,9 +271,6 @@ ScrollBar.prototype._setScrollHeight = function (scrollHeight) {
 ScrollBar.prototype._getScrollHeight = function () {
 
     var scrollHeight = this._scrollHeight;
-    if(this.isScrollX()){
-        scrollHeight += this.config.height;
-    }
     return scrollHeight;
 
 };
@@ -296,6 +285,7 @@ ScrollBar.prototype._renderH = function () {
 
     var dom = document.createElement('div');
     dom.hScrollbar = true;
+    dom.setAttribute('hidden-scroll','');
     this.hScrollbar = dom;
     dom.className = getFullClassName('scrollbar-hor');
     style(dom,{
@@ -414,6 +404,10 @@ ScrollBar.prototype.scrollLeftTo = function (scrollLeft) {
         });
     });
 
+    this.hScrollbar.removeAttribute('hidden-scroll');
+    executeFunctionTimeout('hidden-h-scrollbar', function () {
+        this.hScrollbar.setAttribute('hidden-scroll','');
+    },1000,this);
     this.triggerScrollEvent();
 
 };
@@ -456,6 +450,11 @@ ScrollBar.prototype.scrollTopTo = function (scrollTop) {
             top: -scrollTop + 'px'
         });
     });
+
+    this.vScrollbar.removeAttribute('hidden-scroll');
+    executeFunctionTimeout('hidden-v-scrollbar', function () {
+        this.vScrollbar.setAttribute('hidden-scroll','');
+    },1000,this);
     this.triggerScrollEvent();
 
 };
@@ -642,23 +641,11 @@ ScrollBar.prototype.getScrollbarWidth = function () {
     return barWidth;
 
 };
-ScrollBar.prototype._renderCross = function () {
-    var dom = document.createElement('div');
-    dom.scrollCross = true;
-    dom.className = getFullClassName('scroll-cross');
-    style(dom,{
-        display:'none',
-        width:this.config.width + 'px',
-        height:this.config.height + 'px'
-    });
-    this.element.appendChild(dom);
-
-    this.scrollCross = dom;
-};
 ScrollBar.prototype._renderV = function () {
 
     var dom = document.createElement('div');
     dom.vScrollbar = true;
+    dom.setAttribute('hidden-scroll','');
     this.vScrollbar = dom;
     dom.className = getFullClassName('scrollbar-ver');
     style(dom,{

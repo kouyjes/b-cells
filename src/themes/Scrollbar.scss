@@ -1,6 +1,6 @@
 @import "common.scss";
 
-$scrollConfig:(hScrollTrackColor:#fff,vScrollTrackColor:#fff,hBarColor:rgb(101, 160, 103),vBarColor:rgb(75, 138, 120));
+$scrollConfig:(hScrollTrackColor:transparent,vScrollTrackColor:transparent,hBarColor:rgb(101, 160, 103),vBarColor:rgb(75, 138, 120));
 
 .#{$prefix}{
 
@@ -13,6 +13,7 @@ $scrollConfig:(hScrollTrackColor:#fff,vScrollTrackColor:#fff,hBarColor:rgb(101, 
     position: absolute;
     overflow:hidden;
     z-index:9999;
+
   }
   .#{$prefix}-scroll-cross{
     @extend %scrollbar;
@@ -26,9 +27,15 @@ $scrollConfig:(hScrollTrackColor:#fff,vScrollTrackColor:#fff,hBarColor:rgb(101, 
     right:0;
     bottom:0;
     background-color: map-get($scrollConfig,vScrollTrackColor);
+    border-radius: .5em;
     .#{$prefix}-scrollbar-block{
       background-color: map-get($scrollConfig,vBarColor);
       width:100%;
+    }
+    @include css(transition,width .1s);
+    &[hidden-scroll]{
+      width:0 !important;
+      @include css(transition,width .5s);
     }
   }
   .#{$prefix}-scrollbar-hor{
@@ -37,9 +44,15 @@ $scrollConfig:(hScrollTrackColor:#fff,vScrollTrackColor:#fff,hBarColor:rgb(101, 
     left:0;
     bottom:0;
     background-color: map-get($scrollConfig,hScrollTrackColor);
+    border-radius:.5em;
     .#{$prefix}-scrollbar-block{
       background-color: map-get($scrollConfig,hBarColor);
       height:100%;
+    }
+    @include css(transition,height .1s);
+    &[hidden-scroll]{
+      @include css(transition,height .5s);
+      height:0 !important;
     }
   }
 }
