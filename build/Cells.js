@@ -384,6 +384,8 @@ ScrollBar.prototype.syncScrollbarSize = function () {
 };
 ScrollBar.prototype.triggerScrollEvent = function () {
 
+    this._toggleVisible();
+
     var scrollEvtKey = this._id + 'scroll';
     executeFunctionDelay(scrollEvtKey, function () {
         this.triggerEvent('scroll');
@@ -600,10 +602,6 @@ ScrollBar.prototype.scrollLeftTo = function (scrollLeft) {
         });
     });
 
-    this.hScrollbar.removeAttribute('hidden-scroll');
-    executeFunctionTimeout('hidden-h-scrollbar', function () {
-        this.hScrollbar.setAttribute('hidden-scroll','');
-    },1000,this);
     this.triggerScrollEvent();
 
 };
@@ -647,12 +645,17 @@ ScrollBar.prototype.scrollTopTo = function (scrollTop) {
         });
     });
 
-    this.vScrollbar.removeAttribute('hidden-scroll');
-    executeFunctionTimeout('hidden-v-scrollbar', function () {
-        this.vScrollbar.setAttribute('hidden-scroll','');
-    },1000,this);
     this.triggerScrollEvent();
 
+};
+ScrollBar.prototype._toggleVisible = function () {
+    var attrName = 'hidden-scroll';
+    this.hScrollbar.removeAttribute(attrName);
+    this.vScrollbar.removeAttribute(attrName);
+    executeFunctionTimeout('hidden-v-scrollbar', function () {
+        this.hScrollbar.setAttribute(attrName,'');
+        this.vScrollbar.setAttribute(attrName,'');
+    },1000,this);
 };
 ScrollBar.prototype._bindVerEvent = function () {
 
