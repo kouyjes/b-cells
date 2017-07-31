@@ -190,7 +190,6 @@ _prototype.getThresholdArea = function getThresholdArea(viewSize, positions, cur
 };
 _prototype.getCurrentRowArea = function getCurrentRowArea() {
 
-    var cellsInstance = this.cellsInstance;
     var scrollbar = this.scrollbar;
     var panelSize = this.getPanelSize();
     var rowsTop = this.domCache.rowsTop;

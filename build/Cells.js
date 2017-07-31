@@ -611,7 +611,7 @@ ScrollBar.prototype._getContentChildren = function () {
     var elements = [],ele;
     for(var i = 0;i < length;i++){
         ele = children[i];
-        if(ele.vScrollbar || ele.hScrollbar || ele.scrollCross){
+        if(ele.vScrollbar || ele.hScrollbar){
             continue;
         }
         elements.push(ele);
@@ -1296,7 +1296,6 @@ _prototype$2.getThresholdArea = function getThresholdArea(viewSize, positions, c
 };
 _prototype$2.getCurrentRowArea = function getCurrentRowArea() {
 
-    var cellsInstance = this.cellsInstance;
     var scrollbar = this.scrollbar;
     var panelSize = this.getPanelSize();
     var rowsTop = this.domCache.rowsTop;
@@ -2341,12 +2340,12 @@ function _bindResizeCellEvent() {
             resizeManager.resetX();
         }
         if(resizeFlag){
-            userSelect(false,this.cellsPanel);
+            userSelect(false,cellsPanel);
         }
 
     }.bind(this));
     function mouseup(){
-        userSelect(true,this.cellsPanel);
+        userSelect(true,cellsPanel);
         if(resizeManager.reset()){
             cellsRender.syncCursor();
         }

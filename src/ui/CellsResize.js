@@ -309,12 +309,12 @@ function _bindResizeCellEvent() {
             resizeManager.resetX();
         }
         if(resizeFlag){
-            userSelect(false,this.cellsPanel);
+            userSelect(false,cellsPanel);
         }
 
     }.bind(this));
     function mouseup(){
-        userSelect(true,this.cellsPanel);
+        userSelect(true,cellsPanel);
         if(resizeManager.reset()){
             cellsRender.syncCursor();
         }

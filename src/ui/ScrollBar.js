@@ -415,7 +415,7 @@ ScrollBar.prototype._getContentChildren = function () {
     var elements = [],ele;
     for(var i = 0;i < length;i++){
         ele = children[i];
-        if(ele.vScrollbar || ele.hScrollbar || ele.scrollCross){
+        if(ele.vScrollbar || ele.hScrollbar){
             continue;
         }
         elements.push(ele);
