@@ -2,7 +2,7 @@
 B-cells is a component for rendering big data
 
 ## Demo
-[Demo url](http://htmlpreview.github.io/?https://github.com/kouyjes/b-cells/blob/master/examples/table.html)
+[Demo url](https://kouyjes.github.io/b-cells/examples/table.html)
 
 ## Get Starting
 ### Define CellsModel
