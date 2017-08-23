@@ -1584,13 +1584,34 @@ _prototype$2.emptyElement = function (element) {
         this.removeElementFromDom(element.firstChild);
     }
 };
+function isDomNode(object) {
+    if (typeof object !== 'object') {
+        return false;
+    }
+    return object.nodeType !== void 0 && object.tagName !== void 0;
+}
+function parseDom(text){
+    if (typeof text === 'object' && isDomNode(text)) {
+        return [text];
+    }
+    else if (typeof text === 'string') {
+        var div = document.createElement('div');
+        div.innerHTML = text;
+        return Array.prototype.slice.call(div.childNodes);
+    }
+    throw new Error('invalid data !');
+
+}
 _prototype$2._configCell = function _configCell(cell, field) {
 
     var cellsInstance = this.cellsInstance;
-    var isHtml = typeof field.html === 'string';
+    var isHtml = !!field.html;
     cell.setAttribute('html_content', isHtml + '');
     if (isHtml) {
-        cell.innerHTML = field.html;
+        cell.innerHTML = '';
+        parseDom(field.html).forEach(function (node) {
+            cell.appendChild(node);
+        });
         cell._textSpan = null;
     } else {
         var text = field.name || field.value;
