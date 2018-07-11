@@ -1598,6 +1598,12 @@ function parseDom(text){
         var div = document.createElement('div');
         div.innerHTML = text;
         return Array.prototype.slice.call(div.childNodes);
+    }else if(text instanceof Array){
+        if(text.every(function(node){
+                return isDomNode(node);
+            })){
+            return text;
+        }
     }
     throw new Error('invalid data !');
 
