@@ -71,7 +71,7 @@
             var cellsModel = new HERE.UI.CELL.CellsModel();
             var header = [];
             for(var i = 0; i< colNum;i++){
-                header.push({name:'column' + i,width:'20%',style:{
+                header.push({name:'column' + i,style:{
                     backgroundColor:randomColor()
                 }});
             }
@@ -102,8 +102,8 @@
             return cellsModel;
         }
 
-        var _cellsModel = createCellsModel(30,50),
-                _cellsModel1 = createCellsModel(30,30);
+        var _cellsModel = createCellsModel(30,7),
+                _cellsModel1 = createCellsModel(30,6);
 
 
         function appendData(){

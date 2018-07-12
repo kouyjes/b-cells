@@ -718,16 +718,110 @@ _prototype._initCellSizeIndex = function () {
     this._initCellHeightIndex();
 
 };
+function isNum(v){
+    return !isNaN(v) && typeof v === 'number';
+}
+_prototype._initHeaderFieldsWidth = function(){
+    var cellsModel = this.cellsInstance.cellsModel;
+    var fixedFields = [],autoFields = [];
+    var panelSize = this.getPanelSize();
+    var totalWidth = panelSize.width;
+    cellsModel.header.fields.filter(function(field,index){
+        var maxWidth = field.maxWidth,minWidth = this.getMinCellWidth(index);
+        maxWidth = parseFloat(maxWidth),minWidth = parseFloat(minWidth);
+        field.maxWidth = maxWidth;
+        field.minWidth = minWidth;
+        if(field.width){
+            var width = this._parseCellWidth(field.width);
+            if(maxWidth){
+                width = Math.min(maxWidth,width);
+            }
+            if(minWidth){
+                width = Math.max(minWidth,width,0);
+            }
+            field._width = width;
+            fixedFields.push(field);
+            totalWidth -= width;
+        }else{
+            if(isNum(maxWidth) && isNum(minWidth) && maxWidth === minWidth) {
+                field._width = maxWidth
+                fixedFields.push(field);
+                totalWidth -= maxWidth;
+            }else{
+                autoFields.push(field);
+            }
+        }
+
+    }.bind(this));
+
+    var avgWidth = Math.round(totalWidth / (autoFields.length || 1));
+    autoFields.forEach(function(field){
+        var width = avgWidth;
+        width = Math.min(width,totalWidth);
+        field._width = width;
+        totalWidth -= width;
+    });
+    var consumeWidth = function(width){
+        var noConsumer = true;
+        autoFields.forEach(function(field){
+            noConsumer = false;
+            var maxWidth = field.maxWidth;
+            if(isNum(maxWidth) && field._width - maxWidth >= 0){
+                noConsumer = true;
+                return;
+            }
+            field._width += 1;
+            width--;
+        });
+        if(!noConsumer && width > 0){
+            consumeWidth(width);
+        }
+        return width;
+    };
+    var produceWidth = function(width){
+        var noProducer = true;
+        autoFields.forEach(function(field){
+            noProducer = false;
+            var minWidth = field.minWidth;
+            if(isNum(minWidth) && field._width - minWidth <= 0){
+                noProducer = true;
+                return;
+            }
+            field._width -= 1;
+            width--;
+        });
+        if(!noProducer && width > 0){
+            produceWidth(width);
+        }
+        return width;
+    };
+    autoFields.some(function(field,index){
+        var minWidth = field.minWidth,maxWidth = field.maxWidth;
+        var width = field._width;
+        var w;
+        if(width < minWidth){
+            w = produceWidth(minWidth - width);
+            field._width = minWidth;
+            return;
+        }
+        if(width > maxWidth){
+            w = consumeWidth(width - maxWidth);
+            field._width = maxWidth;
+            return;
+        }
+    });
+};
 _prototype._initCellWidthIndex = function () {
 
     var cellsModel = this.cellsInstance.cellsModel,
         colsWidth = this.domCache.colsWidth,
         colsLeft = this.domCache.colsLeft;
 
+    this._initHeaderFieldsWidth();
+
     var maxWidth = 0;
     cellsModel.header.fields.forEach(function (field, index) {
-        var colWidth = this._parseCellWidth(field.width);
-        colWidth = Math.max(colWidth, this.getMinCellWidth(index));
+        var colWidth = field._width;
         colsWidth[index] = colWidth;
         maxWidth += colWidth;
         if (index === 0) {
