@@ -1,6 +1,7 @@
 function ScrollConfig(config){
     this.scrollX = true;
     this.scrollY = true;
+    this.autoHide = true;
     this.width = 12;
     this.height = 12;
     this.hTrackColor = '';

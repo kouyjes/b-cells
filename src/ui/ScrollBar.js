@@ -456,6 +456,9 @@ ScrollBar.prototype._toggleVisible = function () {
     var attrName = 'hidden-scroll';
     this.hScrollbar.removeAttribute(attrName);
     this.vScrollbar.removeAttribute(attrName);
+    if(!this.config.autoHide){
+        return;
+    }
     executeFunctionTimeout('hidden-v-scrollbar', function () {
         this.hScrollbar.setAttribute(attrName,'');
         this.vScrollbar.setAttribute(attrName,'');

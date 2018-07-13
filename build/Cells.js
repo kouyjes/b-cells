@@ -182,6 +182,7 @@ function userSelect(selected,ele){
 function ScrollConfig(config){
     this.scrollX = true;
     this.scrollY = true;
+    this.autoHide = true;
     this.width = 12;
     this.height = 12;
     this.hTrackColor = '';
@@ -652,6 +653,9 @@ ScrollBar.prototype._toggleVisible = function () {
     var attrName = 'hidden-scroll';
     this.hScrollbar.removeAttribute(attrName);
     this.vScrollbar.removeAttribute(attrName);
+    if(!this.config.autoHide){
+        return;
+    }
     executeFunctionTimeout('hidden-v-scrollbar', function () {
         this.hScrollbar.setAttribute(attrName,'');
         this.vScrollbar.setAttribute(attrName,'');
