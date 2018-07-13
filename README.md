@@ -22,6 +22,7 @@ B-cells is a component for rendering big data
         name:'', // define column header name
         width:'', // define width absolute width,or relative width,eg 200px or 20%
         minWidth:'',// define min width of column
+        maxWidth:'',
         style:{
             backgroundColor:'' // define background color
         }
@@ -67,7 +68,10 @@ B-cells is a component for rendering big data
              width:12,height:13,hTrackColor:'',
              hScrollColor:'',
              vTrackColor:'',
-             vScrollColor:''
+             vScrollColor:'',
+             autoHideX:true,
+             autoHideY:true,
+             timeout:1300
          }
          */
     });
