@@ -34,12 +34,13 @@ _prototype.existEventListener = function (eventType) {
     return listeners && listeners.length > 0;
 
 };
-CellsEvent.createEvent = function createEvent(eventType,target,data) {
+CellsEvent.createEvent = function createEvent(eventType,target,data,origin) {
 
     return {
         type:eventType,
         target:target,
-        data:data
+        data:data,
+        origin:origin
     };
 
 };
