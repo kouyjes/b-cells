@@ -2046,20 +2046,20 @@ _prototype$2._bindCellsModelEvent = function () {
     }.bind(this));
 };
 
-_prototype$2.tiggerCellClickEvent = function tiggerCellClickEvent(cell) {
+_prototype$2.tiggerCellEvent = function tiggerCellEvent(cell,eventName) {
 
     var cellsInstance = this.cellsInstance;
     var cellsModel = cellsInstance.cellsModel,
         cellsEvent = cellsInstance.cellsEvent,
         col = parseInt(cell.getAttribute('col'));
     if (cell._headerCell) {
-        cellsEvent.triggerEvent(CellsEvent.createEvent('cellClick', cell, cellsModel.header.fields[col]));
+        cellsEvent.triggerEvent(CellsEvent.createEvent(eventName, cell, cellsModel.header.fields[col]));
         return;
     }
     var row = parseInt(cell.getAttribute('row'));
     var rowData = cellsModel.rows[row];
     if (rowData) {
-        cellsEvent.triggerEvent(CellsEvent.createEvent('cellClick', cell, rowData.fields[col]));
+        cellsEvent.triggerEvent(CellsEvent.createEvent(eventName, cell, rowData.fields[col]));
     }
 };
 function _bindScrollEvent() {
@@ -2080,6 +2080,24 @@ function _bindScrollEvent() {
 
     }.bind(this));
 }
+function getCellTarget(panel,target){
+    if(target === panel){
+        return null;
+    }
+    if (target._cell) {
+        return target;
+    } else {
+        while (target = target.parentNode) {
+            if (target === panel) {
+                break;
+            }
+            if (target._cell) {
+                return target;
+            }
+        }
+    }
+    return null;
+}
 function _bindClickEvent() {
 
     var cellsInstance = this.cellsInstance,
@@ -2093,27 +2111,43 @@ function _bindClickEvent() {
             return;
         }
         if (cellsEvent.existEventListener('cellClick')) {
-            if (target._cell) {
-                _.tiggerCellClickEvent(target);
-            } else {
-                while (target = target.parentNode) {
-                    if (target === cellsPanel) {
-                        break;
-                    }
-                    if (target._cell) {
-                        _.tiggerCellClickEvent(target);
-                        break;
-                    }
-                }
+
+            var cell = getCellTarget(cellsPanel,target);
+            if(cell){
+                _.tiggerCellEvent(cell,'cellClick');
             }
         }
         cellsEvent.triggerEvent(CellsEvent.createEvent('click', cellsPanel, cellsInstance.cellsModel));
     });
 
 }
+function _bindContextMenuEvent() {
+
+    var cellsInstance = this.cellsInstance,
+        cellsEvent = cellsInstance.cellsEvent;
+    var _ = this, cellsPanel = this.cellsPanel;
+    cellsPanel.addEventListener('contextmenu', function (e) {
+
+        var target = e.target;
+        if (target === cellsPanel) {
+            cellsEvent.triggerEvent(CellsEvent.createEvent('contextMenu', cellsPanel, cellsInstance.cellsModel));
+            return;
+        }
+        if (cellsEvent.existEventListener('cellContextMenu')) {
+
+            var cell = getCellTarget(cellsPanel,target);
+            if(cell){
+                _.tiggerCellEvent(cell,'cellContextMenu');
+            }
+        }
+        cellsEvent.triggerEvent(CellsEvent.createEvent('contextMenu', cellsPanel, cellsInstance.cellsModel));
+    });
+
+}
 _prototype$2.bindEvent = function () {
     _bindScrollEvent.call(this);
     _bindClickEvent.call(this);
+    _bindContextMenuEvent.call(this);
 };
 _prototype$2.render = function render() {
 

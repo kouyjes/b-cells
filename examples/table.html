@@ -186,10 +186,22 @@
                 console.log('tableCell click end');
             })
 
+            tableCell.addEventListener('contextMenu', function (e) {
+                console.log('tableCell context menu start');
+                console.log(e);
+                console.log('tableCell context menu end');
+            })
+
             tableCell.addEventListener('cellClick', function (e) {
                 console.log('tableCell cell click start');
                 console.log(e);
                 console.log('tableCell cell click end');
+            });
+
+            tableCell.addEventListener('cellContextMenu', function (e) {
+                console.log('tableCell cell context menu start');
+                console.log(e);
+                console.log('tableCell cell context menu end');
             });
 
            /* tableCell.addEventListener('scroll', function (e) {
