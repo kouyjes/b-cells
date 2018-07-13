@@ -1870,12 +1870,11 @@ _prototype$2._initHeaderFieldsWidth = function(){
     var consumeWidth = function(width){
         var noConsumer = true;
         autoFields.forEach(function(field){
-            noConsumer = false;
             var maxWidth = field.maxWidth;
             if(isNum(maxWidth) && field._width - maxWidth >= 0){
-                noConsumer = true;
                 return;
             }
+            noConsumer = false;
             field._width += 1;
             width--;
         });
@@ -1887,12 +1886,11 @@ _prototype$2._initHeaderFieldsWidth = function(){
     var produceWidth = function(width){
         var noProducer = true;
         autoFields.forEach(function(field){
-            noProducer = false;
             var minWidth = field.minWidth;
             if(isNum(minWidth) && field._width - minWidth <= 0){
-                noProducer = true;
                 return;
             }
+            noProducer = false;
             field._width -= 1;
             width--;
         });

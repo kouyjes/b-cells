@@ -75,7 +75,8 @@
                     backgroundColor:randomColor()
                 }});
             }
-            header[2].minWidth = 100;
+            header[1].minWidth = 150;
+            header[1].maxWidth = 300;
             var rows = [];
             for(var i = 0;i < rowNum;i++){
                 rows.push((function(){
@@ -102,8 +103,8 @@
             return cellsModel;
         }
 
-        var _cellsModel = createCellsModel(30,7),
-                _cellsModel1 = createCellsModel(30,6);
+        var _cellsModel = createCellsModel(30,5),
+                _cellsModel1 = createCellsModel(30,9);
 
 
         function appendData(){
