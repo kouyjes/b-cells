@@ -182,13 +182,15 @@ function userSelect(selected,ele){
 function ScrollConfig(config){
     this.scrollX = true;
     this.scrollY = true;
-    this.autoHide = true;
+    this.autoHideX = true;
+    this.autoHideY = true;
     this.width = 12;
     this.height = 12;
     this.hTrackColor = '';
     this.hScrollColor = '';
     this.vTrackColor = '';
     this.vScrollColor = '';
+    this.timeout = 1300;
     if(config){
         Object.assign(this,config);
     }
@@ -653,13 +655,14 @@ ScrollBar.prototype._toggleVisible = function () {
     var attrName = 'hidden-scroll';
     this.hScrollbar.removeAttribute(attrName);
     this.vScrollbar.removeAttribute(attrName);
-    if(!this.config.autoHide){
+    var config = this.config;
+    if(!config.autoHideX && !config.autoHideY){
         return;
     }
     executeFunctionTimeout('hidden-v-scrollbar', function () {
-        this.hScrollbar.setAttribute(attrName,'');
-        this.vScrollbar.setAttribute(attrName,'');
-    },1000,this);
+        config.autoHideX && this.hScrollbar.setAttribute(attrName,'');
+        config.autoHideY && this.vScrollbar.setAttribute(attrName,'');
+    },config.timeout,this);
 };
 ScrollBar.prototype._bindVerEvent = function () {
 

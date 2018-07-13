@@ -456,13 +456,14 @@ ScrollBar.prototype._toggleVisible = function () {
     var attrName = 'hidden-scroll';
     this.hScrollbar.removeAttribute(attrName);
     this.vScrollbar.removeAttribute(attrName);
-    if(!this.config.autoHide){
+    var config = this.config;
+    if(!config.autoHideX && !config.autoHideY){
         return;
     }
     executeFunctionTimeout('hidden-v-scrollbar', function () {
-        this.hScrollbar.setAttribute(attrName,'');
-        this.vScrollbar.setAttribute(attrName,'');
-    },1000,this);
+        config.autoHideX && this.hScrollbar.setAttribute(attrName,'');
+        config.autoHideY && this.vScrollbar.setAttribute(attrName,'');
+    },config.timeout,this);
 };
 ScrollBar.prototype._bindVerEvent = function () {
 
