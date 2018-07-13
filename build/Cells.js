@@ -391,7 +391,10 @@ ScrollBar.prototype.triggerScrollEvent = function () {
 
     var scrollEvtKey = this._id + 'scroll';
     executeFunctionDelay(scrollEvtKey, function () {
-        this.triggerEvent('scroll');
+        this.triggerEvent('scroll',{
+            scrollLeft:this.scrollLeft,
+            scrollTop:this.scrollTop
+        });
     },this);
 
 };
@@ -514,7 +517,7 @@ ScrollBar.prototype.addEventListener = function (eventType,listener) {
     listeners.push(listener);
 
 };
-ScrollBar.prototype.triggerEvent = function (eventType) {
+ScrollBar.prototype.triggerEvent = function (eventType,e) {
 
     var listeners = this.eventListeners[eventType];
     if(!listeners){
@@ -522,7 +525,7 @@ ScrollBar.prototype.triggerEvent = function (eventType) {
     }
     listeners.forEach(function (listener) {
         try{
-            listener.call(this);
+            listener.call(this,e);
         }catch(e){
             console.error(e.stack || e);
         }
@@ -2070,13 +2073,13 @@ function _bindScrollEvent() {
     var headerPanel = this.headerPanel,
         scrollbar = this.scrollbar;
     var headerContentPanel = headerPanel._contentPanel;
-    scrollbar.addEventListener('scroll', function () {
+    scrollbar.addEventListener('scroll', function (e) {
 
         var scrollLeft = scrollbar.scrollLeft;
         style(headerContentPanel, 'left', -scrollLeft + 'px');
         executeFunctionDelay('repaintRequest', this.repaint, this);
 
-        var event = CellsEvent.createEvent('scroll', scrollbar, cellsInstance.cellsModel);
+        var event = CellsEvent.createEvent('scroll', scrollbar, cellsInstance.cellsModel,e);
         cellsEvent.triggerEvent(event);
 
     }.bind(this));

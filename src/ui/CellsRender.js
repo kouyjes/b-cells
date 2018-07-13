@@ -956,13 +956,13 @@ function _bindScrollEvent() {
     var headerPanel = this.headerPanel,
         scrollbar = this.scrollbar;
     var headerContentPanel = headerPanel._contentPanel;
-    scrollbar.addEventListener('scroll', function () {
+    scrollbar.addEventListener('scroll', function (e) {
 
         var scrollLeft = scrollbar.scrollLeft;
         style(headerContentPanel, 'left', -scrollLeft + 'px');
         executeFunctionDelay('repaintRequest', this.repaint, this);
 
-        var event = CellsEvent.createEvent('scroll', scrollbar, cellsInstance.cellsModel);
+        var event = CellsEvent.createEvent('scroll', scrollbar, cellsInstance.cellsModel,e);
         cellsEvent.triggerEvent(event);
 
     }.bind(this));

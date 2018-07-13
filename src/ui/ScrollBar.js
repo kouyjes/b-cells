@@ -192,7 +192,10 @@ ScrollBar.prototype.triggerScrollEvent = function () {
 
     var scrollEvtKey = this._id + 'scroll';
     executeFunctionDelay(scrollEvtKey, function () {
-        this.triggerEvent('scroll');
+        this.triggerEvent('scroll',{
+            scrollLeft:this.scrollLeft,
+            scrollTop:this.scrollTop
+        });
     },this);
 
 };
@@ -315,7 +318,7 @@ ScrollBar.prototype.addEventListener = function (eventType,listener) {
     listeners.push(listener);
 
 };
-ScrollBar.prototype.triggerEvent = function (eventType) {
+ScrollBar.prototype.triggerEvent = function (eventType,e) {
 
     var listeners = this.eventListeners[eventType];
     if(!listeners){
@@ -323,7 +326,7 @@ ScrollBar.prototype.triggerEvent = function (eventType) {
     }
     listeners.forEach(function (listener) {
         try{
-            listener.call(this);
+            listener.call(this,e);
         }catch(e){
             console.error(e.stack || e);
         }
