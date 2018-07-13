@@ -113,6 +113,10 @@
     border-top: none;
     border-right: 1px solid #000;
     border-bottom: 1px solid #000; }
+    .d1012 .d1012-body-container[scrollx='false'] {
+      overflow-x: hidden; }
+    .d1012 .d1012-body-container[scrolly='false'] {
+      overflow-y: hidden; }
     .d1012 .d1012-body-container[scroll-x='false'] {
       overflow-x: hidden; }
     .d1012 .d1012-body-container[scroll-y='false'] {

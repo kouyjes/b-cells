@@ -1240,6 +1240,26 @@ _prototype$2.getPanelSize = function () {
     };
 
 };
+_prototype$2.computeScrollbarState = function(){
+    var scrollbar = this.scrollbar;
+    if(scrollbar !== this.bodyPanel){
+        return;
+    }
+    var style$$1 = window.getComputedStyle(scrollbar);
+    var leftBorderW = parseInt(style$$1.borderLeftWidth),
+        rightBorderW = parseInt(style$$1.borderRightWidth),
+        topBorderW = parseInt(style$$1.borderTopWidth),
+        bottomBorderW = parseInt(style$$1.borderBottomWidth);
+
+    var scrollWidth = scrollbar.scrollWidth,
+        offsetWidth = scrollbar.offsetWidth,
+        scrollHeight = scrollbar.scrollHeight,
+        offsetHeight = scrollbar.offsetHeight;
+    var scrollX = scrollWidth + leftBorderW + rightBorderW > offsetWidth;
+    var scrollY = scrollHeight + topBorderW + bottomBorderW > offsetHeight;
+    scrollbar.setAttribute('scrollX',String(scrollX));
+    scrollbar.setAttribute('scrollY',String(scrollY));
+};
 _prototype$2.resizeScrollbar = function resizeScrollbar() {
 
     var cellsInstance = this.cellsInstance;
@@ -1783,7 +1803,7 @@ _prototype$2.syncCursor = function syncCursor() {
         width: curWidth + 'px',
         top: curTop + 'px'
     });
-
+    this.computeScrollbarState();
     executeFunctionDelay('resizeScrollbar', this.resizeScrollbar, this);
 
 };

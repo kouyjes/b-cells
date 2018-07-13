@@ -79,7 +79,12 @@
       right:map-get($bodyConfig,borderRight);
       bottom:map-get($bodyConfig,borderBottom);;
     }
-
+    &[scrollx='false']{
+      overflow-x:hidden;
+    }
+    &[scrolly='false']{
+      overflow-y:hidden;
+    }
     &[scroll-x='false']{
       overflow-x:hidden;
     }
