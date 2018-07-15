@@ -1642,6 +1642,10 @@ function parseDom(text){
 _prototype$2._configCell = function _configCell(cell, field) {
 
     var cellsInstance = this.cellsInstance;
+    if(typeof field.render === 'function'){
+        field.render.call(cell,field);
+        return;
+    }
     var isHtml = !!field.html;
     cell.setAttribute('html_content', isHtml + '');
     if (isHtml) {
