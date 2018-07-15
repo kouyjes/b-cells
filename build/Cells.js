@@ -1643,7 +1643,7 @@ _prototype$2._configCell = function _configCell(cell, field) {
 
     var cellsInstance = this.cellsInstance;
     if(typeof field.render === 'function'){
-        field.render.call(cell,field);
+        field.render(cell);
         return;
     }
     var isHtml = !!field.html;
