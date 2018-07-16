@@ -71,8 +71,8 @@
             var cellsModel = new HERE.UI.CELL.CellsModel();
             var header = [];
             for(var i = 0; i< colNum;i++){
-                header.push({name:'column' + i,style:{
-                    backgroundColor:randomColor()
+                header.push({name:'column' + i,width:200,style:{
+                    //backgroundColor:randomColor()
                 }});
             }
             header[1].minWidth = 150;
@@ -83,7 +83,7 @@
                     var fields = [];
                     for(var col = 0;col < colNum;col++){
                         fields.push({value:'cell-'+ i + '-' + col,style:{
-                            'background-color':randomColor()
+                            //'background-color':randomColor()
                         }});
                     }
                     return {
@@ -103,7 +103,7 @@
             return cellsModel;
         }
 
-        var _cellsModel = createCellsModel(30,5),
+        var _cellsModel = createCellsModel(3000,1000),
                 _cellsModel1 = createCellsModel(30,4);
 
 

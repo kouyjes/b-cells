@@ -1513,7 +1513,7 @@ _prototype$2.getBodyPaintRectAreas = function () {
             areas.push(area);
         });
     });
-    rowPaintAreas.forEach(function (rowArea) {
+    paintState.lastColArea !== null && rowPaintAreas.forEach(function (rowArea) {
         var area = {
             top: rowArea.from,
             bottom: rowArea.from + rowArea.pageSize,
@@ -1522,7 +1522,7 @@ _prototype$2.getBodyPaintRectAreas = function () {
         };
         areas.push(area);
     });
-    colPaintAreas.forEach(function (colArea) {
+    paintState.lastRowArea !== null && colPaintAreas.forEach(function (colArea) {
         var area = {
             top: rowClientArea.from,
             bottom: rowClientArea.from + rowClientArea.pageSize,

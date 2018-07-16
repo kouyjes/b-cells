@@ -23,6 +23,7 @@ B-cells is a component for rendering big data
         width:'', // define width absolute width,or relative width,eg 200px or 20%
         minWidth:'',// define min width of column
         maxWidth:'',
+        //render:Function define render function
         style:{
             backgroundColor:'' // define background color
         }
@@ -42,6 +43,7 @@ B-cells is a component for rendering big data
     fields.push({
         value:'row text',
         html:'',// define html value
+        //render:Function(cell),define render function
         style:{
             'background-color':'#ccc'
         }
