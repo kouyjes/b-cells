@@ -1,12 +1,12 @@
 {
   "name": "b-cell",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "description": "big data",
   "main": "index.js",
   "scripts": {
     "build": "rollup -c",
-    "build-uglify": "rollup -c && uglifyjs build/Cells.js > build/Cells.min.js",
-    "build-css": "scss src/themes/Cells.scss > build/Cells.css",
+    "build-uglify": "rollup -c && uglifyjs build/cells.js > build/cells.min.js",
+    "build-css": "scss src/themes/cells.scss > build/cells.css",
     "build-all": "npm run build-uglify && npm run build-css",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
