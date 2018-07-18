@@ -1646,7 +1646,7 @@ _prototype$2._configCell = function _configCell(cell, field) {
         field.render(cell);
         return;
     }
-    var isHtml = !!field.html;
+    var isHtml = (field.html !== null && field.html !== undefined);
     cell.setAttribute('html_content', isHtml + '');
     if (isHtml) {
         cell.innerHTML = '';
