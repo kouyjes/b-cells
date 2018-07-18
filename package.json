@@ -1,6 +1,6 @@
 {
   "name": "b-cell",
-  "version": "1.0.19",
+  "version": "1.0.21",
   "description": "big data",
   "main": "index.js",
   "scripts": {

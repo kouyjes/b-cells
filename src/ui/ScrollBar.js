@@ -1,12 +1,10 @@
 import { style,userSelect,getFullClassName,getFullClassSelector,isElementInDom,isTouchSupported,getMousePosition,isDomElement,requestAnimationFrame,cancelAnimationFrame,executeFunctionDelay,executeFunctionTimeout } from './domUtil'
 import { ScrollConfig } from './ScrollConfig.js';
-var scrollbarId = 1;
-function ScrollBar(ele,config){
-    Object.defineProperty(this,'_id',{
-        value:'scrollbarId_' + scrollbarId++
-    });
+import { Class } from '../base/Class';
+
+var ScrollBar = Class.create(function (ele,config) {
     this.init(ele,config);
-}
+});
 ScrollBar.mouseupListeners = null;
 ScrollBar.mousemoveListeners = null;
 ScrollBar.initEventListeners = function () {
@@ -465,7 +463,8 @@ ScrollBar.prototype._toggleVisible = function () {
     if(!config.autoHideX && !config.autoHideY){
         return;
     }
-    executeFunctionTimeout('hidden-v-scrollbar', function () {
+    var timeoutKey = this._id + 'hidden-v-scrollbar';
+    executeFunctionTimeout(timeoutKey, function () {
         config.autoHideX && this.hScrollbar.setAttribute(attrName,'');
         config.autoHideY && this.vScrollbar.setAttribute(attrName,'');
     },config.timeout,this);

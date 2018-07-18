@@ -13,10 +13,16 @@ if(!Object.assign){
 function Class(){
 
 }
+var __instanceId__ = 1;
 Class.create = function (baseClass) {
     var base = new Class();
     var _initHooks = [];
     var clazz = function () {
+
+        Object.defineProperty(this,'_id',{
+            value:'_instance_' + (__instanceId__++)
+        });
+
         var args = arguments;
         if(typeof baseClass === 'function'){
             baseClass.apply(this,args);

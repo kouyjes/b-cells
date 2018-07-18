@@ -255,8 +255,10 @@ function _bindResizeCellEvent() {
             return bln;
         }
     };
+    var id = this._id;
     cellsPanel.addEventListener('mousemove', function (e) {
-        executeFunctionDelay('rowPanel-mousemove',function () {
+        var key = id + 'rowPanel-mousemove';
+        executeFunctionDelay(key,function () {
             var mouseInfo = getMouseInfo(e);
             cellsPanel.style.cursor = mouseInfo.cursor;
         });

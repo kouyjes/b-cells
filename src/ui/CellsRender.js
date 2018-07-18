@@ -703,7 +703,8 @@ _prototype.syncCursor = function syncCursor() {
         top: curTop + 'px'
     });
     this.computeScrollbarState();
-    executeFunctionDelay(cellsInstance.getUniqueKey('resizeScrollbar'), this.resizeScrollbar, this);
+    var key = this._id + 'resizeScrollbar';
+    executeFunctionDelay(key, this.resizeScrollbar, this);
 
 };
 _prototype.getGlobalMinWidth = function () {
@@ -920,21 +921,24 @@ _prototype._onAppendRows = function () {
     var rowsHeight = this.domCache.rowsHeight;
     this._initBodyCellHeightIndex(rowsHeight.length);
     this.syncCursor();
-    executeFunctionDelay(cellsInstance.getUniqueKey('repaintRequest'), this.repaint, this);
+    var key = this._id + 'repaintRequest';
+    executeFunctionDelay(key, this.repaint, this);
 
 };
 _prototype._bindCellsModelEvent = function () {
 
     var cellsInstance = this.cellsInstance;
     cellsInstance.cellsModel.bind('refresh', function () {
+        var key = this._id + 'refresh';
         if (cellsInstance.renderTo) {
-            executeFunctionDelay(cellsInstance.getUniqueKey('refresh'), this.repaint, this);
+            executeFunctionDelay(key, this.repaint, this);
         }
     }.bind(this));
 
     cellsInstance.cellsModel.bind('appendRows', function () {
+        var key = this._id + 'appendRows';
         if (cellsInstance.renderTo) {
-            executeFunctionDelay(cellsInstance.getUniqueKey('appendRows'), this._onAppendRows, this);
+            executeFunctionDelay(key, this._onAppendRows, this);
         }
     }.bind(this));
 };
@@ -966,7 +970,8 @@ function _bindScrollEvent() {
 
         var scrollLeft = scrollbar.scrollLeft;
         style(headerContentPanel, 'left', -scrollLeft + 'px');
-        executeFunctionDelay(cellsInstance.getUniqueKey('repaintRequest'), this.repaint, this);
+        var key = this._id + 'repaintRequest';
+        executeFunctionDelay(key, this.repaint, this);
 
         var event = CellsEvent.createEvent('scroll', scrollbar, cellsInstance.cellsModel,e);
         cellsEvent.triggerEvent(event);
