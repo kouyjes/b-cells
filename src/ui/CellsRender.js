@@ -538,7 +538,7 @@ _prototype._configCell = function _configCell(cell, field) {
         });
         cell._textSpan = null;
     } else {
-        var text = field.name || field.value;
+        var text = field.name || field.value || '';
         var span;
         if (!cell._textSpan) {
             cell.innerHTML = '';
