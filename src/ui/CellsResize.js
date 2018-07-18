@@ -266,6 +266,8 @@ function _bindResizeCellEvent() {
     cellsPanel.addEventListener('mousemove', function (e) {
 
         var cellsInstance = this.cellsInstance;
+        var cellsEvent = cellsInstance.cellsEvent,
+            cellsPanel = cellsInstance.cellsPanel;
         var mouseInfo = getMouseInfo(e);
         //resizeCell
         var rowIndex = resizeManager.rowIndex,
@@ -284,7 +286,14 @@ function _bindResizeCellEvent() {
             resizeFlag = true;
         }
         if(resizeFlag){
+            var event = CellsEvent.createEvent('cellResize', cellsPanel, {
+                rowIndex:rowIndex,
+                colIndex:colIndex,
+                width:width,
+                height:height
+            },e);
             this.resizeCell(rowIndex,colIndex,width,height);
+            cellsEvent.triggerEvent(event);
             e.stopPropagation();
         }
     }.bind(this));
