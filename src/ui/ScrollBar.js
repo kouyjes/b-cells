@@ -2,7 +2,9 @@ import { style,userSelect,getFullClassName,getFullClassSelector,isElementInDom,i
 import { ScrollConfig } from './ScrollConfig.js';
 var scrollbarId = 1;
 function ScrollBar(ele,config){
-    this._id = '_id' + scrollbarId++;
+    Object.defineProperty(this,'_id',{
+        value:'scrollbarId_' + scrollbarId++
+    });
     this.init(ele,config);
 }
 ScrollBar.mouseupListeners = null;

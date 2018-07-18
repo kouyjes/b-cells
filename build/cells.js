@@ -201,7 +201,9 @@ ScrollConfig.defaultConfig = function () {
 
 var scrollbarId = 1;
 function ScrollBar(ele,config){
-    this._id = '_id' + scrollbarId++;
+    Object.defineProperty(this,'_id',{
+        value:'scrollbarId_' + scrollbarId++
+    });
     this.init(ele,config);
 }
 ScrollBar.mouseupListeners = null;
@@ -991,7 +993,7 @@ function _setRenderTo(renderTo) {
 var Cells = Class.create(function (cellsModel,config) {
     init.apply(this,arguments);
 });
-
+var CellId = 1;
 function init(cellsModel,config) {
 
     if(!(cellsModel instanceof CellsModel)){
@@ -999,6 +1001,10 @@ function init(cellsModel,config) {
     }
     Object.defineProperty(this,'cellsModel',{
         value:cellsModel
+    });
+
+    Object.defineProperty(this,'_id',{
+        value:'cellsId_' + CellId++
     });
 
     var renderTo = config.renderTo;
@@ -1011,6 +1017,10 @@ function init(cellsModel,config) {
 
 }
 var _prototype = Cells.prototype;
+_prototype.getUniqueKey = function(key){
+    key = key || (new Date()).getTime();
+    return this._id + key;
+};
 Cells.extend = function (extend) {
 
     Object.keys(arguments[0]).forEach(function (key) {
@@ -1806,6 +1816,7 @@ _prototype$2.syncCursor = function syncCursor() {
     if (!cursor) {
         return;
     }
+    var cellsInstance = this.cellsInstance;
     var domCache = this.domCache;
     var rowsTop = domCache.rowsTop,
         rowsHeight = domCache.rowsHeight,
@@ -1819,7 +1830,7 @@ _prototype$2.syncCursor = function syncCursor() {
         top: curTop + 'px'
     });
     this.computeScrollbarState();
-    executeFunctionDelay('resizeScrollbar', this.resizeScrollbar, this);
+    executeFunctionDelay(cellsInstance.getUniqueKey('resizeScrollbar'), this.resizeScrollbar, this);
 
 };
 _prototype$2.getGlobalMinWidth = function () {
@@ -2032,10 +2043,11 @@ _prototype$2._parseCellHeight = function (height) {
 };
 _prototype$2._onAppendRows = function () {
 
+    var cellsInstance = this.cellsInstance;
     var rowsHeight = this.domCache.rowsHeight;
     this._initBodyCellHeightIndex(rowsHeight.length);
     this.syncCursor();
-    executeFunctionDelay('repaintRequest', this.repaint, this);
+    executeFunctionDelay(cellsInstance.getUniqueKey('repaintRequest'), this.repaint, this);
 
 };
 _prototype$2._bindCellsModelEvent = function () {
@@ -2043,13 +2055,13 @@ _prototype$2._bindCellsModelEvent = function () {
     var cellsInstance = this.cellsInstance;
     cellsInstance.cellsModel.bind('refresh', function () {
         if (cellsInstance.renderTo) {
-            executeFunctionDelay('refresh', this.repaint, this);
+            executeFunctionDelay(cellsInstance.getUniqueKey('refresh'), this.repaint, this);
         }
     }.bind(this));
 
     cellsInstance.cellsModel.bind('appendRows', function () {
         if (cellsInstance.renderTo) {
-            executeFunctionDelay('appendRows', this._onAppendRows, this);
+            executeFunctionDelay(cellsInstance.getUniqueKey('appendRows'), this._onAppendRows, this);
         }
     }.bind(this));
 };
@@ -2081,7 +2093,7 @@ function _bindScrollEvent() {
 
         var scrollLeft = scrollbar.scrollLeft;
         style(headerContentPanel, 'left', -scrollLeft + 'px');
-        executeFunctionDelay('repaintRequest', this.repaint, this);
+        executeFunctionDelay(cellsInstance.getUniqueKey('repaintRequest'), this.repaint, this);
 
         var event = CellsEvent.createEvent('scroll', scrollbar, cellsInstance.cellsModel,e);
         cellsEvent.triggerEvent(event);

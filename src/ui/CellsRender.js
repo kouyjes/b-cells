@@ -689,6 +689,7 @@ _prototype.syncCursor = function syncCursor() {
     if (!cursor) {
         return;
     }
+    var cellsInstance = this.cellsInstance;
     var domCache = this.domCache;
     var rowsTop = domCache.rowsTop,
         rowsHeight = domCache.rowsHeight,
@@ -702,7 +703,7 @@ _prototype.syncCursor = function syncCursor() {
         top: curTop + 'px'
     });
     this.computeScrollbarState();
-    executeFunctionDelay('resizeScrollbar', this.resizeScrollbar, this);
+    executeFunctionDelay(cellsInstance.getUniqueKey('resizeScrollbar'), this.resizeScrollbar, this);
 
 };
 _prototype.getGlobalMinWidth = function () {
@@ -915,10 +916,11 @@ _prototype._parseCellHeight = function (height) {
 };
 _prototype._onAppendRows = function () {
 
+    var cellsInstance = this.cellsInstance;
     var rowsHeight = this.domCache.rowsHeight;
     this._initBodyCellHeightIndex(rowsHeight.length);
     this.syncCursor();
-    executeFunctionDelay('repaintRequest', this.repaint, this);
+    executeFunctionDelay(cellsInstance.getUniqueKey('repaintRequest'), this.repaint, this);
 
 };
 _prototype._bindCellsModelEvent = function () {
@@ -926,13 +928,13 @@ _prototype._bindCellsModelEvent = function () {
     var cellsInstance = this.cellsInstance;
     cellsInstance.cellsModel.bind('refresh', function () {
         if (cellsInstance.renderTo) {
-            executeFunctionDelay('refresh', this.repaint, this);
+            executeFunctionDelay(cellsInstance.getUniqueKey('refresh'), this.repaint, this);
         }
     }.bind(this));
 
     cellsInstance.cellsModel.bind('appendRows', function () {
         if (cellsInstance.renderTo) {
-            executeFunctionDelay('appendRows', this._onAppendRows, this);
+            executeFunctionDelay(cellsInstance.getUniqueKey('appendRows'), this._onAppendRows, this);
         }
     }.bind(this));
 };
@@ -964,7 +966,7 @@ function _bindScrollEvent() {
 
         var scrollLeft = scrollbar.scrollLeft;
         style(headerContentPanel, 'left', -scrollLeft + 'px');
-        executeFunctionDelay('repaintRequest', this.repaint, this);
+        executeFunctionDelay(cellsInstance.getUniqueKey('repaintRequest'), this.repaint, this);
 
         var event = CellsEvent.createEvent('scroll', scrollbar, cellsInstance.cellsModel,e);
         cellsEvent.triggerEvent(event);

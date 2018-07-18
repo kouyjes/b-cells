@@ -21,7 +21,7 @@ function _setRenderTo(renderTo) {
 var Cells = Class.create(function (cellsModel,config) {
     init.apply(this,arguments);
 });
-
+var CellId = 1;
 function init(cellsModel,config) {
 
     if(!(cellsModel instanceof CellsModel)){
@@ -29,6 +29,10 @@ function init(cellsModel,config) {
     }
     Object.defineProperty(this,'cellsModel',{
         value:cellsModel
+    });
+
+    Object.defineProperty(this,'_id',{
+        value:'cellsId_' + CellId++
     });
 
     var renderTo = config.renderTo;
@@ -41,6 +45,10 @@ function init(cellsModel,config) {
 
 };
 var _prototype = Cells.prototype;
+_prototype.getUniqueKey = function(key){
+    key = key || (new Date()).getTime();
+    return this._id + key;
+};
 Cells.extend = function (extend) {
 
     Object.keys(arguments[0]).forEach(function (key) {
