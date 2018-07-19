@@ -55,6 +55,18 @@ Class.create = function (baseClass) {
         }
 
     };
+    clazz.extend = function(extend,override){
+        var _prototype = clazz.prototype;
+        if(override === undefined || override === null){
+            override = true;
+        }
+        Object.keys(extend).forEach(function(key){
+            if(!override && (key in _prototype)){
+                return;
+            }
+            _prototype[key] = extend[key];
+        });
+    };
     clazz.prototype = base;
     return clazz;
 };

@@ -75,6 +75,18 @@ Class.create = function (baseClass) {
         }
 
     };
+    clazz.extend = function(extend,override){
+        var _prototype = clazz.prototype;
+        if(override === undefined || override === null){
+            override = true;
+        }
+        Object.keys(extend).forEach(function(key){
+            if(!override && (key in _prototype)){
+                return;
+            }
+            _prototype[key] = extend[key];
+        });
+    };
     clazz.prototype = base;
     return clazz;
 };
@@ -961,7 +973,6 @@ CellsModel.prototype.appendRows = function (rows) {
 };
 
 function Config(config){
-    this.enableCustomScroll = false;
     this.textTitle = false;
     this.colResize = false;
     this.rowResize = false;
@@ -969,6 +980,10 @@ function Config(config){
     this.scrollY = true;
     this.minCellWidth = 50;
     this.minCellHeight = 50;
+    this.freezeConfig = {
+        col:undefined,
+        row:undefined
+    };
     if(config){
         Object.assign(this,config);
     }
@@ -1124,6 +1139,75 @@ Cells.addInitHooks(function () {
     this.cellsEvent = new CellsEvent(this);
 });
 
+var _prototype$3 = {};
+_prototype$3.render = function(){
+    var contentPanel = this.bodyPanel._contentPanel;
+    var freezeContainer = this._createFreezeContainer();
+    contentPanel.appendChild(freezeContainer);
+};
+_prototype$3._createFreezeContainer = function(){
+
+    var freezeCol = document.createElement('div');
+    freezeCol.className = getFullClassName('freeze-col-container');
+
+    var freezeRow = document.createElement('div');
+    freezeRow.className = getFullClassName('freeze-row-container');
+
+    var freezeCross = document.createElement('div');
+    freezeCross.className = getFullClassName('freeze-cross-container');
+
+    var freezeContainer = document.createElement('div');
+    freezeContainer.className = getFullClassName('freeze-container');
+
+    freezeContainer.appendChild(freezeCross);
+    freezeContainer.appendChild(freezeCol);
+    freezeContainer.appendChild(freezeRow);
+
+    return freezeContainer;
+};
+_prototype$3._getFreezeColPanel = function(){
+    var contentPanel = this.bodyPanel._contentPanel;
+    var selector = getFullClassSelector('freeze-col-container');
+    return contentPanel.querySelector(selector);
+};
+_prototype$3._getFreezeRowPanel = function(){
+    var contentPanel = this.bodyPanel._contentPanel;
+    var selector = getFullClassSelector('freeze-row-container');
+    return contentPanel.querySelector(selector);
+};
+_prototype$3._getFreezeCrossPanel = function(){
+    var contentPanel = this.bodyPanel._contentPanel;
+    var selector = getFullClassSelector('freeze-cross-container');
+    return contentPanel.querySelector(selector);
+};
+_prototype$3.paintFreezeRow = function(){
+    var cellsInstance = this.cellsInstance;
+    var freezeConfig = cellsInstance.config.freezeConfig,
+        freezeRow = freezeConfig.row;
+
+    var blnFreezeRow = typeof freezeRow === 'number' && freezeRow >= 0;
+    if(!blnFreezeRow){
+        return;
+    }
+    var panel = this._getFreezeRowPanel();
+    var paintState = this.paintState;
+    var colPaintAreas = paintState.colPaintAreas;
+
+};
+_prototype$3.paintFreezeCol = function(){
+    var cellsInstance = this.cellsInstance;
+    var panel = this._getFreezeColPanel();
+};
+_prototype$3.paintFreezeCross = function(){
+    var cellsInstance = this.cellsInstance;
+    var panel = this._getFreezeCrossPanel();
+};
+_prototype$3.paintFreeze = function(){
+    this.paintFreezeCross();
+    this.paintFreezeCol();
+    this.paintFreezeRow();
+};
+
 var _cellSupportStyles = ['background', 'backgroundColor', 'backgroundImage', 'backgroundRepeat', 'backgroundSize'];
 
 
@@ -1144,6 +1228,8 @@ var CellsRender = Class.create(function (cellsInstance) {
     cellsEvent.extendEventType('cellPainted', []);
 
 });
+
+CellsRender.extend(_prototype$3);
 
 var _prototype$2 = CellsRender.prototype;
 function transformStyleName(styleName) {
@@ -1184,9 +1270,11 @@ _prototype$2.initRenderState = function () {
         clearCells: function () {
             this.headerCells.length = 0;
             this.cells.length = 0;
+            this.freezeCells.length = 0;
         },
         headerCells: [],
         cells: [],
+        freezeCells:[],
         colsWidth: [],
         colsLeft: [],
         rowsTop: [],
@@ -1286,7 +1374,6 @@ _prototype$2.resizeScrollbar = function resizeScrollbar() {
 };
 _prototype$2.getCurrentColArea = function getCurrentColArea() {
 
-    var cellsInstance = this.cellsInstance;
     var scrollbar = this.scrollbar;
     var panelSize = this.getPanelSize();
     var colsLeft = this.domCache.colsLeft;
@@ -1443,6 +1530,7 @@ _prototype$2.executePaint = function () {
     paintState.rowPaintAreas = this.getRowPaintAreas();
     paintState.colPaintAreas = this.getColPaintAreas();
     this.paintHeader();
+    this.paintFreeze();
     this.paintBody();
     paintState.lastRowArea = paintState.currentRowArea;
     paintState.lastColArea = paintState.currentColArea;
@@ -1679,15 +1767,16 @@ _prototype$2._configCell = function _configCell(cell, field) {
 };
 _prototype$2._createHeaderCell = function (row, col, field) {
 
-    return this._createCell(row, col, field, true);
+    var cell = this._createCell(row, col, field, this.domCache.headerCells);
+    cell._headerCell = true;
+    return cell;
 
 };
-_prototype$2._createCell = function _createCell(row, col, field, isHeaderCell) {
+_prototype$2._createCell = function _createCell(row, col, field, cacheCells) {
 
-    var cacheCells = isHeaderCell ? this.domCache.headerCells : this.domCache.cells;
+    var cacheCells = cacheCells || this.domCache.cells;
     var cell = document.createElement('div');
     cell._cell = true;
-    cell._headerCell = isHeaderCell;
 
     cell.setAttribute('row', '' + row);
     cell.setAttribute('col', '' + col);
@@ -1786,6 +1875,10 @@ _prototype$2._createRowContainer = function _createRowContainer() {
 
     var rowContainer = document.createElement('div');
     rowContainer.className = getFullClassName('row-container');
+
+    var freezeContainer = this._createFreezeContainer();
+    rowContainer.appendChild(freezeContainer);
+
     return rowContainer;
 
 };
@@ -1810,7 +1903,6 @@ _prototype$2.syncCursor = function syncCursor() {
     if (!cursor) {
         return;
     }
-    var cellsInstance = this.cellsInstance;
     var domCache = this.domCache;
     var rowsTop = domCache.rowsTop,
         rowsHeight = domCache.rowsHeight,
@@ -1830,14 +1922,16 @@ _prototype$2.syncCursor = function syncCursor() {
 };
 _prototype$2.getGlobalMinWidth = function () {
 
-    var cellsInstance = this.cellsInstance;
-    return parseInt(cellsInstance.config.minCellWidth);
+    var cellsInstance = this.cellsInstance,
+        config = cellsInstance.config;
+    return parseInt(config.minCellWidth);
 
 };
 _prototype$2.getGlobalMinHeight = function () {
 
-    var cellsInstance = this.cellsInstance;
-    return parseInt(cellsInstance.config.minCellHeight);
+    var cellsInstance = this.cellsInstance,
+        config = cellsInstance.config;
+    return parseInt(config.minCellHeight);
 
 };
 _prototype$2.getMinCellWidth = function (col) {
@@ -1940,17 +2034,16 @@ _prototype$2._initHeaderFieldsWidth = function(){
         }
         return width;
     };
-    autoFields.some(function(field,index){
+    autoFields.some(function(field){
         var minWidth = field.minWidth,maxWidth = field.maxWidth;
         var width = field._width;
-        var w;
         if(width < minWidth){
-            w = produceWidth(minWidth - width);
+            produceWidth(minWidth - width);
             field._width = minWidth;
             return;
         }
         if(width > maxWidth){
-            w = consumeWidth(width - maxWidth);
+            consumeWidth(width - maxWidth);
             field._width = maxWidth;
             return;
         }
@@ -2038,7 +2131,6 @@ _prototype$2._parseCellHeight = function (height) {
 };
 _prototype$2._onAppendRows = function () {
 
-    var cellsInstance = this.cellsInstance;
     var rowsHeight = this.domCache.rowsHeight;
     this._initBodyCellHeightIndex(rowsHeight.length);
     this.syncCursor();
@@ -2238,13 +2330,13 @@ var CellsResize = Class.create(function (cellsInstance) {
     this.cellsInstance = cellsInstance;
 
 });
-var _prototype$3 = CellsResize.prototype;
+var _prototype$4 = CellsResize.prototype;
 function isNumber(value){
 
     return typeof value === 'number';
 
 }
-_prototype$3._updateRowDomCache = function (rowIndex,height) {
+_prototype$4._updateRowDomCache = function (rowIndex,height) {
 
     if(!isNumber(rowIndex = parseFloat(rowIndex)) || !isNumber(height = parseFloat(height))){
         return;
@@ -2265,7 +2357,7 @@ _prototype$3._updateRowDomCache = function (rowIndex,height) {
         rowsTop[i] = rowsTop[i - 1] + rowsHeight[i - 1];
     }
 };
-_prototype$3._updateColDomCache = function (colIndex,width) {
+_prototype$4._updateColDomCache = function (colIndex,width) {
 
     if(!isNumber(colIndex = parseFloat(colIndex)) || !isNumber(width = parseFloat(width))){
         return;
@@ -2287,24 +2379,24 @@ _prototype$3._updateColDomCache = function (colIndex,width) {
     }
 
 };
-_prototype$3._updateDomCache = function (rowIndex,colIndex,width,height) {
+_prototype$4._updateDomCache = function (rowIndex,colIndex,width,height) {
 
     this._updateRowDomCache(rowIndex,height);
     this._updateColDomCache(colIndex,width);
 
 };
-_prototype$3.resizeRowHeight = function resizeRowHeight(rowIndex,height) {
+_prototype$4.resizeRowHeight = function resizeRowHeight(rowIndex,height) {
 
     this.resizeCell(rowIndex,null,null,height);
 
 };
-_prototype$3.resizeColWidth = function resizeColWidth(colIndex,width) {
+_prototype$4.resizeColWidth = function resizeColWidth(colIndex,width) {
 
     this.resizeCell(null,colIndex,width,null);
 
 };
 
-_prototype$3._resizeCellDom = function _resizeCellDom(rowIndex,colIndex) {
+_prototype$4._resizeCellDom = function _resizeCellDom(rowIndex,colIndex) {
 
     this._updateHeaderCells(colIndex,{
         row:rowIndex === -1,
@@ -2317,7 +2409,7 @@ _prototype$3._resizeCellDom = function _resizeCellDom(rowIndex,colIndex) {
     });
 
 };
-_prototype$3._updateBodyCells = function (rowIndex,colIndex,option) {
+_prototype$4._updateBodyCells = function (rowIndex,colIndex,option) {
 
     var option = option || {
             row:false,
@@ -2359,7 +2451,7 @@ _prototype$3._updateBodyCells = function (rowIndex,colIndex,option) {
     }
 
 };
-_prototype$3._updateHeaderCells = function (colIndex,option) {
+_prototype$4._updateHeaderCells = function (colIndex,option) {
 
     var option = option || {
             row:false,
@@ -2391,7 +2483,7 @@ _prototype$3._updateHeaderCells = function (colIndex,option) {
         }
     }
 };
-_prototype$3.resizeCell = function resizeCell(rowIndex,colIndex,width,height) {
+_prototype$4.resizeCell = function resizeCell(rowIndex,colIndex,width,height) {
 
     this._updateDomCache(rowIndex,colIndex,width,height);
     this._resizeCellDom(rowIndex,colIndex,width,height);
@@ -2564,7 +2656,7 @@ function _bindResizeCellEvent() {
     cellsPanel.addEventListener('mouseleave',mouseup.bind(this));
 
 }
-_prototype$3.bindEvent = function () {
+_prototype$4.bindEvent = function () {
     _bindResizeCellEvent.call(this);
 };
 Cells.addInitHooks(function () {

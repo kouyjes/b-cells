@@ -1,5 +1,4 @@
 function Config(config){
-    this.enableCustomScroll = false;
     this.textTitle = false;
     this.colResize = false;
     this.rowResize = false;
@@ -7,6 +6,10 @@ function Config(config){
     this.scrollY = true;
     this.minCellWidth = 50;
     this.minCellHeight = 50;
+    this.freezeConfig = {
+        col:undefined,
+        row:undefined
+    };
     if(config){
         Object.assign(this,config);
     }

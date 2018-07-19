@@ -92,6 +92,14 @@
       overflow-y:hidden;
     }
   }
+  .#{$prefix}-freeze-container{
+    .#{$prefix}-freeze-col-container,.#{$prefix}-freeze-row-container,.#{$prefix}-freeze-cross-container{
+      position: absolute;
+      top:0;
+      left:0;
+      z-index:1;
+    }
+  }
   .#{$prefix}-row-container{
     position: relative;
   }

@@ -3,6 +3,7 @@ import { Class } from '../base/Class';
 import { Cells } from './Cells';
 import { CellsEvent } from './CellsEvent';
 import { ScrollBar } from './ScrollBar';
+import { CellsFreeze } from './CellsFreeze';
 var _cellSupportStyles = ['background', 'backgroundColor', 'backgroundImage', 'backgroundRepeat', 'backgroundSize'];
 
 
@@ -23,6 +24,8 @@ var CellsRender = Class.create(function (cellsInstance) {
     cellsEvent.extendEventType('cellPainted', []);
 
 });
+
+CellsRender.extend(CellsFreeze);
 
 var _prototype = CellsRender.prototype;
 function transformStyleName(styleName) {
@@ -63,9 +66,11 @@ _prototype.initRenderState = function () {
         clearCells: function () {
             this.headerCells.length = 0;
             this.cells.length = 0;
+            this.freezeCells.length = 0;
         },
         headerCells: [],
         cells: [],
+        freezeCells:[],
         colsWidth: [],
         colsLeft: [],
         rowsTop: [],
@@ -165,7 +170,6 @@ _prototype.resizeScrollbar = function resizeScrollbar() {
 };
 _prototype.getCurrentColArea = function getCurrentColArea() {
 
-    var cellsInstance = this.cellsInstance;
     var scrollbar = this.scrollbar;
     var panelSize = this.getPanelSize();
     var colsLeft = this.domCache.colsLeft;
@@ -322,6 +326,7 @@ _prototype.executePaint = function () {
     paintState.rowPaintAreas = this.getRowPaintAreas();
     paintState.colPaintAreas = this.getColPaintAreas();
     this.paintHeader();
+    this.paintFreeze();
     this.paintBody();
     paintState.lastRowArea = paintState.currentRowArea;
     paintState.lastColArea = paintState.currentColArea;
@@ -558,15 +563,16 @@ _prototype._configCell = function _configCell(cell, field) {
 };
 _prototype._createHeaderCell = function (row, col, field) {
 
-    return this._createCell(row, col, field, true);
+    var cell = this._createCell(row, col, field, this.domCache.headerCells);
+    cell._headerCell = true;
+    return cell;
 
 };
-_prototype._createCell = function _createCell(row, col, field, isHeaderCell) {
+_prototype._createCell = function _createCell(row, col, field, cacheCells) {
 
-    var cacheCells = isHeaderCell ? this.domCache.headerCells : this.domCache.cells;
+    var cacheCells = cacheCells || this.domCache.cells;
     var cell = document.createElement('div');
     cell._cell = true;
-    cell._headerCell = isHeaderCell;
 
     cell.setAttribute('row', '' + row);
     cell.setAttribute('col', '' + col);
@@ -665,6 +671,10 @@ _prototype._createRowContainer = function _createRowContainer() {
 
     var rowContainer = document.createElement('div');
     rowContainer.className = getFullClassName('row-container');
+
+    var freezeContainer = this._createFreezeContainer();
+    rowContainer.appendChild(freezeContainer);
+
     return rowContainer;
 
 };
@@ -689,7 +699,6 @@ _prototype.syncCursor = function syncCursor() {
     if (!cursor) {
         return;
     }
-    var cellsInstance = this.cellsInstance;
     var domCache = this.domCache;
     var rowsTop = domCache.rowsTop,
         rowsHeight = domCache.rowsHeight,
@@ -709,14 +718,16 @@ _prototype.syncCursor = function syncCursor() {
 };
 _prototype.getGlobalMinWidth = function () {
 
-    var cellsInstance = this.cellsInstance;
-    return parseInt(cellsInstance.config.minCellWidth);
+    var cellsInstance = this.cellsInstance,
+        config = cellsInstance.config;
+    return parseInt(config.minCellWidth);
 
 };
 _prototype.getGlobalMinHeight = function () {
 
-    var cellsInstance = this.cellsInstance;
-    return parseInt(cellsInstance.config.minCellHeight);
+    var cellsInstance = this.cellsInstance,
+        config = cellsInstance.config;
+    return parseInt(config.minCellHeight);
 
 };
 _prototype.getMinCellWidth = function (col) {
@@ -819,17 +830,16 @@ _prototype._initHeaderFieldsWidth = function(){
         }
         return width;
     };
-    autoFields.some(function(field,index){
+    autoFields.some(function(field){
         var minWidth = field.minWidth,maxWidth = field.maxWidth;
         var width = field._width;
-        var w;
         if(width < minWidth){
-            w = produceWidth(minWidth - width);
+            produceWidth(minWidth - width);
             field._width = minWidth;
             return;
         }
         if(width > maxWidth){
-            w = consumeWidth(width - maxWidth);
+            consumeWidth(width - maxWidth);
             field._width = maxWidth;
             return;
         }
@@ -917,7 +927,6 @@ _prototype._parseCellHeight = function (height) {
 };
 _prototype._onAppendRows = function () {
 
-    var cellsInstance = this.cellsInstance;
     var rowsHeight = this.domCache.rowsHeight;
     this._initBodyCellHeightIndex(rowsHeight.length);
     this.syncCursor();

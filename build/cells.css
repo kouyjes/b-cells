@@ -121,6 +121,11 @@
       overflow-x: hidden; }
     .d1012 .d1012-body-container[scroll-y='false'] {
       overflow-y: hidden; }
+  .d1012 .d1012-freeze-container .d1012-freeze-col-container, .d1012 .d1012-freeze-container .d1012-freeze-row-container, .d1012 .d1012-freeze-container .d1012-freeze-cross-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1; }
   .d1012 .d1012-row-container {
     position: relative; }
   .d1012 .d1012-row-cursor {
