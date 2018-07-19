@@ -74,6 +74,13 @@ _prototype.paintFreezeRow = function(){
     this._paintFreezeAreaCells(contentPanel,cells,cacheCells,areas);
 
 };
+_prototype._isFreezeCrossCellArea = function(rowIndex,colIndex){
+    var cellsInstance = this.cellsInstance;
+    var freezeConfig = cellsInstance.config.freezeConfig,
+        freezeCol = freezeConfig.col,
+        freezeRow = freezeConfig.row;
+    return rowIndex < freezeRow && colIndex < freezeCol;
+};
 _prototype._paintFreezeAreaCells = function(contentPanel,cells,cacheCells,areas){
 
     var cellsInstance = this.cellsInstance,
@@ -83,6 +90,11 @@ _prototype._paintFreezeAreaCells = function(contentPanel,cells,cacheCells,areas)
         for (var rowIndex = area.top; rowIndex < area.bottom; rowIndex++) {
             row = rows[rowIndex];
             for (var colIndex = area.left; colIndex < area.right; colIndex++) {
+
+                if(this._isFreezeCrossCellArea(rowIndex,colIndex)){
+                    continue;
+                }
+
                 field = row.fields[colIndex];
                 cell = cells.pop();
                 if (!cell) {
@@ -308,5 +320,10 @@ _prototype.getFreezeColAreas = function () {
         areas.push(area);
     });
     return areas;
+};
+_prototype.getFreezeCells = function () {
+
+    var domCache = this.domCache;
+    return domCache.freezeRowCells.concat(domCache.freezeColCells).concat(domCache.freezeCrossCells).concat(domCache.freezeHeaderCells);
 };
 export { _prototype as CellsFreeze }

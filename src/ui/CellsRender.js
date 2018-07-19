@@ -356,12 +356,6 @@ _prototype.getBodyCells = function () {
     return this.domCache.cells;
 
 };
-_prototype.getFreezeCells = function () {
-
-    var domCache = this.domCache;
-    return domCache.freezeRowCells.concat(domCache.freezeColCells).concat(domCache.freezeCrossCells);
-
-};
 _prototype.paintHeader = function paintHeader() {
 
     var cellsInstance = this.cellsInstance,

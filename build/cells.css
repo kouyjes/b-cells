@@ -132,6 +132,10 @@
       color: #fff; }
   .d1012 .d1012-freeze-cross-container {
     z-index: 3; }
+  .d1012 .d1012-freeze-container {
+    position: absolute;
+    left: 0 !important;
+    top: 0 !important; }
   .d1012 .d1012-row-container {
     position: relative; }
   .d1012 .d1012-row-cursor {

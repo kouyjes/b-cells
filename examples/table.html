@@ -154,14 +154,14 @@
                 freezeConfig:{
                     row:3,
                     col:1
-                }/*,
+                },
                 customScroll:{
                     timeout:3000,
                     autoHideX:false,
                     autoHideY:true
                    //height:'30px',
                    //width:'25'
-                }*/
+                }
             });
             return tableCell;
 
@@ -173,6 +173,10 @@
                 colResize:true,
                 scrollY:true,
                 scrollX:true,
+                freezeConfig:{
+                    row:3,
+                    col:1
+                },
                 customScroll:null
             });
             return tableCell;

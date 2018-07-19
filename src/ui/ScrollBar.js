@@ -43,18 +43,31 @@ function getWidth(ele){
 function getClientWidth(ele){
     return ele.clientWidth;
 }
+function isAbsolute(el){
+    var position = window.getComputedStyle(el).position;
+    return ['fixed','absolute'].indexOf(position) >= 0;
+};
 function getScrollWidth(element){
     var children = element.children;
     var length = children.length,width = 0,ele;
+    var sizes = [],w = 0;
     if(length > 0){
         for(var i = 0;i < length;i++){
             ele = children[i];
             if(ele.vScrollbar || ele.hScrollbar){
                 continue;
             }
-            width += Math.max(ele.scrollWidth,ele.offsetWidth);
+            w = Math.max(ele.scrollWidth,ele.offsetWidth);
+            sizes.push(w);
+            if(isAbsolute(ele)){
+                continue;
+            }
+            width += w;
         }
     }
+    sizes.forEach(function(size){
+        width = Math.max(width,size);
+    });
     return Math.max(element.scrollWidth,element.clientWidth,width);
 }
 function getHeight(ele){
@@ -71,15 +84,24 @@ function getClientHeight(ele){
 function getScrollHeight(element){
     var children = element.children;
     var length = children.length,height = 0,ele;
+    var sizes = [],h = 0;
     if(length > 0){
         for(var i = 0;i < length;i++){
             ele = children[i];
             if(ele.vScrollbar || ele.hScrollbar){
                 continue;
             }
-            height += Math.max(ele.scrollHeight,ele.offsetHeight);
+            h = Math.max(ele.scrollHeight,ele.offsetHeight);
+            sizes.push(h);
+            if(isAbsolute(ele)){
+                continue;
+            }
+            height += h;
         }
     }
+    sizes.forEach(function(size){
+        height = Math.max(height,size);
+    });
     return Math.max(element.scrollHeight,element.clientHeight,height);
 }
 ScrollBar.prototype.init = function (ele,config) {

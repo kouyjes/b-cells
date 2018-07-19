@@ -107,6 +107,9 @@
     z-index:3;
   }
   .#{$prefix}-freeze-container{
+    position: absolute;
+    left:0 !important;
+    top:0 !important;
   }
   .#{$prefix}-row-container{
     position: relative;

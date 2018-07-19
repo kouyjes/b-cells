@@ -258,18 +258,31 @@ function getWidth(ele){
 function getClientWidth(ele){
     return ele.clientWidth;
 }
+function isAbsolute(el){
+    var position = window.getComputedStyle(el).position;
+    return ['fixed','absolute'].indexOf(position) >= 0;
+}
 function getScrollWidth(element){
     var children = element.children;
     var length = children.length,width = 0,ele;
+    var sizes = [],w = 0;
     if(length > 0){
         for(var i = 0;i < length;i++){
             ele = children[i];
             if(ele.vScrollbar || ele.hScrollbar){
                 continue;
             }
-            width += Math.max(ele.scrollWidth,ele.offsetWidth);
+            w = Math.max(ele.scrollWidth,ele.offsetWidth);
+            sizes.push(w);
+            if(isAbsolute(ele)){
+                continue;
+            }
+            width += w;
         }
     }
+    sizes.forEach(function(size){
+        width = Math.max(width,size);
+    });
     return Math.max(element.scrollWidth,element.clientWidth,width);
 }
 function getHeight(ele){
@@ -286,15 +299,24 @@ function getClientHeight(ele){
 function getScrollHeight(element){
     var children = element.children;
     var length = children.length,height = 0,ele;
+    var sizes = [],h = 0;
     if(length > 0){
         for(var i = 0;i < length;i++){
             ele = children[i];
             if(ele.vScrollbar || ele.hScrollbar){
                 continue;
             }
-            height += Math.max(ele.scrollHeight,ele.offsetHeight);
+            h = Math.max(ele.scrollHeight,ele.offsetHeight);
+            sizes.push(h);
+            if(isAbsolute(ele)){
+                continue;
+            }
+            height += h;
         }
     }
+    sizes.forEach(function(size){
+        height = Math.max(height,size);
+    });
     return Math.max(element.scrollHeight,element.clientHeight,height);
 }
 ScrollBar.prototype.init = function (ele,config) {
@@ -1213,6 +1235,13 @@ _prototype$3.paintFreezeRow = function(){
     this._paintFreezeAreaCells(contentPanel,cells,cacheCells,areas);
 
 };
+_prototype$3._isFreezeCrossCellArea = function(rowIndex,colIndex){
+    var cellsInstance = this.cellsInstance;
+    var freezeConfig = cellsInstance.config.freezeConfig,
+        freezeCol = freezeConfig.col,
+        freezeRow = freezeConfig.row;
+    return rowIndex < freezeRow && colIndex < freezeCol;
+};
 _prototype$3._paintFreezeAreaCells = function(contentPanel,cells,cacheCells,areas){
 
     var cellsInstance = this.cellsInstance,
@@ -1222,6 +1251,11 @@ _prototype$3._paintFreezeAreaCells = function(contentPanel,cells,cacheCells,area
         for (var rowIndex = area.top; rowIndex < area.bottom; rowIndex++) {
             row = rows[rowIndex];
             for (var colIndex = area.left; colIndex < area.right; colIndex++) {
+
+                if(this._isFreezeCrossCellArea(rowIndex,colIndex)){
+                    continue;
+                }
+
                 field = row.fields[colIndex];
                 cell = cells.pop();
                 if (!cell) {
@@ -1447,6 +1481,11 @@ _prototype$3.getFreezeColAreas = function () {
         areas.push(area);
     });
     return areas;
+};
+_prototype$3.getFreezeCells = function () {
+
+    var domCache = this.domCache;
+    return domCache.freezeRowCells.concat(domCache.freezeColCells).concat(domCache.freezeCrossCells).concat(domCache.freezeHeaderCells);
 };
 
 var _cellSupportStyles = ['background', 'backgroundColor', 'backgroundImage', 'backgroundRepeat', 'backgroundSize'];
@@ -1799,12 +1838,6 @@ _prototype$2.getHeaderCells = function () {
 _prototype$2.getBodyCells = function () {
 
     return this.domCache.cells;
-
-};
-_prototype$2.getFreezeCells = function () {
-
-    var domCache = this.domCache;
-    return domCache.freezeRowCells.concat(domCache.freezeColCells).concat(domCache.freezeCrossCells);
 
 };
 _prototype$2.paintHeader = function paintHeader() {
