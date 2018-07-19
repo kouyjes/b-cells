@@ -2182,7 +2182,7 @@ _prototype$2._createHeader = function _createHeader() {
     headerContainer.appendChild(headerContentPanel);
 
     var headerFreeContainer = this._createHeaderFreezeContainer();
-    headerContainer.append(headerFreeContainer);
+    headerContainer.appendChild(headerFreeContainer);
 
     headerContainer._contentPanel = headerContentPanel;
     return headerContainer;
