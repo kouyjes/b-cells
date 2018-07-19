@@ -26,47 +26,287 @@ _prototype._createFreezeContainer = function(){
 
     return freezeContainer;
 };
+_prototype._createHeaderFreezeContainer = function(){
+    var freezeContainer = document.createElement('div');
+    freezeContainer.className = getFullClassName('freeze-header-container');
+    return freezeContainer;
+};
+_prototype.getFreezeHeaderPanel = function(){
+    var selector = getFullClassSelector('freeze-header-container');
+    return this.headerPanel.querySelector(selector);
+};
 _prototype._getFreezeColPanel = function(){
-    var contentPanel = this.bodyPanel._contentPanel;
+    var bodyPanel = this.bodyPanel;
     var selector = getFullClassSelector('freeze-col-container');
-    return contentPanel.querySelector(selector);
+    return bodyPanel.querySelector(selector);
 };
 _prototype._getFreezeRowPanel = function(){
-    var contentPanel = this.bodyPanel._contentPanel;
+    var bodyPanel = this.bodyPanel;
     var selector = getFullClassSelector('freeze-row-container');
-    return contentPanel.querySelector(selector);
+    return bodyPanel.querySelector(selector);
 };
 _prototype._getFreezeCrossPanel = function(){
-    var contentPanel = this.bodyPanel._contentPanel;
+    var bodyPanel = this.bodyPanel;
     var selector = getFullClassSelector('freeze-cross-container');
-    return contentPanel.querySelector(selector);
+    return bodyPanel.querySelector(selector);
 };
 _prototype.paintFreezeRow = function(){
+
+    var blnFreezeRow = this._isFreezeRow();
+    if(!blnFreezeRow){
+        return;
+    }
+
+    var paintState = this.paintState,
+        domCache = this.domCache;
+    var colClientArea = paintState.currentColArea;
+
+    var cacheCells = domCache.freezeRowCells;
+    var cells = cacheCells.filter(function (cell) {
+        var col = parseInt(cell.getAttribute('col'));
+        var inCol = col >= colClientArea.from && col < colClientArea.from + colClientArea.pageSize;
+        return !inCol;
+    });
+
+    var contentPanel = this._getFreezeRowPanel();
+
+    var areas = this.getFreezeRowAreas();
+    this._paintFreezeAreaCells(contentPanel,cells,cacheCells,areas);
+
+};
+_prototype._paintFreezeAreaCells = function(contentPanel,cells,cacheCells,areas){
+
+    var cellsInstance = this.cellsInstance,
+        rows = cellsInstance.cellsModel.rows;
+    areas.forEach(function (area) {
+        var row, cell, field;
+        for (var rowIndex = area.top; rowIndex < area.bottom; rowIndex++) {
+            row = rows[rowIndex];
+            for (var colIndex = area.left; colIndex < area.right; colIndex++) {
+                field = row.fields[colIndex];
+                cell = cells.pop();
+                if (!cell) {
+                    cell = this._createCell(rowIndex, colIndex, field,cacheCells);
+                    contentPanel.appendChild(cell);
+                } else {
+                    this._paintCell(cell, rowIndex, colIndex, field);
+                }
+            }
+        }
+    }.bind(this));
+
+    this.removeCells(cacheCells, cells);
+};
+_prototype._isFreezeCol = function(){
+    var cellsInstance = this.cellsInstance;
+    var freezeConfig = cellsInstance.config.freezeConfig,
+        freezeCol = freezeConfig.col;
+
+    var blnFreezeCol = typeof freezeCol === 'number' && freezeCol >= 0;
+    return blnFreezeCol;
+
+};
+_prototype._isFreezeRow = function(){
     var cellsInstance = this.cellsInstance;
     var freezeConfig = cellsInstance.config.freezeConfig,
         freezeRow = freezeConfig.row;
 
     var blnFreezeRow = typeof freezeRow === 'number' && freezeRow >= 0;
-    if(!blnFreezeRow){
-        return;
-    }
-    var panel = this._getFreezeRowPanel();
-    var paintState = this.paintState;
-    var colPaintAreas = paintState.colPaintAreas;
-
+    return blnFreezeRow;
+};
+_prototype._isFreezeCross = function(){
+    return this._isFreezeRow() && this._isFreezeCol();
 };
 _prototype.paintFreezeCol = function(){
-    var cellsInstance = this.cellsInstance;
-    var panel = this._getFreezeColPanel();
+
+    var blnFreezeCol = this._isFreezeCol();
+    if(!blnFreezeCol){
+        return;
+    }
+
+    var paintState = this.paintState,
+        domCache = this.domCache;
+    var rowClientArea = paintState.currentRowArea;
+
+    var cacheCells = domCache.freezeColCells;
+    var cells = cacheCells.filter(function (cell) {
+        var row = parseInt(cell.getAttribute('row'));
+        var inRow = row >= rowClientArea.from && row < rowClientArea.from + rowClientArea.pageSize;
+        return !inRow;
+    });
+
+    var contentPanel = this._getFreezeColPanel();
+
+    var areas = this.getFreezeColAreas();
+    this._paintFreezeAreaCells(contentPanel,cells,cacheCells,areas);
 };
 _prototype.paintFreezeCross = function(){
-    var cellsInstance = this.cellsInstance;
-    var panel = this._getFreezeCrossPanel();
+    var cellsInstance = this.cellsInstance,
+        rows = cellsInstance.cellsModel.rows;
+    var freezeConfig = cellsInstance.config.freezeConfig,
+        freezeCol = freezeConfig.col,
+        freezeRow = freezeConfig.row;
+
+    var blnFreezeCross = this._isFreezeCross();
+    if(!blnFreezeCross){
+        return;
+    }
+
+    var cacheCells = this.domCache.freezeCrossCells;
+
+    if(cacheCells.length > 0){
+        return;
+    }
+    var paintState = this.paintState;
+    var rowPageSize = paintState.currentRowArea.pageSize,
+        colPageSize = paintState.currentColArea.pageSize;
+
+    freezeCol = Math.min(freezeCol,colPageSize);
+    freezeRow = Math.min(freezeRow,rowPageSize);
+
+
+    var freezePanel = this._getFreezeCrossPanel();
+    var row,field,cell;
+    for(var rowIndex = 0;rowIndex < freezeRow;rowIndex++){
+        row = rows[rowIndex];
+        for(var colIndex = 0;colIndex < freezeCol;colIndex++){
+            field = row.fields[colIndex];
+            cell = this._createHeaderCell(rowIndex, colIndex, field,cacheCells);
+            freezePanel.appendChild(cell);
+        }
+    }
+
 };
 _prototype.paintFreeze = function(){
+
+    this.adjustScroll();
+    this.paintFreezeHeader();
     this.paintFreezeCross();
     this.paintFreezeCol();
     this.paintFreezeRow();
 };
+_prototype.paintFreezeHeader = function(){
 
+    var blnFreezeCol = this._isFreezeCol();
+    if(!blnFreezeCol){
+        return;
+    }
+
+    var cellsInstance = this.cellsInstance;
+    var freezeConfig = cellsInstance.config.freezeConfig,
+        freezeCol = freezeConfig.col;
+
+    var paintState = this.paintState;
+    var colPageSize = paintState.currentColArea.pageSize;
+    freezeCol = Math.min(freezeCol,colPageSize);
+
+    var cellsModel = cellsInstance.cellsModel,
+        cacheCells = this.domCache.freezeHeaderCells,
+        headerFreezePanel = this.getFreezeHeaderPanel();
+
+    if(cacheCells.length > 0){
+        return;
+    }
+
+    var fields = cellsModel.header.fields;
+    var field,cell;
+    for(var i = 0;i < freezeCol;i++){
+        field = fields[i];
+        cell = this._createHeaderCell(0, i, field,cacheCells);
+        headerFreezePanel.appendChild(cell);
+    }
+};
+_prototype.adjustFreezeRowScroll = function(){
+
+    if(!this._isFreezeRow()){
+        return;
+    }
+    var scroll = this.scrollTo();
+    var rowPanel = this._getFreezeRowPanel();
+    var css = {};
+    if(this.isCustomScroll){
+        css.left =  -scroll.scrollLeft + 'px';
+    }else{
+        css.top = scroll.scrollTop + 'px';
+    }
+    style(rowPanel,css);
+};
+_prototype.adjustFreezeColScroll = function(){
+
+    if(!this._isFreezeCol()){
+        return;
+    }
+    var scroll = this.scrollTo();
+    var colPanel = this._getFreezeColPanel();
+    var css = {};
+    if(this.isCustomScroll){
+        css.top =  -scroll.scrollTop + 'px';
+    }else{
+        css.left = scroll.scrollLeft + 'px';
+    }
+    style(colPanel,css);
+};
+_prototype.adjustFreezeCrossScroll = function(){
+
+    if(!this._isFreezeCross()){
+        return;
+    }
+    var scroll = this.scrollTo();
+    var crossPanel = this._getFreezeCrossPanel();
+    var css = {};
+    if(!this.isCustomScroll){
+        css.top =  scroll.scrollTop + 'px';
+        css.left = scroll.scrollLeft + 'px';
+    }
+    style(crossPanel,css);
+};
+_prototype.adjustScroll = function(){
+   this.adjustFreezeCrossScroll();
+   this.adjustFreezeRowScroll();
+   this.adjustFreezeColScroll();
+};
+_prototype.getFreezeRowAreas = function () {
+
+    var cellsInstance = this.cellsInstance;
+    var paintState = this.paintState;
+    var rowPageSize = paintState.currentRowArea.pageSize;
+    var colPaintAreas = [].concat(paintState.colPaintAreas);
+    var areas = [];
+    var freezeConfig = cellsInstance.config.freezeConfig,
+        freezeRow = freezeConfig.row;
+
+    freezeRow = Math.min(freezeRow,rowPageSize);
+    colPaintAreas.forEach(function(colArea){
+        var area = {
+            top: 0,
+            bottom: freezeRow,
+            left: colArea.from,
+            right: colArea.from + colArea.pageSize
+        };
+        areas.push(area);
+    });
+    return areas;
+};
+_prototype.getFreezeColAreas = function () {
+
+    var cellsInstance = this.cellsInstance;
+    var paintState = this.paintState;
+    var colPageSize = paintState.currentColArea.pageSize;
+    var rowPaintAreas = [].concat(paintState.rowPaintAreas);
+    var areas = [];
+    var freezeConfig = cellsInstance.config.freezeConfig,
+        freezeCol = freezeConfig.col;
+
+    freezeCol = Math.min(freezeCol,colPageSize);
+    rowPaintAreas.forEach(function(rowArea){
+        var area = {
+            top: rowArea.from,
+            bottom: rowArea.from + rowArea.pageSize,
+            left: 0,
+            right: freezeCol
+        };
+        areas.push(area);
+    });
+    return areas;
+};
 export { _prototype as CellsFreeze }

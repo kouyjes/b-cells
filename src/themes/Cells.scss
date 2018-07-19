@@ -25,6 +25,7 @@
     }
     box-sizing:border-box;
     background:{
+      color:#fff;
       clip:content-box;
     }
     overflow: hidden;
@@ -58,9 +59,6 @@
     .#{$prefix}-cell{
       border-bottom:none;
       height:100% !important;
-      &[col-last='true']{
-        border-right:none;
-      }
     }
   }
   .#{$prefix}-header-content{
@@ -92,13 +90,23 @@
       overflow-y:hidden;
     }
   }
-  .#{$prefix}-freeze-container{
-    .#{$prefix}-freeze-col-container,.#{$prefix}-freeze-row-container,.#{$prefix}-freeze-cross-container{
-      position: absolute;
-      top:0;
-      left:0;
-      z-index:1;
+  .#{$prefix}-freeze-header-container{
+    height:100%;
+  }
+  .#{$prefix}-freeze-header-container,.#{$prefix}-freeze-col-container,.#{$prefix}-freeze-row-container,.#{$prefix}-freeze-cross-container{
+    position: absolute;
+    top:0;
+    left:0;
+    z-index:2;
+    .#{$prefix}-cell{
+      background-color:#23d;
+      color:#fff;
     }
+  }
+  .#{$prefix}-freeze-cross-container{
+    z-index:3;
+  }
+  .#{$prefix}-freeze-container{
   }
   .#{$prefix}-row-container{
     position: relative;

@@ -87,8 +87,22 @@ _prototype._resizeCellDom = function _resizeCellDom(rowIndex,colIndex) {
         col:colIndex >= 0
     });
 
+    this._updateFreezeCells(rowIndex,colIndex,{
+        row:rowIndex >= 0,
+        col:colIndex >= 0
+    });
 };
 _prototype._updateBodyCells = function (rowIndex,colIndex,option) {
+    var cellsInstance = this.cellsInstance,
+        cellsRender = cellsInstance.cellsRender;
+    this._updateContentCells(cellsRender.getBodyCells(),rowIndex,colIndex,option);
+};
+_prototype._updateFreezeCells = function (rowIndex,colIndex,option) {
+    var cellsInstance = this.cellsInstance,
+        cellsRender = cellsInstance.cellsRender;
+    this._updateContentCells(cellsRender.getFreezeCells(),rowIndex,colIndex,option);
+};
+_prototype._updateContentCells = function (cells,rowIndex,colIndex,option) {
 
     var option = option || {
             row:false,
@@ -104,8 +118,7 @@ _prototype._updateBodyCells = function (rowIndex,colIndex,option) {
         rowsTop = domCache.rowsTop;
     var colsWidth = domCache.colsWidth,
         colsLeft = domCache.colsLeft;
-    var cells = cellsRender.getBodyCells(),
-        size = cells.length,
+    var size = cells.length,
         cell,row,col;
     for(var i = 0;i < size;i++){
         cell = cells[i];

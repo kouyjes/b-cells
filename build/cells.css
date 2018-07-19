@@ -73,6 +73,7 @@
     border-bottom: 1px solid #000;
     border-right: 1px solid #f0f;
     box-sizing: border-box;
+    background-color: #fff;
     background-clip: content-box;
     overflow: hidden; }
     .d1012 .d1012-cell[html_content='false'] {
@@ -98,8 +99,6 @@
     .d1012 > .d1012-header .d1012-cell {
       border-bottom: none;
       height: 100% !important; }
-      .d1012 > .d1012-header .d1012-cell[col-last='true'] {
-        border-right: none; }
   .d1012 .d1012-header-content {
     position: relative;
     width: 100%;
@@ -121,11 +120,18 @@
       overflow-x: hidden; }
     .d1012 .d1012-body-container[scroll-y='false'] {
       overflow-y: hidden; }
-  .d1012 .d1012-freeze-container .d1012-freeze-col-container, .d1012 .d1012-freeze-container .d1012-freeze-row-container, .d1012 .d1012-freeze-container .d1012-freeze-cross-container {
+  .d1012 .d1012-freeze-header-container {
+    height: 100%; }
+  .d1012 .d1012-freeze-header-container, .d1012 .d1012-freeze-col-container, .d1012 .d1012-freeze-row-container, .d1012 .d1012-freeze-cross-container {
     position: absolute;
     top: 0;
     left: 0;
-    z-index: 1; }
+    z-index: 2; }
+    .d1012 .d1012-freeze-header-container .d1012-cell, .d1012 .d1012-freeze-col-container .d1012-cell, .d1012 .d1012-freeze-row-container .d1012-cell, .d1012 .d1012-freeze-cross-container .d1012-cell {
+      background-color: #23d;
+      color: #fff; }
+  .d1012 .d1012-freeze-cross-container {
+    z-index: 3; }
   .d1012 .d1012-row-container {
     position: relative; }
   .d1012 .d1012-row-cursor {

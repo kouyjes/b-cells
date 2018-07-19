@@ -66,11 +66,17 @@ _prototype.initRenderState = function () {
         clearCells: function () {
             this.headerCells.length = 0;
             this.cells.length = 0;
-            this.freezeCells.length = 0;
+            this.freezeHeaderCells.length = 0;
+            this.freezeRowCells.length = 0;
+            this.freezeColCells.length = 0;
+            this.freezeCrossCells.length = 0;
         },
         headerCells: [],
         cells: [],
-        freezeCells:[],
+        freezeHeaderCells:[],
+        freezeRowCells:[],
+        freezeColCells:[],
+        freezeCrossCells:[],
         colsWidth: [],
         colsLeft: [],
         rowsTop: [],
@@ -109,6 +115,9 @@ function initRender() {
     } else {
         scrollbar = this.bodyPanel;
     }
+    Object.defineProperty(this,'isCustomScroll',{
+        value:!!customScroll
+    });
     Object.defineProperty(this, 'scrollbar', {
         configurable: true,
         get: function () {
@@ -347,6 +356,12 @@ _prototype.getBodyCells = function () {
     return this.domCache.cells;
 
 };
+_prototype.getFreezeCells = function () {
+
+    var domCache = this.domCache;
+    return domCache.freezeRowCells.concat(domCache.freezeColCells).concat(domCache.freezeCrossCells);
+
+};
 _prototype.paintHeader = function paintHeader() {
 
     var cellsInstance = this.cellsInstance,
@@ -561,9 +576,9 @@ _prototype._configCell = function _configCell(cell, field) {
     return cell;
 
 };
-_prototype._createHeaderCell = function (row, col, field) {
+_prototype._createHeaderCell = function (row, col, field,cells) {
 
-    var cell = this._createCell(row, col, field, this.domCache.headerCells);
+    var cell = this._createCell(row, col, field, cells || this.domCache.headerCells);
     cell._headerCell = true;
     return cell;
 
@@ -664,6 +679,9 @@ _prototype._createBodyContainer = function _createBodyContainer() {
     var rowContainer = this._createRowContainer();
     bodyContainer.appendChild(rowContainer);
 
+    var freezeContainer = this._createFreezeContainer();
+    bodyContainer.appendChild(freezeContainer);
+
     bodyContainer._contentPanel = rowContainer;
     return bodyContainer;
 };
@@ -671,10 +689,6 @@ _prototype._createRowContainer = function _createRowContainer() {
 
     var rowContainer = document.createElement('div');
     rowContainer.className = getFullClassName('row-container');
-
-    var freezeContainer = this._createFreezeContainer();
-    rowContainer.appendChild(freezeContainer);
-
     return rowContainer;
 
 };
@@ -688,6 +702,9 @@ _prototype._createHeader = function _createHeader() {
     headerContentPanel.className = getFullClassName(headerContentClassName);
 
     headerContainer.appendChild(headerContentPanel);
+
+    var headerFreeContainer = this._createHeaderFreezeContainer();
+    headerContainer.append(headerFreeContainer);
 
     headerContainer._contentPanel = headerContentPanel;
     return headerContainer;

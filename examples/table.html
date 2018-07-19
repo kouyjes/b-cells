@@ -103,7 +103,7 @@
             return cellsModel;
         }
 
-        var _cellsModel = createCellsModel(3000,1000),
+        var _cellsModel = createCellsModel(3000,100),
                 _cellsModel1 = createCellsModel(30,4);
 
 
@@ -151,13 +151,17 @@
                 colResize:true,
                 scrollY:true,
                 scrollX:true,
+                freezeConfig:{
+                    row:3,
+                    col:1
+                }/*,
                 customScroll:{
                     timeout:3000,
                     autoHideX:false,
                     autoHideY:true
                    //height:'30px',
                    //width:'25'
-                }
+                }*/
             });
             return tableCell;
 
