@@ -219,6 +219,8 @@ function _bindResizeCellEvent() {
             getRowHitConfig = function(scrollTop,freezeRow){
                 var relY = position.pageY;
                 var rowHit = 0,rowIndex = undefined;
+                var freeze = false;
+
                 var isFreezeRow = typeof freezeRow === 'number' && freezeRow > 0;
                 if(headerResize && Math.abs(relY - headerHeight) < mouseHit){
                     rowHit = 1;
@@ -226,8 +228,12 @@ function _bindResizeCellEvent() {
                 }else if(headerHeight > relY){
                 }else{
                     relY -= headerHeight;
-                    rowsTop.some(function (rowTop,index) {
-                        if(isFreezeRow && index >= freezeRow){
+                    if(isFreezeRow){
+                        var top = rowsTop[freezeRow - 1] + rowsHeight[freezeRow - 1];
+                        freeze = (top + mouseHit >= relY);
+                    }
+                    (!isFreezeRow || (freeze  && freezeConfig.rowResize)) && rowsTop.some(function (rowTop,index) {
+                        if(index >= freezeRow){
                             return true;
                         }
                         var h = rowsHeight[index];
@@ -239,6 +245,7 @@ function _bindResizeCellEvent() {
                     });
                 }
                 return {
+                    freeze:freeze,
                     rowHit:rowHit,
                     rowIndex:rowIndex
                 };
@@ -252,8 +259,13 @@ function _bindResizeCellEvent() {
                 var isFreezeCol = typeof freezeCol === 'number' && freezeCol > 0;
                 var relX = position.pageX;
                 var colHit = 0,colIndex = undefined;
-                colsLeft.some(function (colLeft,index) {
-                    if(isFreezeCol && index >= freezeCol){
+                var freeze = false;
+                if(isFreezeCol){
+                    var left = colsLeft[freezeCol - 1] + colsWidth[freezeCol - 1];
+                    freeze = (left + mouseHit >= relX);
+                }
+                (!isFreezeCol || (freeze && freezeConfig.colResize)) && colsLeft.some(function (colLeft,index) {
+                    if(index >= freezeCol){
                         return true;
                     }
                     var w = colsWidth[index];
@@ -264,6 +276,7 @@ function _bindResizeCellEvent() {
                     }
                 });
                 return {
+                    freeze:freeze,
                     colHit:colHit,
                     colIndex:colIndex
                 };
@@ -276,7 +289,7 @@ function _bindResizeCellEvent() {
             if(freezeRow > 0){
                 rowHitConfig = getRowHitConfig(0,freezeRow);
             }
-            if(!rowHitConfig || rowHitConfig.rowIndex === undefined){
+            if(!rowHitConfig || (!rowHitConfig.freeze && rowHitConfig.rowIndex === undefined)){
                 rowHitConfig = getRowHitConfig(scrollTo.scrollTop);
             }
             rowHit = rowHitConfig.rowHit;
@@ -288,7 +301,7 @@ function _bindResizeCellEvent() {
             if(freezeCol > 0){
                 colHitConfig = getColHitConfig(0,freezeCol);
             }
-            if(!colHitConfig || colHitConfig.colIndex === undefined){
+            if(!colHitConfig || (!colHitConfig.freeze && colHitConfig.colIndex === undefined)){
                 colHitConfig = getColHitConfig(scrollTo.scrollLeft);
             }
             colHit = colHitConfig.colHit;

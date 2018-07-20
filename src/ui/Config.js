@@ -9,7 +9,9 @@ function Config(config){
     this.minCellHeight = 50;
     this.freezeConfig = {
         col:undefined,
-        row:undefined
+        row:undefined,
+        rowResize:true,
+        colResize:true
     };
     if(config){
         Object.assign(this,config);

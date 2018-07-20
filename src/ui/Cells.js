@@ -21,6 +21,25 @@ function _setRenderTo(renderTo) {
 var Cells = Class.create(function (cellsModel,config) {
     init.apply(this,arguments);
 });
+var _toString_ = Object.prototype.toString,
+    _noonObj_ = {};
+function isPlainObject(obj) {
+    return _toString_.call(obj) === _toString_.call(_noonObj_);
+}
+function assignConfig(config,newConfig) {
+    Object.keys(newConfig).forEach(function(key){
+        var val = config[key],newVal = newConfig[key];
+        if(isPlainObject(newVal)){
+            if(!isPlainObject(val)){
+                config[key] = newVal;
+            }else{
+                newVal = assignConfig(val,newVal);
+            }
+        }
+        config[key] = newVal;
+    });
+    return config;
+}
 function init(cellsModel,config) {
 
     if(!(cellsModel instanceof CellsModel)){
@@ -34,7 +53,8 @@ function init(cellsModel,config) {
     delete config.renderTo;
     _setRenderTo.call(this,renderTo);
 
-    this.config = Object.assign(Config.defaultConfig(),config);
+
+    this.config = assignConfig(Config.defaultConfig(),config);
     Object.freeze(this.config);
 
 
