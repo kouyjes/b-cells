@@ -2030,6 +2030,9 @@ function parseDom(text){
     throw new Error('invalid data !');
 
 }
+function isDefined$1(v) {
+    return v !== undefined && v !== null;
+}
 _prototype$2._configCell = function _configCell(cell, field) {
 
     var cellsInstance = this.cellsInstance;
@@ -2046,7 +2049,10 @@ _prototype$2._configCell = function _configCell(cell, field) {
         });
         cell._textSpan = null;
     } else {
-        var text = field.name || field.value || '';
+        var text = field.name;
+        if(!isDefined$1(text)){
+            text = isDefined$1(field.value) ? field.value : '';
+        }
         var span;
         if (!cell._textSpan) {
             cell.innerHTML = '';
