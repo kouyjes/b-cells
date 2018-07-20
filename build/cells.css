@@ -129,6 +129,8 @@
     top: 0;
     left: 0;
     z-index: 2; }
+    .d1012 .d1012-freeze-header-container .d1012-cell, .d1012 .d1012-freeze-col-container .d1012-cell, .d1012 .d1012-freeze-row-container .d1012-cell, .d1012 .d1012-freeze-cross-container .d1012-cell {
+      background-color: #9cf9b5; }
   .d1012 .d1012-freeze-cross-container {
     z-index: 3; }
   .d1012 .d1012-freeze-container {

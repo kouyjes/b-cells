@@ -1277,7 +1277,7 @@ _prototype$3._isFreezeCol = function(){
     var freezeConfig = cellsInstance.config.freezeConfig,
         freezeCol = freezeConfig.col;
 
-    var blnFreezeCol = typeof freezeCol === 'number' && freezeCol >= 0;
+    var blnFreezeCol = typeof freezeCol === 'number' && freezeCol > 0;
     return blnFreezeCol;
 
 };
@@ -1286,7 +1286,7 @@ _prototype$3._isFreezeRow = function(){
     var freezeConfig = cellsInstance.config.freezeConfig,
         freezeRow = freezeConfig.row;
 
-    var blnFreezeRow = typeof freezeRow === 'number' && freezeRow >= 0;
+    var blnFreezeRow = typeof freezeRow === 'number' && freezeRow > 0;
     return blnFreezeRow;
 };
 _prototype$3._isFreezeCross = function(){
@@ -2831,59 +2831,99 @@ function _bindResizeCellEvent() {
         var colResize = cellsInstance.config.colResize,
             rowResize = cellsInstance.config.rowResize;
 
-        var freezeConfig = cellsInstance.config.freezeConfig;
+        var freezeConfig = cellsInstance.config.freezeConfig,
+            freezeRow = freezeConfig.row,
+            freezeCol = freezeConfig.col;
+
+        var headerResize = cellsInstance.config.headerResize;
 
         var position = getMousePosition(e,cellsPanel);
 
-        var relY,relX;
+        var scrollTo = cellsRender.scrollTo();
+        var headerHeight = cellsInstance.headerHeight();
+
         var rowHit = 0,colHit = 0,rowIndex = undefined,colIndex = undefined;
 
-        var scrollTo = cellsRender.scrollTo();
-        //header area
+        var loop = function(){ return {} };
+        var getRowHitConfig = loop;
         if(rowResize){
-            relY = position.pageY;
-            var headerHeight = cellsInstance.headerHeight();
-            if(Math.abs(relY - headerHeight) < mouseHit){
-                rowHit = 1;
-                rowIndex = -1;
-            }else if(headerHeight > relY){
-            }else{
+            getRowHitConfig = function(scrollTop,freezeRow){
+                var relY = position.pageY;
+                var rowHit = 0,rowIndex = undefined;
+                var isFreezeRow = typeof freezeRow === 'number' && freezeRow > 0;
+                if(headerResize && Math.abs(relY - headerHeight) < mouseHit){
+                    rowHit = 1;
+                    rowIndex = -1;
+                }else if(headerHeight > relY){
+                }else{
+                    relY -= headerHeight;
+                    rowsTop.some(function (rowTop,index) {
+                        if(isFreezeRow && index >= freezeRow){
+                            return true;
+                        }
+                        var h = rowsHeight[index];
+                        if(Math.abs(rowTop + h - scrollTop - relY) < mouseHit){
+                            rowHit = 1;
+                            rowIndex = index;
+                            return true;
+                        }
+                    });
+                }
+                return {
+                    rowHit:rowHit,
+                    rowIndex:rowIndex
+                };
+            };
+        }
 
-                relY -= headerHeight;
-                rowsTop.some(function (rowTop,index) {
-                    var h = rowsHeight[index];
-                    if(Math.abs(rowTop + h - scrollTo.scrollTop - relY) < mouseHit){
-                        rowHit = 1;
-                        rowIndex = index;
+
+        var getColHitConfig = loop;
+        if(colResize){
+            getColHitConfig = function(scrollLeft,freezeCol){
+                var isFreezeCol = typeof freezeCol === 'number' && freezeCol > 0;
+                var relX = position.pageX;
+                var colHit = 0,colIndex = undefined;
+                colsLeft.some(function (colLeft,index) {
+                    if(isFreezeCol && index >= freezeCol){
+                        return true;
+                    }
+                    var w = colsWidth[index];
+                    if(Math.abs(colLeft + w - scrollLeft - relX) < mouseHit){
+                        colHit = 2;
+                        colIndex = index;
                         return true;
                     }
                 });
-            }
+                return {
+                    colHit:colHit,
+                    colIndex:colIndex
+                };
+            };
+        }
 
-            if(rowIndex < freezeConfig.row){
-                rowIndex = undefined;
-                rowHit = 0;
-            }else if(rowIndex === -1 && !cellsInstance.config.headerResize){
-                rowIndex = undefined;
-                rowHit = 0;
+        //header area
+        if(rowResize){
+            var rowHitConfig;
+            if(freezeRow > 0){
+                rowHitConfig = getRowHitConfig(0,freezeRow);
             }
+            if(!rowHitConfig || rowHitConfig.rowIndex === undefined){
+                rowHitConfig = getRowHitConfig(scrollTo.scrollTop);
+            }
+            rowHit = rowHitConfig.rowHit;
+            rowIndex = rowHitConfig.rowIndex;
         }
 
         if(colResize){
-            relX = position.pageX;
-            colsLeft.some(function (colLeft,index) {
-                var w = colsWidth[index];
-                if(Math.abs(colLeft + w - scrollTo.scrollLeft - relX) < mouseHit){
-                    colHit = 2;
-                    colIndex = index;
-                    return true;
-                }
-            });
-
-            if(colIndex < freezeConfig.col){
-                colIndex = undefined;
-                colHit = 0;
+            var colHitConfig;
+            if(freezeCol > 0){
+                colHitConfig = getColHitConfig(0,freezeCol);
             }
+            if(!colHitConfig || colHitConfig.colIndex === undefined){
+                colHitConfig = getColHitConfig(scrollTo.scrollLeft);
+            }
+            colHit = colHitConfig.colHit;
+            colIndex = colHitConfig.colIndex;
         }
 
         var cursor = cursors[rowHit + colHit];

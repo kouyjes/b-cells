@@ -115,7 +115,7 @@ _prototype._isFreezeCol = function(){
     var freezeConfig = cellsInstance.config.freezeConfig,
         freezeCol = freezeConfig.col;
 
-    var blnFreezeCol = typeof freezeCol === 'number' && freezeCol >= 0;
+    var blnFreezeCol = typeof freezeCol === 'number' && freezeCol > 0;
     return blnFreezeCol;
 
 };
@@ -124,7 +124,7 @@ _prototype._isFreezeRow = function(){
     var freezeConfig = cellsInstance.config.freezeConfig,
         freezeRow = freezeConfig.row;
 
-    var blnFreezeRow = typeof freezeRow === 'number' && freezeRow >= 0;
+    var blnFreezeRow = typeof freezeRow === 'number' && freezeRow > 0;
     return blnFreezeRow;
 };
 _prototype._isFreezeCross = function(){
