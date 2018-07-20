@@ -153,8 +153,9 @@ _prototype._updateHeaderCells = function (colIndex,option) {
     var cellsInstance = this.cellsInstance,
         cellsRender = cellsInstance.cellsRender,
         domCache = cellsRender.domCache;
+
     if(option.row){
-        cellsRender.headerPanel.style.height = domCache.headerHeight + 'px';
+        cellsInstance.headerHeight(domCache.headerHeight);
     }
     if(option.col){
         var colsWidth = domCache.colsWidth,
@@ -198,6 +199,9 @@ function _bindResizeCellEvent() {
 
         var colResize = cellsInstance.config.colResize,
             rowResize = cellsInstance.config.rowResize;
+
+        var freezeConfig = cellsInstance.config.freezeConfig;
+
         var position = getMousePosition(e,cellsPanel);
 
         var relY,relX;
@@ -224,6 +228,14 @@ function _bindResizeCellEvent() {
                     }
                 });
             }
+
+            if(rowIndex < freezeConfig.row){
+                rowIndex = undefined;
+                rowHit = 0;
+            }else if(rowIndex === -1 && !cellsInstance.config.headerResize){
+                rowIndex = undefined;
+                rowHit = 0;
+            }
         }
 
         if(colResize){
@@ -236,6 +248,11 @@ function _bindResizeCellEvent() {
                     return true;
                 }
             });
+
+            if(colIndex < freezeConfig.col){
+                colIndex = undefined;
+                colHit = 0;
+            }
         }
 
         var cursor = cursors[rowHit + colHit];

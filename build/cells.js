@@ -998,6 +998,7 @@ function Config(config){
     this.textTitle = false;
     this.colResize = false;
     this.rowResize = false;
+    this.headerResize = false;
     this.scrollX = true;
     this.scrollY = true;
     this.minCellWidth = 50;
@@ -1213,13 +1214,14 @@ _prototype$3._getFreezeCrossPanel = function(){
 };
 _prototype$3.paintFreezeRow = function(){
 
-    var blnFreezeRow = this._isFreezeRow();
-    if(!blnFreezeRow){
-        return;
-    }
 
     var paintState = this.paintState,
         domCache = this.domCache;
+    var blnFreezeRow = this._isFreezeRow();
+    if(!blnFreezeRow){
+        this.removeCells(domCache.freezeRowCells);
+        return;
+    }
     var colClientArea = paintState.currentColArea;
 
     var cacheCells = domCache.freezeRowCells;
@@ -1292,13 +1294,16 @@ _prototype$3._isFreezeCross = function(){
 };
 _prototype$3.paintFreezeCol = function(){
 
-    var blnFreezeCol = this._isFreezeCol();
-    if(!blnFreezeCol){
-        return;
-    }
 
     var paintState = this.paintState,
         domCache = this.domCache;
+
+    var blnFreezeCol = this._isFreezeCol();
+    if(!blnFreezeCol){
+        this.removeCells(domCache.freezeColCells);
+        return;
+    }
+
     var rowClientArea = paintState.currentRowArea;
 
     var cacheCells = domCache.freezeColCells;
@@ -1321,11 +1326,11 @@ _prototype$3.paintFreezeCross = function(){
         freezeRow = freezeConfig.row;
 
     var blnFreezeCross = this._isFreezeCross();
+    var cacheCells = this.domCache.freezeCrossCells;
     if(!blnFreezeCross){
+        this.removeCells(cacheCells);
         return;
     }
-
-    var cacheCells = this.domCache.freezeCrossCells;
 
     if(cacheCells.length > 0){
         return;
@@ -1361,7 +1366,9 @@ _prototype$3.paintFreeze = function(){
 _prototype$3.paintFreezeHeader = function(){
 
     var blnFreezeCol = this._isFreezeCol();
+    var cacheCells = this.domCache.freezeHeaderCells;
     if(!blnFreezeCol){
+        this.removeCells(cacheCells);
         return;
     }
 
@@ -1374,7 +1381,6 @@ _prototype$3.paintFreezeHeader = function(){
     freezeCol = Math.min(freezeCol,colPageSize);
 
     var cellsModel = cellsInstance.cellsModel,
-        cacheCells = this.domCache.freezeHeaderCells,
         headerFreezePanel = this.getFreezeHeaderPanel();
 
     if(cacheCells.length > 0){
@@ -1962,8 +1968,12 @@ _prototype$2.paintBody = function paintBody() {
 _prototype$2.removeCells = function removeCells(cacheCells, cells) {
 
     var _ = this;
+    cells = cells || cacheCells;
     cells.forEach(function (cell) {
-        cacheCells.splice(cacheCells.indexOf(cell), 1);
+        var index = cacheCells.indexOf(cell);
+        if(index !== -1){
+            cacheCells.splice(index, 1);
+        }
         _.removeElementFromDom(cell);
     });
 
@@ -2592,7 +2602,9 @@ _prototype$2.headerHeight = function (height) {
         return;
     }
     domCache.headerHeight = height;
-    this.headerPanel.style.height = height + 'px';
+    height = height + 'px';
+    this.headerPanel.style.height = height;
+    this.cellsPanel.style.paddingTop = height;
 };
 _prototype$2.scrollTo = function (scrollTop, scrollLeft) {
 
@@ -2765,8 +2777,9 @@ _prototype$4._updateHeaderCells = function (colIndex,option) {
     var cellsInstance = this.cellsInstance,
         cellsRender = cellsInstance.cellsRender,
         domCache = cellsRender.domCache;
+
     if(option.row){
-        cellsRender.headerPanel.style.height = domCache.headerHeight + 'px';
+        cellsInstance.headerHeight(domCache.headerHeight);
     }
     if(option.col){
         var colsWidth = domCache.colsWidth,
@@ -2811,6 +2824,9 @@ function _bindResizeCellEvent() {
 
         var colResize = cellsInstance.config.colResize,
             rowResize = cellsInstance.config.rowResize;
+
+        var freezeConfig = cellsInstance.config.freezeConfig;
+
         var position = getMousePosition(e,cellsPanel);
 
         var relY,relX;
@@ -2837,6 +2853,14 @@ function _bindResizeCellEvent() {
                     }
                 });
             }
+
+            if(rowIndex < freezeConfig.row){
+                rowIndex = undefined;
+                rowHit = 0;
+            }else if(rowIndex === -1 && !cellsInstance.config.headerResize){
+                rowIndex = undefined;
+                rowHit = 0;
+            }
         }
 
         if(colResize){
@@ -2849,6 +2873,11 @@ function _bindResizeCellEvent() {
                     return true;
                 }
             });
+
+            if(colIndex < freezeConfig.col){
+                colIndex = undefined;
+                colHit = 0;
+            }
         }
 
         var cursor = cursors[rowHit + colHit];

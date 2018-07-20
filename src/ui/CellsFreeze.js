@@ -52,13 +52,14 @@ _prototype._getFreezeCrossPanel = function(){
 };
 _prototype.paintFreezeRow = function(){
 
-    var blnFreezeRow = this._isFreezeRow();
-    if(!blnFreezeRow){
-        return;
-    }
 
     var paintState = this.paintState,
         domCache = this.domCache;
+    var blnFreezeRow = this._isFreezeRow();
+    if(!blnFreezeRow){
+        this.removeCells(domCache.freezeRowCells)
+        return;
+    }
     var colClientArea = paintState.currentColArea;
 
     var cacheCells = domCache.freezeRowCells;
@@ -131,13 +132,16 @@ _prototype._isFreezeCross = function(){
 };
 _prototype.paintFreezeCol = function(){
 
-    var blnFreezeCol = this._isFreezeCol();
-    if(!blnFreezeCol){
-        return;
-    }
 
     var paintState = this.paintState,
         domCache = this.domCache;
+
+    var blnFreezeCol = this._isFreezeCol();
+    if(!blnFreezeCol){
+        this.removeCells(domCache.freezeColCells);
+        return;
+    }
+
     var rowClientArea = paintState.currentRowArea;
 
     var cacheCells = domCache.freezeColCells;
@@ -160,11 +164,11 @@ _prototype.paintFreezeCross = function(){
         freezeRow = freezeConfig.row;
 
     var blnFreezeCross = this._isFreezeCross();
+    var cacheCells = this.domCache.freezeCrossCells;
     if(!blnFreezeCross){
+        this.removeCells(cacheCells);
         return;
     }
-
-    var cacheCells = this.domCache.freezeCrossCells;
 
     if(cacheCells.length > 0){
         return;
@@ -200,7 +204,9 @@ _prototype.paintFreeze = function(){
 _prototype.paintFreezeHeader = function(){
 
     var blnFreezeCol = this._isFreezeCol();
+    var cacheCells = this.domCache.freezeHeaderCells;
     if(!blnFreezeCol){
+        this.removeCells(cacheCells);
         return;
     }
 
@@ -213,7 +219,6 @@ _prototype.paintFreezeHeader = function(){
     freezeCol = Math.min(freezeCol,colPageSize);
 
     var cellsModel = cellsInstance.cellsModel,
-        cacheCells = this.domCache.freezeHeaderCells,
         headerFreezePanel = this.getFreezeHeaderPanel();
 
     if(cacheCells.length > 0){

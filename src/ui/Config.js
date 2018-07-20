@@ -2,6 +2,7 @@ function Config(config){
     this.textTitle = false;
     this.colResize = false;
     this.rowResize = false;
+    this.headerResize = false;
     this.scrollX = true;
     this.scrollY = true;
     this.minCellWidth = 50;

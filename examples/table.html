@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>big data table</title>
-    <link rel="stylesheet" href="../build/Cells.css"/>
-    <script src="../build/Cells.js"></script>
+    <link rel="stylesheet" href="../build/cells.css"/>
+    <script src="../build/cells.js"></script>
     <style>
         html,body{
             width:100%;
@@ -13,6 +13,9 @@
             margin:0;
             overflow:hidden;
             background-color:#5d98a5;
+        }
+        div{
+            box-sizing: border-box;
         }
         button{
             -webkit-appearance: initial;
@@ -27,13 +30,12 @@
             background-color:#88d89e;
         }
         .flex{
-            display:flex;
-            flex-direction: row;
-            justify-content: center;
-            margin:auto;
+           height:100%;
+            width:100%;
         }
         .flex-item{
-            flex:1;
+            width:50%;
+            float:left;
         }
         .flex-item:nth-child(1){
             background-color: #9ab3af;
@@ -151,8 +153,9 @@
                 colResize:true,
                 scrollY:true,
                 scrollX:true,
+                headerResize:true,
                 freezeConfig:{
-                    row:3,
+                    row:1,
                     col:1
                 },
                 customScroll:{
@@ -173,9 +176,10 @@
                 colResize:true,
                 scrollY:true,
                 scrollX:true,
+                headerResize:true,
                 freezeConfig:{
-                    row:3,
-                    col:1
+                    //row:3,
+                    //col:1
                 },
                 customScroll:null
             });

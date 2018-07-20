@@ -478,8 +478,12 @@ _prototype.paintBody = function paintBody() {
 _prototype.removeCells = function removeCells(cacheCells, cells) {
 
     var _ = this;
+    cells = cells || cacheCells;
     cells.forEach(function (cell) {
-        cacheCells.splice(cacheCells.indexOf(cell), 1);
+        var index = cacheCells.indexOf(cell);
+        if(index !== -1){
+            cacheCells.splice(index, 1);
+        }
         _.removeElementFromDom(cell);
     });
 
@@ -1108,7 +1112,9 @@ _prototype.headerHeight = function (height) {
         return;
     }
     domCache.headerHeight = height;
-    this.headerPanel.style.height = height + 'px';
+    height = height + 'px';
+    this.headerPanel.style.height = height;
+    this.cellsPanel.style.paddingTop = height;
 };
 _prototype.scrollTo = function (scrollTop, scrollLeft) {
 
