@@ -994,6 +994,7 @@ CellsModel.prototype.appendRows = function (rows) {
     this.trigger('appendRows');
 };
 
+var onRemoveCell = function(){};
 function Config(config){
     this.textTitle = false;
     this.colResize = false;
@@ -1003,6 +1004,8 @@ function Config(config){
     this.scrollY = true;
     this.minCellWidth = 50;
     this.minCellHeight = 50;
+    this.renderCell = null;
+    this.onRemoveCell = onRemoveCell;
     this.freezeConfig = {
         col:undefined,
         row:undefined,
@@ -1285,9 +1288,8 @@ _prototype$3._paintFreezeAreaCells = function(contentPanel,cells,cacheCells,area
                 if (!cell) {
                     cell = this._createCell(rowIndex, colIndex, field,cacheCells);
                     contentPanel.appendChild(cell);
-                } else {
-                    this._paintCell(cell, rowIndex, colIndex, field);
                 }
+                this._paintCell(cell, rowIndex, colIndex, field);
             }
         }
     }.bind(this));
@@ -1372,6 +1374,7 @@ _prototype$3.paintFreezeCross = function(){
         for(var colIndex = 0;colIndex < freezeCol;colIndex++){
             field = row.fields[colIndex];
             cell = this._createHeaderCell(rowIndex, colIndex, field,cacheCells);
+            this._paintCell(cell, rowIndex, colIndex, field);
             freezePanel.appendChild(cell);
         }
     }
@@ -1414,6 +1417,7 @@ _prototype$3.paintFreezeHeader = function(){
     for(var i = 0;i < freezeCol;i++){
         field = fields[i];
         cell = this._createHeaderCell(0, i, field,cacheCells);
+        this._paintCell(cell, 0, i, field);
         headerFreezePanel.appendChild(cell);
     }
 };
@@ -1895,9 +1899,8 @@ _prototype$2.paintHeader = function paintHeader() {
             if (!cell) {
                 cell = this._createHeaderCell(0, colIndex, field);
                 headerContentPanel.appendChild(cell);
-            } else {
-                this._paintCell(cell, 0, colIndex, field);
             }
+            this._paintCell(cell, 0, colIndex, field);
         }
     }.bind(this));
 
@@ -1977,9 +1980,8 @@ _prototype$2.paintBody = function paintBody() {
                 if (!cell) {
                     cell = this._createCell(rowIndex, colIndex, field);
                     contentPanel.appendChild(cell);
-                } else {
-                    this._paintCell(cell, rowIndex, colIndex, field);
                 }
+                this._paintCell(cell, rowIndex, colIndex, field);
             }
         }
     }.bind(this));
@@ -1990,12 +1992,19 @@ _prototype$2.paintBody = function paintBody() {
 _prototype$2.removeCells = function removeCells(cacheCells, cells) {
 
     var _ = this;
+    var config = this.cellsInstance.config;
     cells = cells || cacheCells;
     cells.forEach(function (cell) {
         var index = cacheCells.indexOf(cell);
         if(index !== -1){
             cacheCells.splice(index, 1);
         }
+        var onRemoveCell = config.onRemoveCell;
+        try{
+            if(typeof onRemoveCell === 'function'){
+                onRemoveCell(cell);
+            }
+        }catch(e){}
         _.removeElementFromDom(cell);
     });
 
@@ -2058,10 +2067,22 @@ function isDefined$1(v) {
 _prototype$2._configCell = function _configCell(cell, field) {
 
     var cellsInstance = this.cellsInstance;
-    if(typeof field.render === 'function'){
-        field.render(cell);
-        return;
+    var config = cellsInstance.config;
+    var render = field.render || config.renderCell;
+    var defaultPaint = this.paintCellContent.bind(this);
+    if(typeof render === 'function'){
+        cell._textSpan = null;
+        render.call(this,cell,field,defaultPaint);
+        return cell;
     }
+
+    return this.paintCellContent(cell,field);
+
+};
+_prototype$2.paintCellContent = function(cell,field){
+
+    var cellsInstance = this.cellsInstance;
+    var config = cellsInstance.config;
     var isHtml = (field.html !== null && field.html !== undefined);
     cell.setAttribute('html_content', isHtml + '');
     if (isHtml) {
@@ -2085,12 +2106,11 @@ _prototype$2._configCell = function _configCell(cell, field) {
             span = cell._textSpan;
         }
         span.innerText = text;
-        if (cellsInstance.config.textTitle) {
+        if (config.textTitle) {
             cell.setAttribute('title', text);
         }
     }
     return cell;
-
 };
 _prototype$2._createHeaderCell = function (row, col, field,cells) {
 
@@ -2105,14 +2125,8 @@ _prototype$2._createCell = function _createCell(row, col, field, cacheCells) {
     var cell = document.createElement('div');
     cell._cell = true;
 
-    cell.setAttribute('row', '' + row);
-    cell.setAttribute('col', '' + col);
     var classNames = [getFullClassName('cell')];
     cell.className = classNames.join(' ');
-
-    this._configCell(cell, field);
-
-    this._reLayoutCell(cell);
 
     cacheCells.push(cell);
 

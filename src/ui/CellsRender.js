@@ -383,9 +383,8 @@ _prototype.paintHeader = function paintHeader() {
             if (!cell) {
                 cell = this._createHeaderCell(0, colIndex, field);
                 headerContentPanel.appendChild(cell);
-            } else {
-                this._paintCell(cell, 0, colIndex, field);
             }
+            this._paintCell(cell, 0, colIndex, field);
         }
     }.bind(this));
 
@@ -465,9 +464,8 @@ _prototype.paintBody = function paintBody() {
                 if (!cell) {
                     cell = this._createCell(rowIndex, colIndex, field);
                     contentPanel.appendChild(cell);
-                } else {
-                    this._paintCell(cell, rowIndex, colIndex, field);
                 }
+                this._paintCell(cell, rowIndex, colIndex, field);
             }
         }
     }.bind(this));
@@ -478,12 +476,19 @@ _prototype.paintBody = function paintBody() {
 _prototype.removeCells = function removeCells(cacheCells, cells) {
 
     var _ = this;
+    var config = this.cellsInstance.config;
     cells = cells || cacheCells;
     cells.forEach(function (cell) {
         var index = cacheCells.indexOf(cell);
         if(index !== -1){
             cacheCells.splice(index, 1);
         }
+        var onRemoveCell = config.onRemoveCell;
+        try{
+            if(typeof onRemoveCell === 'function'){
+                onRemoveCell(cell);
+            }
+        }catch(e){}
         _.removeElementFromDom(cell);
     });
 
@@ -546,10 +551,22 @@ function isDefined(v) {
 _prototype._configCell = function _configCell(cell, field) {
 
     var cellsInstance = this.cellsInstance;
-    if(typeof field.render === 'function'){
-        field.render(cell);
-        return;
+    var config = cellsInstance.config;
+    var render = field.render || config.renderCell;
+    var defaultPaint = this.paintCellContent.bind(this);
+    if(typeof render === 'function'){
+        cell._textSpan = null;
+        render.call(this,cell,field,defaultPaint);
+        return cell;
     }
+
+    return this.paintCellContent(cell,field);
+
+};
+_prototype.paintCellContent = function(cell,field){
+
+    var cellsInstance = this.cellsInstance;
+    var config = cellsInstance.config;
     var isHtml = (field.html !== null && field.html !== undefined);
     cell.setAttribute('html_content', isHtml + '');
     if (isHtml) {
@@ -573,12 +590,11 @@ _prototype._configCell = function _configCell(cell, field) {
             span = cell._textSpan;
         }
         span.innerText = text;
-        if (cellsInstance.config.textTitle) {
+        if (config.textTitle) {
             cell.setAttribute('title', text);
         }
     }
     return cell;
-
 };
 _prototype._createHeaderCell = function (row, col, field,cells) {
 
@@ -593,14 +609,8 @@ _prototype._createCell = function _createCell(row, col, field, cacheCells) {
     var cell = document.createElement('div');
     cell._cell = true;
 
-    cell.setAttribute('row', '' + row);
-    cell.setAttribute('col', '' + col);
     var classNames = [getFullClassName('cell')];
     cell.className = classNames.join(' ');
-
-    this._configCell(cell, field);
-
-    this._reLayoutCell(cell);
 
     cacheCells.push(cell);
 

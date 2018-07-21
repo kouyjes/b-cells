@@ -101,9 +101,8 @@ _prototype._paintFreezeAreaCells = function(contentPanel,cells,cacheCells,areas)
                 if (!cell) {
                     cell = this._createCell(rowIndex, colIndex, field,cacheCells);
                     contentPanel.appendChild(cell);
-                } else {
-                    this._paintCell(cell, rowIndex, colIndex, field);
                 }
+                this._paintCell(cell, rowIndex, colIndex, field);
             }
         }
     }.bind(this));
@@ -188,6 +187,7 @@ _prototype.paintFreezeCross = function(){
         for(var colIndex = 0;colIndex < freezeCol;colIndex++){
             field = row.fields[colIndex];
             cell = this._createHeaderCell(rowIndex, colIndex, field,cacheCells);
+            this._paintCell(cell, rowIndex, colIndex, field);
             freezePanel.appendChild(cell);
         }
     }
@@ -230,6 +230,7 @@ _prototype.paintFreezeHeader = function(){
     for(var i = 0;i < freezeCol;i++){
         field = fields[i];
         cell = this._createHeaderCell(0, i, field,cacheCells);
+        this._paintCell(cell, 0, i, field);
         headerFreezePanel.appendChild(cell);
     }
 };

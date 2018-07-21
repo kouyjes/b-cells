@@ -1,3 +1,4 @@
+var onRemoveCell = function(){};
 function Config(config){
     this.textTitle = false;
     this.colResize = false;
@@ -7,6 +8,8 @@ function Config(config){
     this.scrollY = true;
     this.minCellWidth = 50;
     this.minCellHeight = 50;
+    this.renderCell = null;
+    this.onRemoveCell = onRemoveCell;
     this.freezeConfig = {
         col:undefined,
         row:undefined,

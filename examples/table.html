@@ -34,7 +34,9 @@
             width:100%;
         }
         .flex-item{
+            position: relative;
             width:50%;
+            height:100%;
             float:left;
         }
         .flex-item:nth-child(1){
@@ -43,17 +45,13 @@
         .flex-item:nth-child(2){
             background-color: #ccb3af;
         }
-        #table{
-            width:80%;
-            height:90vh;
-            margin:auto;
+        #table,#table1{
+            position: absolute;
+            left:10px;
+            right:10px;
+            top:80px;
+            bottom:40px;
             background-color:#ccc;
-        }
-        #table1{
-            width:80%;
-            height:90vh;
-            margin:auto;
-            background-color:#cec;
         }
         .option{
             width:100%;
@@ -156,8 +154,8 @@
                 headerResize:true,
                 freezeConfig:{
                     row:2,
-                    col:3/*,
-                    rowResize:false,
+                    col:1,
+                    /*rowResize:false,
                     colResize:false*/
                 },
                 customScroll:{
