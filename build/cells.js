@@ -1269,6 +1269,9 @@ _prototype$3._isFreezeCrossCellArea = function(rowIndex,colIndex){
         freezeRow = freezeConfig.row;
     return rowIndex < freezeRow && colIndex < freezeCol;
 };
+_prototype$3._isFreezeArea = function(row,col){
+    return this._isFreezeRow(row) || this._isFreezeCol(col);
+};
 _prototype$3._paintFreezeAreaCells = function(contentPanel,cells,cacheCells,areas){
 
     var cellsInstance = this.cellsInstance,
@@ -1287,6 +1290,7 @@ _prototype$3._paintFreezeAreaCells = function(contentPanel,cells,cacheCells,area
                 cell = cells.pop();
                 if (!cell) {
                     cell = this._createCell(rowIndex, colIndex, field,cacheCells);
+                    cell._freezeCell = true;
                     contentPanel.appendChild(cell);
                 }
                 this._paintCell(cell, rowIndex, colIndex, field);
@@ -1296,21 +1300,27 @@ _prototype$3._paintFreezeAreaCells = function(contentPanel,cells,cacheCells,area
 
     this.removeCells(cacheCells, cells);
 };
-_prototype$3._isFreezeCol = function(){
+_prototype$3._isFreezeCol = function(col){
     var cellsInstance = this.cellsInstance;
     var freezeConfig = cellsInstance.config.freezeConfig,
         freezeCol = freezeConfig.col;
 
     var blnFreezeCol = typeof freezeCol === 'number' && freezeCol > 0;
+    if(arguments.length > 0 && typeof col === 'number'){
+        blnFreezeCol = blnFreezeCol && col < freezeCol;
+    }
     return blnFreezeCol;
 
 };
-_prototype$3._isFreezeRow = function(){
+_prototype$3._isFreezeRow = function(row){
     var cellsInstance = this.cellsInstance;
     var freezeConfig = cellsInstance.config.freezeConfig,
         freezeRow = freezeConfig.row;
 
     var blnFreezeRow = typeof freezeRow === 'number' && freezeRow > 0;
+    if(arguments.length > 0 && typeof row === 'number'){
+        blnFreezeRow = blnFreezeRow && row < freezeRow;
+    }
     return blnFreezeRow;
 };
 _prototype$3._isFreezeCross = function(){
@@ -1373,7 +1383,8 @@ _prototype$3.paintFreezeCross = function(){
         row = rows[rowIndex];
         for(var colIndex = 0;colIndex < freezeCol;colIndex++){
             field = row.fields[colIndex];
-            cell = this._createHeaderCell(rowIndex, colIndex, field,cacheCells);
+            cell = this._createCell(rowIndex, colIndex, field,cacheCells);
+            cell._freezeCell = true;
             this._paintCell(cell, rowIndex, colIndex, field);
             freezePanel.appendChild(cell);
         }
@@ -1417,6 +1428,7 @@ _prototype$3.paintFreezeHeader = function(){
     for(var i = 0;i < freezeCol;i++){
         field = fields[i];
         cell = this._createHeaderCell(0, i, field,cacheCells);
+        cell._freezeCell = true;
         this._paintCell(cell, 0, i, field);
         headerFreezePanel.appendChild(cell);
     }
@@ -1894,6 +1906,9 @@ _prototype$2.paintHeader = function paintHeader() {
     colPaintAreas.forEach(function (colArea) {
         var cell, field;
         for (var colIndex = colArea.from; colIndex < colArea.from + colArea.pageSize; colIndex++) {
+            if(this._isFreezeCol(colIndex)){
+                continue;
+            }
             field = fields[colIndex];
             cell = cells.pop();
             if (!cell) {
@@ -1974,7 +1989,13 @@ _prototype$2.paintBody = function paintBody() {
         var row, cell, field;
         for (var rowIndex = area.top; rowIndex < area.bottom; rowIndex++) {
             row = rows[rowIndex];
+            if(this._isFreezeRow(rowIndex)){
+                continue;
+            }
             for (var colIndex = area.left; colIndex < area.right; colIndex++) {
+                if(this._isFreezeCol(colIndex)){
+                    continue;
+                }
                 field = row.fields[colIndex];
                 cell = cells.pop();
                 if (!cell) {

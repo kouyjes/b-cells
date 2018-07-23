@@ -378,6 +378,9 @@ _prototype.paintHeader = function paintHeader() {
     colPaintAreas.forEach(function (colArea) {
         var cell, field;
         for (var colIndex = colArea.from; colIndex < colArea.from + colArea.pageSize; colIndex++) {
+            if(this._isFreezeCol(colIndex)){
+                continue;
+            }
             field = fields[colIndex];
             cell = cells.pop();
             if (!cell) {
@@ -458,7 +461,13 @@ _prototype.paintBody = function paintBody() {
         var row, cell, field;
         for (var rowIndex = area.top; rowIndex < area.bottom; rowIndex++) {
             row = rows[rowIndex];
+            if(this._isFreezeRow(rowIndex)){
+                continue;
+            }
             for (var colIndex = area.left; colIndex < area.right; colIndex++) {
+                if(this._isFreezeCol(colIndex)){
+                    continue;
+                }
                 field = row.fields[colIndex];
                 cell = cells.pop();
                 if (!cell) {
