@@ -100,7 +100,10 @@ _prototype._paintFreezeAreaCells = function(contentPanel,cells,cacheCells,areas)
                 }
 
                 field = row.fields[colIndex];
-                cell = cells.pop();
+                cell = null;
+                if(this.isNeedCache(field)){
+                    cell = cells.pop();
+                }
                 if (!cell) {
                     cell = this._createCell(rowIndex, colIndex, field,cacheCells);
                     cell._freezeCell = true;

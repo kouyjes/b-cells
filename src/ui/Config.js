@@ -10,6 +10,7 @@ function Config(config){
     this.minCellHeight = 50;
     this.renderCell = null;
     this.onRemoveCell = onRemoveCell;
+    this.cacheCell = true;
     this.freezeConfig = {
         col:undefined,
         row:undefined,

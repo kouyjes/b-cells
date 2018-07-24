@@ -1006,6 +1006,7 @@ function Config(config){
     this.minCellHeight = 50;
     this.renderCell = null;
     this.onRemoveCell = onRemoveCell;
+    this.cacheCell = true;
     this.freezeConfig = {
         col:undefined,
         row:undefined,
@@ -1287,7 +1288,10 @@ _prototype$3._paintFreezeAreaCells = function(contentPanel,cells,cacheCells,area
                 }
 
                 field = row.fields[colIndex];
-                cell = cells.pop();
+                cell = null;
+                if(this.isNeedCache(field)){
+                    cell = cells.pop();
+                }
                 if (!cell) {
                     cell = this._createCell(rowIndex, colIndex, field,cacheCells);
                     cell._freezeCell = true;
@@ -1910,7 +1914,10 @@ _prototype$2.paintHeader = function paintHeader() {
                 continue;
             }
             field = fields[colIndex];
-            cell = cells.pop();
+            cell = null;
+            if(this.isNeedCache(field)){
+                cell = cells.pop();
+            }
             if (!cell) {
                 cell = this._createHeaderCell(0, colIndex, field);
                 headerContentPanel.appendChild(cell);
@@ -1962,6 +1969,12 @@ _prototype$2.getBodyPaintRectAreas = function () {
     return areas;
 
 };
+_prototype$2.isNeedCache = function(field){
+    if(typeof field.cacheCell === 'boolean'){
+        return field.cacheCell;
+    }
+    return this.cellsInstance.config.cacheCell;
+};
 _prototype$2.paintBody = function paintBody() {
 
     var cellsInstance = this.cellsInstance;
@@ -1997,7 +2010,10 @@ _prototype$2.paintBody = function paintBody() {
                     continue;
                 }
                 field = row.fields[colIndex];
-                cell = cells.pop();
+                cell = null;
+                if(this.isNeedCache(field)){
+                    cell = cells.pop();
+                }
                 if (!cell) {
                     cell = this._createCell(rowIndex, colIndex, field);
                     contentPanel.appendChild(cell);

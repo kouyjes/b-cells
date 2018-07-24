@@ -382,7 +382,10 @@ _prototype.paintHeader = function paintHeader() {
                 continue;
             }
             field = fields[colIndex];
-            cell = cells.pop();
+            cell = null;
+            if(this.isNeedCache(field)){
+                cell = cells.pop();
+            }
             if (!cell) {
                 cell = this._createHeaderCell(0, colIndex, field);
                 headerContentPanel.appendChild(cell);
@@ -434,6 +437,12 @@ _prototype.getBodyPaintRectAreas = function () {
     return areas;
 
 };
+_prototype.isNeedCache = function(field){
+    if(typeof field.cacheCell === 'boolean'){
+        return field.cacheCell;
+    }
+    return this.cellsInstance.config.cacheCell;
+};
 _prototype.paintBody = function paintBody() {
 
     var cellsInstance = this.cellsInstance;
@@ -469,7 +478,10 @@ _prototype.paintBody = function paintBody() {
                     continue;
                 }
                 field = row.fields[colIndex];
-                cell = cells.pop();
+                cell = null;
+                if(this.isNeedCache(field)){
+                    cell = cells.pop();
+                }
                 if (!cell) {
                     cell = this._createCell(rowIndex, colIndex, field);
                     contentPanel.appendChild(cell);
