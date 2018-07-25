@@ -264,8 +264,8 @@ ScrollBar.prototype.updateScrollSize = function () {
 
     var clientHeight = getClientHeight(this.element),scrollHeight = getScrollHeight(this.element);
 
-    this.overflowX = scrollWidth > clientWidth;
-    this.overflowY = scrollHeight > clientHeight;
+    this.overflowX = scrollWidth > clientWidth + 1;
+    this.overflowY = scrollHeight > clientHeight + 1;
 
     this.clientWidth = clientWidth;
     this.clientHeight = clientHeight;

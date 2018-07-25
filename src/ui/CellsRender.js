@@ -163,8 +163,8 @@ _prototype.computeScrollbarState = function(){
         offsetWidth = scrollbar.offsetWidth,
         scrollHeight = scrollbar.scrollHeight,
         offsetHeight = scrollbar.offsetHeight;
-    var scrollX = scrollWidth + leftBorderW + rightBorderW > offsetWidth;
-    var scrollY = scrollHeight + topBorderW + bottomBorderW > offsetHeight;
+    var scrollX = scrollWidth + leftBorderW + rightBorderW > offsetWidth + 1;
+    var scrollY = scrollHeight + topBorderW + bottomBorderW > offsetHeight + 1;
     scrollbar.setAttribute('scrollX',String(scrollX));
     scrollbar.setAttribute('scrollY',String(scrollY));
 };
@@ -843,10 +843,13 @@ _prototype._initHeaderFieldsWidth = function(){
 
     }.bind(this));
 
-    var avgWidth = Math.round(totalWidth / (autoFields.length || 1));
-    autoFields.forEach(function(field){
+    var len = autoFields.length;
+    var avgWidth = Math.round(totalWidth / (len || 1));
+    autoFields.forEach(function(field,index){
         var width = avgWidth;
-        width = Math.min(width,totalWidth);
+        if(index === len - 1){
+            width = totalWidth + 1;
+        }
         field._width = width;
         totalWidth -= width;
     });

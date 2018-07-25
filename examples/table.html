@@ -71,11 +71,11 @@
             var cellsModel = new HERE.UI.CELL.CellsModel();
             var header = [];
             for(var i = 0; i< colNum;i++){
-                header.push({name:'column' + i,width:200,style:{
+                header.push({name:'column' + i,minWidth:150,style:{
                     //backgroundColor:randomColor()
                 }});
             }
-            header[1].minWidth = 150;
+            header[1].minWidth = 200;
             header[1].maxWidth = 300;
             var rows = [];
             for(var i = 0;i < rowNum;i++){
