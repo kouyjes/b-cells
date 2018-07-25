@@ -995,7 +995,7 @@ _prototype._bindCellsModelEvent = function () {
     cellsInstance.cellsModel.bind('refresh', function () {
         var key = this._id + 'refresh';
         if (cellsInstance.renderTo) {
-            executeFunctionDelay(key, this.repaint, this);
+            executeFunctionDelay(key, this.refresh, this);
         }
     }.bind(this));
 
@@ -1126,6 +1126,10 @@ _prototype.render = function render() {
 };
 _prototype.paint = function paint() {
 
+    if(!this.cellsPanel){
+        return;
+    }
+
     var domCache = this.domCache;
     this.initPaint();
     this._initPanelSize();
@@ -1139,6 +1143,14 @@ _prototype.repaint = function repaint() {
 
     this.executePaint();
 
+};
+_prototype.refresh = function(){
+    if(!this.cellsPanel){
+        return;
+    }
+    this._initPanelSize();
+    this.executePaint();
+    this.syncCursor();
 };
 _prototype.headerHeight = function (height) {
 
@@ -1173,7 +1185,7 @@ _prototype.scrollTo = function (scrollTop, scrollLeft) {
 CellsRender.addInitHooks(function () {
     this._bindCellsModelEvent();
 });
-Cells.publishMethod(['render', 'paint', 'repaint', 'scrollTo', 'headerHeight'], 'cellsRender');
+Cells.publishMethod(['render', 'paint','refresh', 'repaint', 'scrollTo', 'headerHeight'], 'cellsRender');
 Cells.addInitHooks(function () {
     this.cellsRender = new CellsRender(this);
 });
