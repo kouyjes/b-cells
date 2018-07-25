@@ -1287,7 +1287,7 @@ _prototype$3._paintFreezeAreaCells = function(contentPanel,cells,cacheCells,area
                     continue;
                 }
 
-                field = row.fields[colIndex];
+                field = row.fields[colIndex] || {};
                 cell = null;
                 if(this.isNeedCache(field)){
                     cell = cells.pop();
@@ -1386,7 +1386,7 @@ _prototype$3.paintFreezeCross = function(){
     for(var rowIndex = 0;rowIndex < freezeRow;rowIndex++){
         row = rows[rowIndex];
         for(var colIndex = 0;colIndex < freezeCol;colIndex++){
-            field = row.fields[colIndex];
+            field = row.fields[colIndex] || {};
             cell = this._createCell(rowIndex, colIndex, field,cacheCells);
             cell._freezeCell = true;
             this._paintCell(cell, rowIndex, colIndex, field);
@@ -1430,7 +1430,7 @@ _prototype$3.paintFreezeHeader = function(){
     var fields = cellsModel.header.fields;
     var field,cell;
     for(var i = 0;i < freezeCol;i++){
-        field = fields[i];
+        field = fields[i] || {};
         cell = this._createHeaderCell(0, i, field,cacheCells);
         cell._freezeCell = true;
         this._paintCell(cell, 0, i, field);
@@ -1913,7 +1913,7 @@ _prototype$2.paintHeader = function paintHeader() {
             if(this._isFreezeCol(colIndex)){
                 continue;
             }
-            field = fields[colIndex];
+            field = fields[colIndex] || {};
             cell = null;
             if(this.isNeedCache(field)){
                 cell = cells.pop();
@@ -1970,7 +1970,7 @@ _prototype$2.getBodyPaintRectAreas = function () {
 
 };
 _prototype$2.isNeedCache = function(field){
-    if(typeof field.cacheCell === 'boolean'){
+    if(field && typeof field.cacheCell === 'boolean'){
         return field.cacheCell;
     }
     return this.cellsInstance.config.cacheCell;
@@ -2009,7 +2009,7 @@ _prototype$2.paintBody = function paintBody() {
                 if(this._isFreezeCol(colIndex)){
                     continue;
                 }
-                field = row.fields[colIndex];
+                field = row.fields[colIndex] || {};
                 cell = null;
                 if(this.isNeedCache(field)){
                     cell = cells.pop();
@@ -2205,7 +2205,7 @@ _prototype$2._reLayoutCell = function _reLayoutCell(cell) {
     }
 
     var fields = cell._headerCell ? header.fields : rows[row].fields,
-        field = fields[col];
+        field = fields[col] || {};
 
     var fieldStyle = field.style;
     var customStyleKeys = [];

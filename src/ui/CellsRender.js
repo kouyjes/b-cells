@@ -381,7 +381,7 @@ _prototype.paintHeader = function paintHeader() {
             if(this._isFreezeCol(colIndex)){
                 continue;
             }
-            field = fields[colIndex];
+            field = fields[colIndex] || {};
             cell = null;
             if(this.isNeedCache(field)){
                 cell = cells.pop();
@@ -438,7 +438,7 @@ _prototype.getBodyPaintRectAreas = function () {
 
 };
 _prototype.isNeedCache = function(field){
-    if(typeof field.cacheCell === 'boolean'){
+    if(field && typeof field.cacheCell === 'boolean'){
         return field.cacheCell;
     }
     return this.cellsInstance.config.cacheCell;
@@ -477,7 +477,7 @@ _prototype.paintBody = function paintBody() {
                 if(this._isFreezeCol(colIndex)){
                     continue;
                 }
-                field = row.fields[colIndex];
+                field = row.fields[colIndex] || {};
                 cell = null;
                 if(this.isNeedCache(field)){
                     cell = cells.pop();
@@ -673,7 +673,7 @@ _prototype._reLayoutCell = function _reLayoutCell(cell) {
     }
 
     var fields = cell._headerCell ? header.fields : rows[row].fields,
-        field = fields[col];
+        field = fields[col] || {};
 
     var fieldStyle = field.style;
     var customStyleKeys = [];

@@ -99,7 +99,7 @@ _prototype._paintFreezeAreaCells = function(contentPanel,cells,cacheCells,areas)
                     continue;
                 }
 
-                field = row.fields[colIndex];
+                field = row.fields[colIndex] || {};
                 cell = null;
                 if(this.isNeedCache(field)){
                     cell = cells.pop();
@@ -198,7 +198,7 @@ _prototype.paintFreezeCross = function(){
     for(var rowIndex = 0;rowIndex < freezeRow;rowIndex++){
         row = rows[rowIndex];
         for(var colIndex = 0;colIndex < freezeCol;colIndex++){
-            field = row.fields[colIndex];
+            field = row.fields[colIndex] || {};
             cell = this._createCell(rowIndex, colIndex, field,cacheCells);
             cell._freezeCell = true;
             this._paintCell(cell, rowIndex, colIndex, field);
@@ -242,7 +242,7 @@ _prototype.paintFreezeHeader = function(){
     var fields = cellsModel.header.fields;
     var field,cell;
     for(var i = 0;i < freezeCol;i++){
-        field = fields[i];
+        field = fields[i] || {};
         cell = this._createHeaderCell(0, i, field,cacheCells);
         cell._freezeCell = true;
         this._paintCell(cell, 0, i, field);
