@@ -145,4 +145,6 @@
     height: 1px;
     font-size: 0;
     left: 0;
+    pointer-events: none;
+    background-color: transparent;
     visibility: hidden; }

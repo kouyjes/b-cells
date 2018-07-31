@@ -761,7 +761,7 @@ _prototype.syncCursor = function syncCursor() {
 
     style(cursor, {
         width: curWidth + 'px',
-        top: curTop + 'px'
+        top: (curTop - 1) + 'px'
     });
     this.computeScrollbarState();
     var key = this._id + 'resizeScrollbar';
