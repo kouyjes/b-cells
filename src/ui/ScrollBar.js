@@ -366,7 +366,7 @@ ScrollBar.prototype._bindHorEvent = function () {
         relativeLeft = parseFloat(bar.style.left) || 0;
         userSelect(false);
     }.bind(this));
-    var eventKey = this._id + 'hor';
+    var eventKey = this._id +'hor';
     ScrollBar.mousemoveListeners[eventKey] = function (e) {
 
         if(!startX){
@@ -696,6 +696,16 @@ ScrollBar.prototype._renderV = function () {
     dom.appendChild(bar);
     this.element.appendChild(dom);
 
-}
+};
+ScrollBar.prototype.destroy = function(){
+    if(ScrollBar.mouseupListeners){
+        delete ScrollBar.mouseupListeners[this._id + 'hor'];
+        delete ScrollBar.mouseupListeners[this._id + 'ver'];
+    }
+    if(ScrollBar.mousemoveListeners){
+        delete ScrollBar.mousemoveListeners[this._id + 'hor'];
+        delete ScrollBar.mousemoveListeners[this._id + 'ver'];
+    }
+};
 
 export { ScrollBar }

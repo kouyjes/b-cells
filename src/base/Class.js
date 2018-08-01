@@ -17,6 +17,7 @@ var __instanceId__ = 1;
 Class.create = function (baseClass) {
     var base = new Class();
     var _initHooks = [];
+    var _destroyHooks = [];
     var clazz = function () {
 
         Object.defineProperty(this,'_id',{
@@ -54,6 +55,24 @@ Class.create = function (baseClass) {
             _initHooks.splice(index,1);
         }
 
+    };
+    clazz.addDestroyHooks = function (destroyHook) {
+
+        var index = _destroyHooks.indexOf(destroyHook);
+        if(index === -1){
+            _destroyHooks.push(destroyHook);
+        }
+
+    };
+    base.destroy = function(){
+        var args = arguments;
+        _destroyHooks.forEach(function (destroyHook) {
+            try{
+                destroyHook.apply(this,args);
+            }catch(e){
+                console.log(e.stack || e);
+            }
+        }.bind(this));
     };
     clazz.extend = function(extend,override){
         var _prototype = clazz.prototype;

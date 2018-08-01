@@ -1185,6 +1185,12 @@ _prototype.scrollTo = function (scrollTop, scrollLeft) {
 CellsRender.addInitHooks(function () {
     this._bindCellsModelEvent();
 });
+Cells.addDestroyHooks(function () {
+    var cellsRender = this.cellsRender;
+    if(cellsRender.isCustomScroll){
+        cellsRender.scrollbar.destroy();
+    }
+});
 Cells.publishMethod(['render', 'paint','refresh', 'repaint', 'scrollTo', 'headerHeight'], 'cellsRender');
 Cells.addInitHooks(function () {
     this.cellsRender = new CellsRender(this);

@@ -37,6 +37,7 @@ var __instanceId__ = 1;
 Class.create = function (baseClass) {
     var base = new Class();
     var _initHooks = [];
+    var _destroyHooks = [];
     var clazz = function () {
 
         Object.defineProperty(this,'_id',{
@@ -74,6 +75,24 @@ Class.create = function (baseClass) {
             _initHooks.splice(index,1);
         }
 
+    };
+    clazz.addDestroyHooks = function (destroyHook) {
+
+        var index = _destroyHooks.indexOf(destroyHook);
+        if(index === -1){
+            _destroyHooks.push(destroyHook);
+        }
+
+    };
+    base.destroy = function(){
+        var args = arguments;
+        _destroyHooks.forEach(function (destroyHook) {
+            try{
+                destroyHook.apply(this,args);
+            }catch(e){
+                console.log(e.stack || e);
+            }
+        }.bind(this));
     };
     clazz.extend = function(extend,override){
         var _prototype = clazz.prototype;
@@ -581,7 +600,7 @@ ScrollBar.prototype._bindHorEvent = function () {
         relativeLeft = parseFloat(bar.style.left) || 0;
         userSelect(false);
     }.bind(this));
-    var eventKey = this._id + 'hor';
+    var eventKey = this._id +'hor';
     ScrollBar.mousemoveListeners[eventKey] = function (e) {
 
         if(!startX){
@@ -911,6 +930,16 @@ ScrollBar.prototype._renderV = function () {
     dom.appendChild(bar);
     this.element.appendChild(dom);
 
+};
+ScrollBar.prototype.destroy = function(){
+    if(ScrollBar.mouseupListeners){
+        delete ScrollBar.mouseupListeners[this._id + 'hor'];
+        delete ScrollBar.mouseupListeners[this._id + 'ver'];
+    }
+    if(ScrollBar.mousemoveListeners){
+        delete ScrollBar.mousemoveListeners[this._id + 'hor'];
+        delete ScrollBar.mousemoveListeners[this._id + 'ver'];
+    }
 };
 
 /**
@@ -2717,6 +2746,12 @@ _prototype$2.scrollTo = function (scrollTop, scrollLeft) {
 CellsRender.addInitHooks(function () {
     this._bindCellsModelEvent();
 });
+Cells.addDestroyHooks(function () {
+    var cellsRender = this.cellsRender;
+    if(cellsRender.isCustomScroll){
+        cellsRender.scrollbar.destroy();
+    }
+});
 Cells.publishMethod(['render', 'paint','refresh', 'repaint', 'scrollTo', 'headerHeight'], 'cellsRender');
 Cells.addInitHooks(function () {
     this.cellsRender = new CellsRender(this);
@@ -2726,7 +2761,36 @@ var CellsResize = Class.create(function (cellsInstance) {
 
     this.cellsInstance = cellsInstance;
 
+    CellsResize.initEventListeners();
+
 });
+CellsResize.mouseupListeners = null;
+CellsResize.mousemoveListeners = null;
+CellsResize.initEventListeners = function () {
+    if(!CellsResize.mouseupListeners){
+        CellsResize.mouseupListeners = {};
+        CellsResize.mousemoveListeners = {};
+        document.body.addEventListener('mouseup', function (evt) {
+            var _ = this;
+            Object.keys(CellsResize.mouseupListeners).forEach(function (key) {
+                var listener = CellsResize.mouseupListeners[key];
+                try{
+                    listener.call(_,evt);
+                }catch(e){}
+            });
+        },true);
+
+        document.body.addEventListener('mousemove', function (evt) {
+            var _ = this;
+            Object.keys(CellsResize.mousemoveListeners).forEach(function (key) {
+                var listener = CellsResize.mousemoveListeners[key];
+                try{
+                    listener.call(_,evt);
+                }catch(e){}
+            });
+        },true);
+    }
+};
 var _prototype$4 = CellsResize.prototype;
 function isNumber(value){
 
@@ -3058,16 +3122,16 @@ function _bindResizeCellEvent() {
         }
     };
     var id = this._id;
-    cellsPanel.addEventListener('mousemove', function (e) {
+    var eventKey = id;
+    var cursorMove = function(e) {
         var key = id + 'rowPanel-mousemove';
         executeFunctionDelay(key,function () {
             var mouseInfo = getMouseInfo(e);
             cellsPanel.style.cursor = mouseInfo.cursor;
         });
+    }.bind(this);
 
-    }.bind(this));
-
-    cellsPanel.addEventListener('mousemove', function (e) {
+    var resizeMove = function(e) {
 
         var cellsInstance = this.cellsInstance;
         var cellsEvent = cellsInstance.cellsEvent,
@@ -3100,7 +3164,11 @@ function _bindResizeCellEvent() {
             cellsEvent.triggerEvent(event);
             e.stopPropagation();
         }
-    }.bind(this));
+    }.bind(this);
+
+    CellsResize.mousemoveListeners[eventKey] = resizeMove;
+
+    cellsPanel.addEventListener('mousemove',cursorMove);
 
 
     cellsPanel.addEventListener('mousedown', function (e) {
@@ -3132,10 +3200,18 @@ function _bindResizeCellEvent() {
             cellsRender.syncCursor();
         }
     }
-    cellsPanel.addEventListener('mouseup',mouseup.bind(this));
-    cellsPanel.addEventListener('mouseleave',mouseup.bind(this));
+
+    CellsResize.mouseupListeners[eventKey] = mouseup;
 
 }
+_prototype$4.destroy = function(){
+    if(CellsResize.mouseupListeners){
+        delete CellsResize.mouseupListeners[this._id];
+    }
+    if(CellsResize.mousemoveListeners){
+        delete CellsResize.mousemoveListeners[this._id];
+    }
+};
 _prototype$4.bindEvent = function () {
     _bindResizeCellEvent.call(this);
 };
@@ -3144,6 +3220,11 @@ Cells.addInitHooks(function () {
     this.addEventListener('renderFinished', function () {
         this.cellsResize.bindEvent();
     }.bind(this));
+});
+Cells.addDestroyHooks(function(){
+    if(this.cellsResize){
+        this.cellsResize.destroy();
+    }
 });
 
 exports.global = global;
