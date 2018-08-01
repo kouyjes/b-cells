@@ -1163,6 +1163,8 @@ _prototype.headerHeight = function (height) {
     if (typeof height !== 'number') {
         return;
     }
+    var size = this.getPanelSize();
+    height = Math.min(size.height - 10,height);
     domCache.headerHeight = height;
     height = height + 'px';
     this.headerPanel.style.height = height;

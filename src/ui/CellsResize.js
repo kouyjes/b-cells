@@ -17,7 +17,7 @@ CellsResize.initEventListeners = function () {
     if(!CellsResize.mouseupListeners){
         CellsResize.mouseupListeners = {};
         CellsResize.mousemoveListeners = {};
-        document.body.addEventListener('mouseup', function (evt) {
+        function mouseUp(evt) {
             var _ = this;
             Object.keys(CellsResize.mouseupListeners).forEach(function (key) {
                 var listener = CellsResize.mouseupListeners[key];
@@ -25,7 +25,9 @@ CellsResize.initEventListeners = function () {
                     listener.call(_,evt);
                 }catch(e){}
             });
-        },true);
+        }
+        document.body.addEventListener('mouseup',mouseUp,true);
+        document.body.addEventListener('mouseleave',mouseUp);
 
         document.body.addEventListener('mousemove', function (evt) {
             var _ = this;
@@ -41,7 +43,7 @@ CellsResize.initEventListeners = function () {
 var _prototype = CellsResize.prototype;
 function isNumber(value){
 
-    return typeof value === 'number';
+    return typeof value === 'number' && !isNaN(value);
 
 }
 _prototype._updateRowDomCache = function (rowIndex,height) {
@@ -52,9 +54,16 @@ _prototype._updateRowDomCache = function (rowIndex,height) {
     var cellsInstance = this.cellsInstance,
         cellsRender = cellsInstance.cellsRender,
         domCache = cellsRender.domCache;
+
+    var size = cellsRender.getPanelSize();
+    var _height = height;
     height = Math.max(cellsRender.getMinCellHeight(rowIndex),height);
     if(rowIndex === -1){
+        height = Math.min(size.height - 10,height);
         domCache.headerHeight = height;
+        if(isNumber(height) && height !== _height){
+            this.triggerMouseUp();
+        }
         return;
     }
 
@@ -63,6 +72,10 @@ _prototype._updateRowDomCache = function (rowIndex,height) {
     rowsHeight[rowIndex] = height;
     for(var i = rowIndex + 1;i < rowsTop.length;i++){
         rowsTop[i] = rowsTop[i - 1] + rowsHeight[i - 1];
+    }
+
+    if(isNumber(height) && height !== _height){
+        this.triggerMouseUp();
     }
 };
 _prototype._updateColDomCache = function (colIndex,width) {
@@ -77,7 +90,7 @@ _prototype._updateColDomCache = function (colIndex,width) {
         cellsRender = cellsInstance.cellsRender;
     var domCache = cellsRender.domCache;
 
-
+    var _width = width;
     width = Math.max(cellsRender.getMinCellWidth(colIndex),width);
     var colsWidth = domCache.colsWidth,
         colsLeft = domCache.colsLeft;
@@ -86,6 +99,16 @@ _prototype._updateColDomCache = function (colIndex,width) {
         colsLeft[i] = colsLeft[i - 1] + colsWidth[i - 1];
     }
 
+    if(isNumber(width) && width !== _width){
+        this.triggerMouseUp();
+    }
+
+};
+_prototype.triggerMouseUp = function(){
+    var func = CellsResize.mouseupListeners[this._id];
+    if(typeof func === 'function'){
+        func();
+    }
 };
 _prototype._updateDomCache = function (rowIndex,colIndex,width,height) {
 
