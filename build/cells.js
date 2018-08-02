@@ -1626,14 +1626,6 @@ _prototype$2.initRenderState = function () {
         }
     };
     this.domCache = {
-        clearCells: function () {
-            this.headerCells.length = 0;
-            this.cells.length = 0;
-            this.freezeHeaderCells.length = 0;
-            this.freezeRowCells.length = 0;
-            this.freezeColCells.length = 0;
-            this.freezeCrossCells.length = 0;
-        },
         headerCells: [],
         cells: [],
         freezeHeaderCells:[],
@@ -1646,7 +1638,6 @@ _prototype$2.initRenderState = function () {
         rowsHeight: [],
         headerHeight: 0,
     };
-
 };
 function initRender() {
 
@@ -1878,17 +1869,19 @@ _prototype$2._getPaintAreas = function _getPaintAreas(type) {
 };
 _prototype$2.initPaint = function () {
 
-    var cellsInstance = this.cellsInstance;
-    var domCache = this.domCache;
-    var cells = cellsInstance.renderTo.querySelectorAll(getFullClassSelector('cell')),
-        size = cells.length;
-    for (var i = 0; i < size; i++) {
-        this.removeElementFromDom(cells[i]);
-    }
-    domCache.clearCells();
+    this.clearDomCells();
     var paintState = this.paintState;
     paintState.reset();
 
+};
+_prototype$2.clearDomCells = function(){
+    var domCache = this.domCache;
+    var _this = this;
+    ['headerCells','cells','freezeHeaderCells','freezeRowCells','freezeColCells','freezeCrossCells'].forEach(function(key){
+        var cells = domCache[key];
+        _this.removeCells(cells);
+        domCache[key] = [];
+    });
 };
 _prototype$2.executePaint = function () {
 
@@ -2060,8 +2053,12 @@ _prototype$2.paintBody = function paintBody() {
 _prototype$2.removeCells = function removeCells(cacheCells, cells) {
 
     var _ = this;
-    var config = this.cellsInstance.config;
+    if(!cacheCells){
+        return;
+    }
     cells = cells || cacheCells;
+    cells = [].concat(cells);
+    var config = this.cellsInstance.config;
     cells.forEach(function (cell) {
         var index = cacheCells.indexOf(cell);
         if(index !== -1){
@@ -2712,6 +2709,8 @@ _prototype$2.refresh = function(){
         return;
     }
     this._initPanelSize();
+
+    this.initPaint();
     this.executePaint();
     this.syncCursor();
 };
