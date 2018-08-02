@@ -177,9 +177,6 @@ function executeFunctionTimeout(timeoutId,func,timeout,context) {
     return _timeoutCache[timeoutId] = setTimeout.call(window,func.bind(context),timeout);
 
 }
-function isElementInDom(element){
-    return document.contains(element);
-}
 function getFullClassName(className) {
 
     var themesPrefix = global.config.themesPrefix;
@@ -615,10 +612,6 @@ ScrollBar.prototype._bindHorEvent = function () {
     ScrollBar.mouseupListeners[eventKey] = function () {
         startX = relativeLeft = undefined;
         userSelect(true);
-        if(!isElementInDom(this.element)){
-            delete ScrollBar.mousemoveListeners[eventKey];
-            delete ScrollBar.mouseupListeners[eventKey];
-        }
     }.bind(this);
 
 };
@@ -751,10 +744,6 @@ ScrollBar.prototype._bindVerEvent = function () {
     ScrollBar.mouseupListeners[eventKey] = function () {
         startY = relativeTop = undefined;
         userSelect(true);
-        if(!isElementInDom(this.element)){
-            delete ScrollBar.mousemoveListeners[eventKey];
-            delete ScrollBar.mouseupListeners[eventKey];
-        }
     }.bind(this);
 
 };
