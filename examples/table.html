@@ -295,7 +295,18 @@
             console.timeEnd('---appendrow')
             _cellsModel.appendRows(rows);
         }
-
+        function destroy(){
+            tableCell.destroy();
+            tableCell1.destroy();
+            tableCell = null;
+            tableCell1 = null;
+            _cellsModel = null;
+            _cellsModel1 = null;
+        }
+        function removeEl() {
+            document.querySelector('#table').remove();
+            document.querySelector('#table1').remove();
+        }
     </script>
 </head>
 <body onload="init()">

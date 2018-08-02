@@ -945,7 +945,18 @@ ScrollBar.prototype.destroy = function(){
 /**
  * Created by koujp on 2016/10/17.
  */
-function CellsModel(cellsModel){
+var CellsModel = Class.create(function (cellsModel) {
+
+    this.initData(cellsModel);
+
+    if(arguments.length > 0){
+        this.init(cellsModel);
+    }
+});
+CellsModel.addDestroyHooks(function(){
+    this.initData();
+});
+CellsModel.prototype.initData = function(cellsModel){
     this.header = {
         fields:[] //{name:''}
     };
@@ -955,11 +966,7 @@ function CellsModel(cellsModel){
         onAppendRows:[],
         onRefresh:[]
     };
-
-    if(arguments.length > 0){
-        this.init(cellsModel);
-    }
-}
+};
 CellsModel.prototype.init = function (cellsModel) {
     if(cellsModel.header && cellsModel.header.fields instanceof Array){
         this.header.fields = cellsModel.header.fields;
@@ -1107,14 +1114,16 @@ function init(cellsModel,config) {
 
 
 }
+
+Cells.addDestroyHooks(function(){
+    this.renderTo = null;
+    var cellsModel = this.cellsModel;
+    if(cellsModel){
+        cellsModel.destroy();
+    }
+});
 var _prototype = Cells.prototype;
-Cells.extend = function (extend) {
 
-    Object.keys(arguments[0]).forEach(function (key) {
-        _prototype[key] = extend[key];
-    });
-
-};
 Cells.publishMethod = function (methodNames,instanceName) {
 
     if(!methodNames || !instanceName){
@@ -1215,6 +1224,10 @@ _prototype$1.triggerEvent = function triggerEvent(event) {
 Cells.publishMethod(['addEventListener','removeEventListener','triggerEvent'],'cellsEvent');
 Cells.addInitHooks(function () {
     this.cellsEvent = new CellsEvent(this);
+});
+
+Cells.addDestroyHooks(function () {
+    this.cellsEvent = null;
 });
 
 var _prototype$3 = {};
@@ -2745,14 +2758,30 @@ _prototype$2.scrollTo = function (scrollTop, scrollLeft) {
     scrollbar.scrollTop = scrollTop;
 
 };
+CellsRender.addDestroyHooks(function(){
+    if(this.isCustomScroll){
+        this.scrollbar.destroy();
+    }
+    var cellsPanel = this.cellsPanel;
+    if(cellsPanel){
+        if(cellsPanel.remove){
+            cellsPanel.remove();
+        }else if(cellsPanel.parentNode){
+            cellsPanel.parentNode.removeChild(cellsPanel);
+        }
+    }
+    this.cellsPanel = null;
+    this.bodyPanel = null;
+    this.headerPanel = null;
+    this.cursor = null;
+});
 CellsRender.addInitHooks(function () {
     this._bindCellsModelEvent();
 });
 Cells.addDestroyHooks(function () {
     var cellsRender = this.cellsRender;
-    if(cellsRender.isCustomScroll){
-        cellsRender.scrollbar.destroy();
-    }
+    cellsRender.destroy();
+    this.cellsRender = null;
 });
 Cells.publishMethod(['render', 'paint','refresh', 'repaint', 'scrollTo', 'headerHeight'], 'cellsRender');
 Cells.addInitHooks(function () {
@@ -3250,6 +3279,7 @@ Cells.addDestroyHooks(function(){
     if(this.cellsResize){
         this.cellsResize.destroy();
     }
+    this.cellsResize = null;
 });
 
 exports.global = global;

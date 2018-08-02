@@ -87,4 +87,8 @@ Cells.addInitHooks(function () {
     this.cellsEvent = new CellsEvent(this);
 });
 
+Cells.addDestroyHooks(function () {
+    this.cellsEvent = null;
+});
+
 export { CellsEvent }

@@ -1184,14 +1184,30 @@ _prototype.scrollTo = function (scrollTop, scrollLeft) {
     scrollbar.scrollTop = scrollTop;
 
 };
+CellsRender.addDestroyHooks(function(){
+    if(this.isCustomScroll){
+        this.scrollbar.destroy();
+    }
+    var cellsPanel = this.cellsPanel;
+    if(cellsPanel){
+        if(cellsPanel.remove){
+            cellsPanel.remove();
+        }else if(cellsPanel.parentNode){
+            cellsPanel.parentNode.removeChild(cellsPanel);
+        }
+    }
+    this.cellsPanel = null;
+    this.bodyPanel = null;
+    this.headerPanel = null;
+    this.cursor = null;
+});
 CellsRender.addInitHooks(function () {
     this._bindCellsModelEvent();
 });
 Cells.addDestroyHooks(function () {
     var cellsRender = this.cellsRender;
-    if(cellsRender.isCustomScroll){
-        cellsRender.scrollbar.destroy();
-    }
+    cellsRender.destroy();
+    this.cellsRender = null;
 });
 Cells.publishMethod(['render', 'paint','refresh', 'repaint', 'scrollTo', 'headerHeight'], 'cellsRender');
 Cells.addInitHooks(function () {

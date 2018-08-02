@@ -59,14 +59,16 @@ function init(cellsModel,config) {
 
 
 };
+
+Cells.addDestroyHooks(function(){
+    this.renderTo = null;
+    var cellsModel = this.cellsModel;
+    if(cellsModel){
+        cellsModel.destroy();
+    }
+});
 var _prototype = Cells.prototype;
-Cells.extend = function (extend) {
 
-    Object.keys(arguments[0]).forEach(function (key) {
-        _prototype[key] = extend[key];
-    });
-
-};
 Cells.publishMethod = function (methodNames,instanceName) {
 
     if(!methodNames || !instanceName){

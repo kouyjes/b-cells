@@ -1,7 +1,19 @@
 /**
  * Created by koujp on 2016/10/17.
  */
-function CellsModel(cellsModel){
+import { Class } from '../base/Class';
+var CellsModel = Class.create(function (cellsModel) {
+
+    this.initData(cellsModel);
+
+    if(arguments.length > 0){
+        this.init(cellsModel);
+    }
+});
+CellsModel.addDestroyHooks(function(){
+    this.initData();
+});
+CellsModel.prototype.initData = function(cellsModel){
     this.header = {
         fields:[] //{name:''}
     };
@@ -11,11 +23,7 @@ function CellsModel(cellsModel){
         onAppendRows:[],
         onRefresh:[]
     };
-
-    if(arguments.length > 0){
-        this.init(cellsModel);
-    }
-}
+};
 CellsModel.prototype.init = function (cellsModel) {
     if(cellsModel.header && cellsModel.header.fields instanceof Array){
         this.header.fields = cellsModel.header.fields;

@@ -494,6 +494,7 @@ Cells.addDestroyHooks(function(){
     if(this.cellsResize){
         this.cellsResize.destroy();
     }
+    this.cellsResize = null;
 });
 
 export { CellsResize }
