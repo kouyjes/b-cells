@@ -95,7 +95,7 @@
 
             cellsModel.header = {
                 height:50,
-                minHeight:100,
+                minHeight:'0',
                 fields:header
             };
             cellsModel.rows = rows;
@@ -104,7 +104,7 @@
         }
 
         var _cellsModel = createCellsModel(3000,100),
-                _cellsModel1 = createCellsModel(30,4);
+                _cellsModel1 = createCellsModel(30,3);
 
 
         function appendData(){
@@ -183,13 +183,7 @@
                     //rowResize:false,
                     //col:1
                 },
-                customScroll:{
-                    timeout:3000,
-                    autoHideX:false,
-                    autoHideY:true
-                    //height:'30px',
-                    //width:'25'
-                }
+                customScroll:null
             });
             return tableCell;
 

@@ -2354,11 +2354,19 @@ _prototype$2.getMinCellHeight = function (rowIndex) {
 
     var cellsInstance = this.cellsInstance,
         cellsModel = cellsInstance.cellsModel;
+    var minHeight;
     if (rowIndex === -1) {
-        return cellsModel.header.minHeight || this.getGlobalMinHeight();
+        minHeight = this._parseCellHeight(cellsModel.header.minHeight);
+        return isNum(minHeight) ? minHeight : this.getGlobalMinHeight();
     }
     var row = cellsModel.rows[rowIndex];
-    return row && row.minHeight || this.getGlobalMinHeight();
+    if(row){
+        minHeight = this._parseCellHeight(row.minHeight);
+        if(!isNum(minHeight)){
+            minHeight = this.getGlobalMinHeight();
+        }
+    }
+    return minHeight;
 
 };
 _prototype$2._initCellSizeIndex = function () {
@@ -2381,7 +2389,7 @@ _prototype$2._initHeaderFieldsWidth = function(){
         field.maxWidth = maxWidth;
         field.minWidth = minWidth;
         if(field.width){
-            var width = this._parseCellWidth(field.width);
+            var width = this._parseCellWidth(field.width,0);
             if(maxWidth){
                 width = Math.min(maxWidth,width);
             }
@@ -2488,7 +2496,7 @@ _prototype$2._initCellHeightIndex = function () {
         cellsInstance = this.cellsInstance,
         cellsModel = cellsInstance.cellsModel;
 
-    var headerHeight = this._parseCellHeight(cellsModel.header.height);
+    var headerHeight = this._parseCellHeight(cellsModel.header.height,0);
     headerHeight = Math.max(headerHeight, this.getMinCellHeight(-1));
     domCache.headerHeight = headerHeight;
 
@@ -2507,7 +2515,7 @@ _prototype$2._initBodyCellHeightIndex = function (startIndex) {
     //create page cursor
     rows.slice(startIndex).forEach(function (row, index) {
         index += startIndex;
-        var rowHeight = this._parseCellHeight(row.height);
+        var rowHeight = this._parseCellHeight(row.height,0);
         rowHeight = Math.max(rowHeight, this.getMinCellHeight(index));
         rowsHeight[index] = rowHeight;
         if (index === 0) {
@@ -2517,7 +2525,7 @@ _prototype$2._initBodyCellHeightIndex = function (startIndex) {
         }
     }.bind(this));
 };
-_prototype$2._parseCellWidth = function (width) {
+_prototype$2._parseCellWidth = function (width,defaultWidth) {
 
     var panelSize = this.getPanelSize();
     var clientWidth = panelSize.width;
@@ -2526,10 +2534,10 @@ _prototype$2._parseCellWidth = function (width) {
     } else {
         width = parseInt(width);
     }
-    return isNaN(width) ? 100 : width;
+    return isNum(width) ? width : defaultWidth;
 
 };
-_prototype$2._parseCellHeight = function (height) {
+_prototype$2._parseCellHeight = function (height,defaultHeight) {
 
     if (typeof height === 'string' && height && height.indexOf('%') === height.length - 1) {
         var clientHeight = this.getPanelSize().height;
@@ -2537,7 +2545,7 @@ _prototype$2._parseCellHeight = function (height) {
     } else {
         height = parseInt(height);
     }
-    return height ? height : 30;
+    return isNum(height) ? height : defaultHeight;
 
 };
 _prototype$2._onAppendRows = function () {
@@ -2718,7 +2726,7 @@ _prototype$2.headerHeight = function (height) {
 
     var domCache = this.domCache;
 
-    if (!height) {
+    if (arguments.length === 0) {
         return domCache.headerHeight;
     }
     height = parseInt(height);
@@ -2726,7 +2734,9 @@ _prototype$2.headerHeight = function (height) {
         return;
     }
     var size = this.getPanelSize();
+    height = Math.max(this.getMinCellHeight(-1),height);
     height = Math.min(size.height - 10,height);
+    height = Math.max(height,0);
     domCache.headerHeight = height;
     height = height + 'px';
     this.headerPanel.style.height = height;
@@ -2831,7 +2841,7 @@ _prototype$4._updateRowDomCache = function (rowIndex,height) {
     var _height = height;
     height = Math.max(cellsRender.getMinCellHeight(rowIndex),height);
     if(rowIndex === -1){
-        height = Math.min(size.height - 10,height);
+        height = Math.min(size.height - 10,height,0);
         domCache.headerHeight = height;
         if(isNumber(height) && height !== _height){
             this.triggerMouseUp();
