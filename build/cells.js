@@ -777,13 +777,16 @@ ScrollBar.prototype._bindMouseWheelEvent = function () {
 
         var lengthX = _.isScrollX() ? getWheelData(e,'X') : 0,
             lengthY = _.isScrollY() ? getWheelData(e,'Y') : 0;
-        
+
+        var step = 0;
         if(Math.abs(lengthX) > Math.abs(lengthY)){
 
             if(lengthX){
                 lengthX = lengthX > 0 ? Math.max(200,lengthX) : Math.min(-200,lengthX);
                 var lastScrollLeft = _.scrollLeft;
-                _.scrollLeft = lastScrollLeft + (lengthX * 10 / _.getScrollbarWidth());
+                step = (lengthX * 10 / _.getScrollbarWidth());
+                step = Math.max(15,Math.abs(step)) * step / Math.abs(step || 1);
+                _.scrollLeft = lastScrollLeft + step;
                 if( _.scrollLeft !== lastScrollLeft){
                     e.preventDefault();
                 }
@@ -792,7 +795,9 @@ ScrollBar.prototype._bindMouseWheelEvent = function () {
             if(lengthY){
                 lengthY = lengthY > 0 ? Math.max(200,lengthY) : Math.min(-200,lengthY);
                 var lastScrollTop = _.scrollTop;
-                _.scrollTop = lastScrollTop + (lengthY * 10 / _.getScrollbarHeight());
+                step = (lengthY * 10 / _.getScrollbarHeight());
+                step = Math.max(15,Math.abs(step)) * step / Math.abs(step || 1);
+                _.scrollTop = lastScrollTop + step;
                 if( _.scrollTop !== lastScrollTop){
                     e.preventDefault();
                 }
