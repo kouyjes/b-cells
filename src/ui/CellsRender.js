@@ -487,6 +487,15 @@ _prototype.paintBody = function paintBody() {
     this.removeCells(cacheCells, cells);
 
 };
+_prototype.getClientRectArea = function(){
+    var paintState = this.paintState;
+    var rowClientArea = paintState.currentRowArea,
+        colClientArea = paintState.currentColArea;
+    return {
+        row:Object.assign({},rowClientArea),
+        col:Object.assign({},colClientArea)
+    };
+};
 _prototype.removeCells = function removeCells(cacheCells, cells) {
 
     var _ = this;
@@ -1193,6 +1202,23 @@ _prototype.scrollTo = function (scrollTop, scrollLeft) {
     scrollbar.scrollTop = scrollTop;
 
 };
+_prototype.scrollToRow = function(rowIndex){
+    var rowsTop = this.domCache.rowsTop;
+    var top = rowsTop[rowIndex];
+    this.scrollTo(top,0);
+};
+_prototype.scrollToCol = function(colIndex){
+    var colsLeft = this.domCache.colsLeft;
+    var left = colsLeft[colIndex];
+    this.scrollTo(0,left);
+};
+_prototype.scrollToArea = function(rowIndex,colIndex){
+    var rowsTop = this.domCache.rowsTop;
+    var top = rowsTop[rowIndex];
+    var colsLeft = this.domCache.colsLeft;
+    var left = colsLeft[colIndex];
+    this.scrollTo(top,left);
+};
 CellsRender.addDestroyHooks(function(){
     if(this.isCustomScroll){
         this.scrollbar.destroy();
@@ -1218,7 +1244,7 @@ Cells.addDestroyHooks(function () {
     cellsRender.destroy();
     this.cellsRender = null;
 });
-Cells.publishMethod(['render', 'paint','refresh', 'repaint', 'scrollTo', 'headerHeight'], 'cellsRender');
+Cells.publishMethod(['render', 'paint','refresh', 'repaint', 'scrollTo','scrollToRow','scrollToCol','scrollToArea', 'headerHeight','getClientRectArea'], 'cellsRender');
 Cells.addInitHooks(function () {
     this.cellsRender = new CellsRender(this);
 });
