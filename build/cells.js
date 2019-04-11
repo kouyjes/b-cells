@@ -2872,7 +2872,7 @@ _prototype$4._updateRowDomCache = function (rowIndex,height) {
     var _height = height;
     height = Math.max(cellsRender.getMinCellHeight(rowIndex),height);
     if(rowIndex === -1){
-        height = Math.min(size.height - 10,height,0);
+        height = Math.min(size.height - 10,height);
         domCache.headerHeight = height;
         if(isNumber(height) && height !== _height){
             this.triggerMouseUp();
